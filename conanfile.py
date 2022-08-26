@@ -24,6 +24,9 @@ class WxpexConan(ConanFile):
 
     no_copy_source = True
 
+    default_options = {
+        "wxwidgets:exceptions": False}
+
     def build(self):
         cmake = CMake(self)
         cmake.configure()
@@ -45,5 +48,4 @@ class WxpexConan(ConanFile):
         self.requires("fields/[~1]")
         self.requires("tau/[~1.5]")
         self.requires("pex/[~0.6]")
-        self.requires("wxwidgets/3.1.7@jivehelix/stable")
-
+        self.requires("wxwidgets/3.2.0@jivehelix/stable")

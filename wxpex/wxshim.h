@@ -15,7 +15,6 @@
     int main(int argc, char **argv)                                           \
     {                                                                         \
         wxDISABLE_DEBUG_SUPPORT();                                            \
-                                                                              \
         ProcessSerialNumber psn = {0, kCurrentProcess};                       \
         TransformProcessType(&psn, kProcessTransformToForegroundApplication); \
         return wxEntry(argc, argv);                                           \
@@ -41,4 +40,3 @@ WXSHIM_POP_IGNORES
     WXSHIM_PUSH_IGNORES \
     wxIMPLEMENT_APP_CONSOLE(appClass); \
     WXSHIM_POP_IGNORES
-
