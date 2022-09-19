@@ -20,7 +20,9 @@ target_sources(
     wxpex
     PRIVATE
     shortcut.cpp
-    layout_top_level.cpp)
+    layout_top_level.cpp
+    tile.cpp
+    gauge.cpp)
 
 
 install(TARGETS wxpex DESTINATION ${CMAKE_INSTALL_LIBDIR})

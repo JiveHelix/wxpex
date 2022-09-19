@@ -24,7 +24,7 @@ wxRect ToWxRect(const tau::Region<T> &region)
 template<typename T>
 tau::Region<T> ToRegion(const wxRect &rect)
 {
-    return {{ToWxPoint<T>(rect.GetTopLeft()), ToWxSize<T>(rect.GetSize())}};
+    return {{ToPoint<T>(rect.GetTopLeft()), ToSize<T>(rect.GetSize())}};
 }
 
 
