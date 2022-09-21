@@ -215,12 +215,11 @@ private:
 };
 
 
-template<int base_, int width_, int precision_>
-struct ViewTraits
+template<int base, int width, int precision>
+struct ViewTraits:
+    pex::ConverterTraits<base, width, precision, jive::flag::None>
 {
-    static constexpr int base = base_;
-    static constexpr int width = width_;
-    static constexpr int precision = precision_;
+
 };
 
 
