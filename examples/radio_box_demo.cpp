@@ -9,6 +9,7 @@
   * Licensed under the MIT license. See LICENSE file.
 **/
 
+#include <memory>
 #include <pex/chooser.h>
 
 #include "wxpex/view.h"

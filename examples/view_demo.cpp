@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 #include <jive/formatter.h>
 #include <tau/angles.h>
 #include <pex/signal.h>

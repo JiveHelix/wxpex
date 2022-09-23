@@ -14,6 +14,7 @@
 
 
 #include <mutex>
+#include <atomic>
 
 #include <pex/value.h>
 #include <pex/interface.h>

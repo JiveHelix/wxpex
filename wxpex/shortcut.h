@@ -2,6 +2,7 @@
 
 #include <map>
 #include <functional>
+#include <memory>
 
 #include <jive/strings.h>
 #include <jive/formatter.h>

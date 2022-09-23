@@ -43,11 +43,9 @@ public:
         :
         GaugeControl()
     {
-        this->value = wxpex::Async<size_t>::Control(
-            model.value.GetWorkerControl());
+        this->value = model.value.GetWorkerControl();
 
-        this->maximum = wxpex::Async<size_t>::Control(
-            model.maximum.GetWorkerControl());
+        this->maximum = model.maximum.GetWorkerControl();
     }
 };
 
