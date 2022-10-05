@@ -16,6 +16,7 @@
 #include <pex/converter.h>
 
 #include "wxpex/wxshim.h"
+#include "wxpex/size.h"
 
 
 namespace wxpex
@@ -25,14 +26,13 @@ namespace wxpex
 template
 <
     typename Control,
-    typename ConverterTraits = pex::DefaultConverterTraits
+    typename Convert = pex::Converter<typename Control::Type>
 >
 class Field: public wxControl
 {
 public:
     using Base = wxControl;
     using Type = typename Control::Type;
-    using Convert = pex::Converter<Type, ConverterTraits>;
 
     Field(
         wxWindow *parent,
@@ -50,20 +50,50 @@ public:
                 wxDefaultPosition,
                 wxDefaultSize,
                 style | wxTE_PROCESS_ENTER,
-                wxDefaultValidator))
+                wxDefaultValidator)),
+        fittingSize_{this->GetFittingSize()}
     {
         this->textControl_->Bind(wxEVT_TEXT_ENTER, &Field::OnEnter_, this);
         this->textControl_->Bind(wxEVT_KILL_FOCUS, &Field::OnKillFocus_, this);
 
         PEX_LOG("Connect");
         this->value_.Connect(&Field::OnValueChanged_);
+
+        // A sizer is required to allow the text control to be managed by
+        // a hierarchy of sizers.
+        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+        sizer->Add(this->textControl_, 1, wxEXPAND);
+        this->SetSizerAndFit(sizer.release());
+
+        this->SetMinClientSize(ToWxSize(this->fittingSize_));
     }
 
     // NOTE: As of wx 3.1.3, changing the font size does not affect
     // wxTextCtrl's GetBestSize, defeating the window layout mechanism.
     bool SetFont(const wxFont &font) override
     {
-        return this->textControl_->SetFont(font);
+        bool result = this->textControl_->SetFont(font);
+
+        this->fittingSize_ = this->GetFittingSize();
+        this->SetMinClientSize(ToWxSize(this->fittingSize_));
+        this->InvalidateBestSize();
+
+        return result;
+    }
+
+    tau::Size<int> GetFittingSize() const
+    {
+        return ToSize<int>(
+            this->textControl_->GetSizeFromTextSize(
+                this->textControl_->GetTextExtent(
+                    Convert::ToString(this->value_.Get()))));
+    }
+
+protected:
+    wxSize DoGetBestClientSize() const override
+    {
+        this->fittingSize_ = this->GetFittingSize();
+        return ToWxSize(this->fittingSize_);
     }
 
 private:
@@ -107,6 +137,18 @@ private:
     {
         this->displayedString_ = Convert::ToString(value);
         this->textControl_->ChangeValue(this->displayedString_);
+
+        // Text entry field will resize to fit whatever text is displayed.
+        // TODO: Create a version that allows fixed size text entry fields.
+        auto fitting = this->GetFittingSize();
+
+        if (std::abs((fitting - this->fittingSize_).width) > 2)
+        {
+            this->fittingSize_ = fitting;
+            this->SetMinClientSize(ToWxSize(fitting));
+            this->InvalidateBestSize();
+            this->GetParent()->Layout();
+        }
     }
 
     using Value = pex::Terminus<Field, Control>;
@@ -114,6 +156,7 @@ private:
     Value value_;
     std::string displayedString_;
     wxTextCtrl *textControl_;
+    mutable tau::Size<int> fittingSize_;
 };
 
 

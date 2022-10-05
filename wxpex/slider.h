@@ -20,6 +20,9 @@
 
 #include "wxpex/wxshim.h"
 #include "wxpex/view.h"
+#include "wxpex/spin_control.h"
+#include "wxpex/field.h"
+#include "wxpex/layout_top_level.h"
 
 
 namespace wxpex
@@ -217,7 +220,7 @@ private:
 
 template<int base, int width, int precision>
 struct ViewTraits:
-    pex::ConverterTraits<base, width, precision, jive::flag::None>
+    pex::ConverterTraits<base, width, precision, jive::flag::Alternate>
 {
 
 };
@@ -279,16 +282,17 @@ public:
 
 
 template<typename RangeControl, typename ValueControl, int precision>
-using SimplifiedConvert = SliderAndValueConvert
+using SimplifiedSliderAndValue = SliderAndValueConvert
     <
         RangeControl,
         ValueControl,
         pex::Converter
         <
             typename ValueControl::Type,
-            ViewTraits<10, precision + 2, precision>
+            ViewTraits<10, 0, precision>
         >
     >;
+
 
 template
 <
@@ -298,9 +302,10 @@ template
 >
 class SliderAndValue
     :
-    public SimplifiedConvert<RangeControl, ValueControl, precision>
+    public SimplifiedSliderAndValue<RangeControl, ValueControl, precision>
 {
-    using Base = SimplifiedConvert<RangeControl, ValueControl, precision>;
+    using Base =
+        SimplifiedSliderAndValue<RangeControl, ValueControl, precision>;
 
 public:
     SliderAndValue(
@@ -314,6 +319,99 @@ public:
 
     }
 };
+
+
+template<typename RangeControl>
+class SpinSlider: public wxControl
+{
+public:
+    SpinSlider(wxWindow *parent, RangeControl range)
+        :
+        wxControl(parent, wxID_ANY)
+    {
+        auto slider =
+            new Slider<RangeControl>(this, range, wxSL_HORIZONTAL);
+
+        auto spin =
+            new SpinControl(this, range, 1, 0);
+
+        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+        sizer->Add(slider, 1, wxRIGHT | wxEXPAND, 3);
+        sizer->Add(spin, 0, wxALIGN_CENTER);
+
+        this->SetSizerAndFit(sizer.release());
+    }
+};
+
+
+template
+<
+    typename RangeControl,
+    typename ValueControl,
+    typename Convert = pex::Converter<typename ValueControl::Type>
+>
+class FieldSliderConvert: public wxControl
+{
+public:
+    using ValueField = Field<ValueControl, Convert>;
+
+    FieldSliderConvert(wxWindow *parent, RangeControl range, ValueControl value)
+        :
+        wxControl(parent, wxID_ANY)
+    {
+        auto slider =
+            new Slider<RangeControl>(this, range, wxSL_HORIZONTAL);
+
+        auto field = new ValueField(this, value);
+
+        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+        sizer->Add(slider, 1, wxRIGHT | wxEXPAND, 3);
+        sizer->Add(field, 0, wxALIGN_CENTER);
+
+        this->SetSizerAndFit(sizer.release());
+    }
+};
+
+
+template<typename RangeControl, typename ValueControl, int precision>
+using SimplifiedFieldSlider = FieldSliderConvert
+    <
+        RangeControl,
+        ValueControl,
+        pex::Converter
+        <
+            typename ValueControl::Type,
+            ViewTraits<10, 0, precision>
+        >
+    >;
+
+
+template
+<
+    typename RangeControl,
+    typename ValueControl,
+    int precision = 3
+>
+class FieldSlider
+    :
+    public SimplifiedFieldSlider<RangeControl, ValueControl, precision>
+{
+    using Base =
+        SimplifiedFieldSlider<RangeControl, ValueControl, precision>;
+
+public:
+    FieldSlider(
+        wxWindow *parent,
+        RangeControl range,
+        ValueControl value)
+        :
+        Base(parent, range, value)
+    {
+
+    }
+};
+
+
 
 
 } // namespace wxpex

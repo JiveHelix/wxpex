@@ -126,11 +126,12 @@ void AddVertical(
 template<typename Items, size_t ...I>
 void AddRow(
     wxSizer *sizer,
+    int ratio,
     int flags,
     Items &&items,
     std::index_sequence<I...>)
 {
-    (sizer->Add(std::get<I>(std::forward<Items>(items)), 0, flags), ...);
+    (sizer->Add(std::get<I>(std::forward<Items>(items)), ratio, flags), ...);
 }
 
 
@@ -162,12 +163,14 @@ std::unique_ptr<wxSizer> LayoutLabeled(
         // Layout in a row with labels above their respective widgets.
         AddRow(
             groupSizer.get(),
+            0,
             options.labelFlags,
             labels,
             std::make_index_sequence<sizeof...(Labeled)>{});
 
         AddRow(
             groupSizer.get(),
+            1,
             options.widgetFlags,
             widgets,
             std::make_index_sequence<sizeof...(Labeled)>{});

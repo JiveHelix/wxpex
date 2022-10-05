@@ -104,6 +104,10 @@ using PositionSlider =
     wxpex::SliderAndValue<PositionRangeControl, PositionValue, precision>;
 
 
+using PositionFieldSlider =
+    wxpex::FieldSlider<PositionRangeControl, PositionValue, 1>;
+
+
 using PlaybackSpeedSlider =
     wxpex::SliderAndValueConvert
     <
@@ -154,6 +158,9 @@ ExampleFrame::ExampleFrame(
     auto positionSlider =
         new PositionSlider(this, positionRange, positionValue);
 
+    auto positionFieldSlider =
+        new PositionFieldSlider(this, positionRange, positionValue);
+
     auto verticalSlider =
         new PositionSlider(
             this,
@@ -173,6 +180,7 @@ ExampleFrame::ExampleFrame(
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
     topSizer->Add(positionSlider, 0, wxALL | wxEXPAND, 10);
+    topSizer->Add(positionFieldSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSlider, 1, wxALL | wxEXPAND, 10);
     topSizer->Add(playbackSpeedSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSpeedSlider, 0, wxALL | wxEXPAND, 10);
