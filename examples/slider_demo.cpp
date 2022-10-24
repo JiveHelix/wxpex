@@ -125,6 +125,11 @@ public:
         PositionValue positionValue,
         PlaybackSpeedRangeControl playbackSpeedRange,
         PlaybackSpeedValue playbackSpeedValue);
+
+    void OnSliderDone_(wxCommandEvent &)
+    {
+        this->Layout();
+    }
 };
 
 
@@ -186,4 +191,9 @@ ExampleFrame::ExampleFrame(
     topSizer->Add(verticalSpeedSlider, 0, wxALL | wxEXPAND, 10);
 
     this->SetSizerAndFit(topSizer.release());
+
+    positionFieldSlider->Bind(
+        wxpex::SliderDone,
+        &ExampleFrame::OnSliderDone_,
+        this);
 }

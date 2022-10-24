@@ -38,7 +38,7 @@ public:
     using Value = pex::Terminus<SpinControl, typename Range::Value>;
     using Limit = pex::Terminus<SpinControl, typename Range::Limit>;
     using Type = typename Value::Type;
-    
+
     SpinControl(
         wxWindow *parent,
         RangeControl range,

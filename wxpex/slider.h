@@ -80,6 +80,9 @@ private:
 } // end namespace detail
 
 
+wxDEFINE_EVENT(SliderDone, wxCommandEvent);
+
+
 /** wxSlider uses `int`, so the default filter will attempt to convert T to
  ** `int`.
  **/
@@ -99,7 +102,7 @@ public:
 
     using Value = typename Range::Value;
     using Limit = typename Range::Limit;
-    
+
     static_assert(
         std::is_same_v<int, typename Value::Type>,
         "Slider control uses int");
@@ -142,6 +145,7 @@ public:
 
         this->Bind(wxEVT_SLIDER, &Slider::OnSlider_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Slider::OnSliderLeftDown_, this);
+        this->Bind(wxEVT_LEFT_UP, &Slider::OnSliderLeftUp_, this);
         
         // wxSlider appears to underreport its minimum size, which causes the
         // thumb to be clipped.
@@ -189,7 +193,7 @@ public:
         // wx generates multiple wxEVT_SLIDER events with the same value.
         // We will only send changes.
         auto newValue = this->styleFilter_(event.GetInt());
-        
+
         if (newValue != this->value_.Get())
         {
             this->value_.Set(newValue);
@@ -209,6 +213,12 @@ public:
         }
     }
 
+    void OnSliderLeftUp_(wxMouseEvent &event)
+    {
+        event.Skip();
+        this->AddPendingEvent(wxCommandEvent(SliderDone));
+    }
+
 private:
     pex::Terminus<Slider, Value> value_;
     pex::Terminus<Slider, Limit> minimum_;
@@ -220,7 +230,7 @@ private:
 
 template<int base, int width, int precision>
 struct ViewTraits:
-    pex::ConverterTraits<base, width, precision, jive::flag::Alternate>
+    pex::ConverterTraits<base, width, precision, jive::flag::None>
 {
 
 };

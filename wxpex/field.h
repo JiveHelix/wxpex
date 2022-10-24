@@ -97,9 +97,10 @@ protected:
     }
 
 private:
-    void OnEnter_(wxCommandEvent &)
+    void OnEnter_(wxCommandEvent &event)
     {
         this->ProcessUserInput_();
+        event.Skip();
     }
 
     void OnKillFocus_(wxEvent &event)
@@ -131,6 +132,8 @@ private:
         {
             this->textControl_->ChangeValue(this->displayedString_);
         }
+
+        this->GetParent()->Layout();
     }
 
     void OnValueChanged_(pex::Argument<Type> value)
@@ -142,13 +145,9 @@ private:
         // TODO: Create a version that allows fixed size text entry fields.
         auto fitting = this->GetFittingSize();
 
-        if (std::abs((fitting - this->fittingSize_).width) > 2)
-        {
-            this->fittingSize_ = fitting;
-            this->SetMinClientSize(ToWxSize(fitting));
-            this->InvalidateBestSize();
-            this->GetParent()->Layout();
-        }
+        this->fittingSize_ = fitting;
+        this->SetMinClientSize(ToWxSize(fitting));
+        this->InvalidateBestSize();
     }
 
     using Value = pex::Terminus<Field, Control>;
