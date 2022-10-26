@@ -1,8 +1,8 @@
 /**
   * @file spin_control_double_demo.cpp
-  * 
+  *
   * @brief A demonstration of wxpex::SpinControlDouble.
-  * 
+  *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 17 Aug 2020
   * @copyright Jive Helix
@@ -14,30 +14,23 @@
 #include "wxpex/view.h"
 #include "wxpex/spin_control.h"
 
-using Wibble = pex::model::Value<double>;
-using WibbleRange = pex::model::Range<Wibble>;
-using WibbleRangeControl = pex::control::Range<void, WibbleRange>;
 
-using WibbleValue = typename WibbleRangeControl::Value;
+using pex::Limit;
 
+
+using Wibble = pex::model::Range<double, Limit<0>, Limit<20>>;
+using WibbleControl = pex::control::Range<void, Wibble>;
+using WibbleValue = typename WibbleControl::Value;
 
 inline constexpr double defaultWibble = 10;
-inline constexpr double minimumWibble = 0;
-inline constexpr double maximumWibble = 20;
 inline constexpr double wibbleIncrement = 1;
 
 
-using Wobble = pex::model::Value<float>;
-using WobbleRange = pex::model::Range<Wobble>;
-
-using WobbleRangeControl = pex::control::Range<void, WobbleRange>;
-
-using WobbleValue = typename WobbleRangeControl::Value;
-
+using Wobble = pex::model::Range<float, Limit<-100>, Limit<100>>;
+using WobbleControl = pex::control::Range<void, Wobble>;
+using WobbleValue = typename WobbleControl::Value;
 
 inline constexpr float defaultWobble = 0;
-inline constexpr float minimumWobble = -100.0;
-inline constexpr float maximumWobble = 100;
 inline constexpr float wobbleIncrement = 2.5;
 
 
@@ -47,34 +40,25 @@ public:
     ExampleApp()
         :
         wibble_(defaultWibble),
-        wibbleRange_(this->wibble_),
-        wobble_(defaultWobble),
-        wobbleRange_(this->wobble_)
+        wobble_(defaultWobble)
     {
-        this->wibbleRange_.SetLimits(minimumWibble, maximumWibble);
-        this->wobbleRange_.SetLimits(minimumWobble, maximumWobble);
+
     }
 
     bool OnInit() override;
 
 private:
     Wibble wibble_;
-    WibbleRange wibbleRange_;
     Wobble wobble_;
-    WobbleRange wobbleRange_;
 };
-
-
 
 
 class ExampleFrame: public wxFrame
 {
 public:
     ExampleFrame(
-        WibbleRangeControl wibbleRange,
-        WibbleValue wibbleValue,
-        WobbleRangeControl wobbleRange,
-        WobbleValue wobbleValue);
+        WibbleControl wibbleControl,
+        WobbleControl wobbleControl);
 };
 
 
@@ -84,44 +68,36 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
-    auto wibble = WibbleRangeControl(this->wibbleRange_);
-    auto wobble = WobbleRangeControl(this->wobbleRange_);
-
     ExampleFrame *exampleFrame =
         new ExampleFrame(
-            wibble,
-            wibble.value,
-            wobble,
-            wobble.value);
+            WibbleControl(this->wibble_),
+            WobbleControl(this->wobble_));
 
     exampleFrame->Show();
+
     return true;
 }
 
 
-using WibbleSpinControl = wxpex::SpinControl<WibbleRangeControl>;
-using WobbleSpinControl = wxpex::SpinControl<WobbleRangeControl>;
+using WibbleSpinControl = wxpex::SpinControl<WibbleControl>;
+using WobbleSpinControl = wxpex::SpinControl<WobbleControl>;
 
 
-ExampleFrame::ExampleFrame(
-        WibbleRangeControl wibbleRange,
-        WibbleValue wibbleValue,
-        WobbleRangeControl wobbleRange,
-        WobbleValue wobbleValue)
+ExampleFrame::ExampleFrame(WibbleControl wibble, WobbleControl wobble)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::SpinControl Demo")
 {
     auto wibbleView =
-        new wxpex::View(this, wibbleValue);
+        new wxpex::View(this, wibble.value);
 
     auto wibbleSpinControl =
-        new WibbleSpinControl(this, wibbleRange, wibbleIncrement, 0);
+        new WibbleSpinControl(this, wibble, wibbleIncrement, 0);
 
     auto wobbleView =
-        new wxpex::View(this, wobbleValue);
+        new wxpex::View(this, wobble.value);
 
     auto wobbleSpinControl =
-        new WobbleSpinControl(this, wobbleRange, wobbleIncrement);
+        new WobbleSpinControl(this, wobble, wobbleIncrement);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 

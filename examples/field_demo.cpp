@@ -44,7 +44,7 @@ struct ApplicationFields
 template<template<typename> typename T>
 struct ApplicationTemplate
 {
-    T<pex::Member<double, AngleFilter>> angle;
+    T<pex::Filtered<double, AngleFilter>> angle;
     T<std::string> message;
 };
 

@@ -1,8 +1,8 @@
 /**
   * @file slider_demo.cpp
-  * 
+  *
   * @brief A demonstration of wxpex::Slider.
-  * 
+  *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 17 Aug 2020
   * @copyright Jive Helix
@@ -11,26 +11,52 @@
 
 #include <pex/range.h>
 #include <pex/converting_filter.h>
+#include <fields/fields.h>
 #include "wxpex/slider.h"
 
 
-using Position = pex::model::Value<int>;
-using PositionRange = pex::model::Range<Position>;
+template<typename T>
+struct DemoFields
+{
+    static constexpr auto fields = std::make_tuple(
+        fields::Field(&T::position, "position"),
+        fields::Field(&T::playbackSpeed, "playbackSpeed"));
+};
 
-// Do not filter the position.
-using PositionRangeControl = pex::control::Range<void, PositionRange>;
+using pex::Limit;
+using pex::MakeRange;
 
-// This is the control node used to display position's value.
-using PositionValue = pex::control::Value<void, Position>;
+template<template<typename> typename T>
+struct DemoTemplate
+{
+    T<MakeRange<int, Limit<0>, Limit<1000>>> position;
+    T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
+};
 
-inline constexpr size_t defaultPosition = 0;
-inline constexpr size_t minimumPosition = 0;
-inline constexpr size_t maximumPosition = 1000;
 
+struct Demo: public DemoTemplate<pex::Identity>
+{
+    static constexpr int defaultPosition = 0;
+    static constexpr float defaultPlaybackSpeed = 1.0f;
 
-using PlaybackSpeed = pex::model::Value<float>;
-using PlaybackSpeedRange = pex::model::Range<PlaybackSpeed>;
+    static Demo MakeDefault()
+    {
+        return {{defaultPosition, defaultPlaybackSpeed}};
+    }
+};
 
+using DemoGroup = pex::Group<DemoFields, DemoTemplate, Demo>;
+using DemoModel = typename DemoGroup::Model;
+using DemoControl = typename DemoGroup::Control<void>;
+
+using PositionControl = decltype(DemoControl::position);
+using PositionValue = decltype(PositionControl::value);
+
+using PlaybackSpeed = decltype(DemoModel::playbackSpeed);
+using PlaybackSpeedControl = decltype(DemoControl::playbackSpeed);
+
+// The unfiltered value used to display playback speed
+using PlaybackSpeedValue = decltype(PlaybackSpeedControl::value);
 
 static constexpr unsigned clicksPerOctave = 3;
 
@@ -56,17 +82,10 @@ struct PlaybackSpeedConverter:
 };
 
 
-using PlaybackSpeedRangeControl = ::pex::control::Range<
+using FilteredPlaybackSpeed = ::pex::control::Range<
     void,
-    PlaybackSpeedRange,
+    PlaybackSpeed,
     PlaybackSpeedFilter<float>>;
-
-// The unfiltered value used to display playback speed
-using PlaybackSpeedValue = pex::control::Value<void, PlaybackSpeed>;
-
-inline constexpr float minimumPlaybackSpeed = 0.25f;
-inline constexpr float maximumPlaybackSpeed = 4.0f;
-inline constexpr float defaultPlaybackSpeed = 1.0f;
 
 
 class ExampleApp : public wxApp
@@ -74,44 +93,32 @@ class ExampleApp : public wxApp
 public:
     ExampleApp()
         :
-        position_(defaultPosition),
-        positionRange_(this->position_),
-        playbackSpeed_(defaultPlaybackSpeed),
-        playbackSpeedRange_(this->playbackSpeed_)
+        model_(Demo::MakeDefault())
     {
-        this->positionRange_.SetLimits(
-            minimumPosition,
-            maximumPosition);
 
-        this->playbackSpeedRange_.SetLimits(
-            minimumPlaybackSpeed,
-            maximumPlaybackSpeed);
     }
 
     bool OnInit() override;
 
 private:
-    Position position_;
-    PositionRange positionRange_;
-    PlaybackSpeed playbackSpeed_;
-    PlaybackSpeedRange playbackSpeedRange_;
+    DemoModel model_;
 };
 
 
 const int precision = 3;
 
 using PositionSlider =
-    wxpex::SliderAndValue<PositionRangeControl, PositionValue, precision>;
+    wxpex::SliderAndValue<PositionControl, PositionValue, precision>;
 
 
 using PositionFieldSlider =
-    wxpex::FieldSlider<PositionRangeControl, PositionValue, 1>;
+    wxpex::FieldSlider<PositionControl, PositionValue, 1>;
 
 
 using PlaybackSpeedSlider =
     wxpex::SliderAndValueConvert
     <
-        PlaybackSpeedRangeControl,
+        FilteredPlaybackSpeed,
         PlaybackSpeedValue,
         PlaybackSpeedConverter
     >;
@@ -120,11 +127,7 @@ using PlaybackSpeedSlider =
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(
-        PositionRangeControl positionRange,
-        PositionValue positionValue,
-        PlaybackSpeedRangeControl playbackSpeedRange,
-        PlaybackSpeedValue playbackSpeedValue);
+    ExampleFrame(DemoControl control);
 
     void OnSliderDone_(wxCommandEvent &)
     {
@@ -139,47 +142,41 @@ wxshimIMPLEMENT_APP(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
-    ExampleFrame *exampleFrame =
-        new ExampleFrame(
-            PositionRangeControl(this->positionRange_),
-            PositionValue(this->position_),
-            PlaybackSpeedRangeControl(this->playbackSpeedRange_),
-            PlaybackSpeedValue(this->playbackSpeed_));
-
+    ExampleFrame *exampleFrame = new ExampleFrame(DemoControl(this->model_));
     exampleFrame->Show();
+
     return true;
 }
 
 
 
-ExampleFrame::ExampleFrame(
-    PositionRangeControl positionRange,
-    PositionValue positionValue,
-    PlaybackSpeedRangeControl playbackSpeedRange,
-    PlaybackSpeedValue playbackSpeedValue)
+ExampleFrame::ExampleFrame(DemoControl control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Slider Demo")
 {
     auto positionSlider =
-        new PositionSlider(this, positionRange, positionValue);
+        new PositionSlider(this, control.position, control.position.value);
 
     auto positionFieldSlider =
-        new PositionFieldSlider(this, positionRange, positionValue);
+        new PositionFieldSlider(this, control.position, control.position.value);
 
     auto verticalSlider =
         new PositionSlider(
             this,
-            positionRange,
-            positionValue,
+            control.position,
+            control.position.value,
             wxSL_VERTICAL);
 
     auto playbackSpeedSlider =
-        new PlaybackSpeedSlider(this, playbackSpeedRange, playbackSpeedValue);
+        new PlaybackSpeedSlider(
+            this,
+            FilteredPlaybackSpeed(control.playbackSpeed),
+            control.playbackSpeed.value);
 
     auto verticalSpeedSlider = new PlaybackSpeedSlider(
         this,
-        playbackSpeedRange,
-        playbackSpeedValue,
+        FilteredPlaybackSpeed(control.playbackSpeed),
+        control.playbackSpeed.value,
         wxSL_VERTICAL);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
