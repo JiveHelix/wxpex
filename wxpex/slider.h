@@ -51,7 +51,7 @@ public:
         {
             return value;
         }
-        
+
         // Reverse the values so that the slider is at the top for the highest
         // value.
         return this->offset_ - value;
@@ -134,11 +134,6 @@ public:
         defaultValue_(this->value_.Get()),
         styleFilter_(style, range.minimum.Get(), range.maximum.Get())
     {
-        PEX_LOG(this);
-        PEX_LOG("\nvalue_: ", &this->value_);
-        PEX_LOG("\nminimum_: ", &this->minimum_);
-        PEX_LOG("\nmaximum_: ", &this->maximum_);
-
         this->value_.Connect(&Slider::OnValue_);
         this->minimum_.Connect(&Slider::OnMinimum_);
         this->maximum_.Connect(&Slider::OnMaximum_);
@@ -146,7 +141,7 @@ public:
         this->Bind(wxEVT_SLIDER, &Slider::OnSlider_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Slider::OnSliderLeftDown_, this);
         this->Bind(wxEVT_LEFT_UP, &Slider::OnSliderLeftUp_, this);
-        
+
         // wxSlider appears to underreport its minimum size, which causes the
         // thumb to be clipped.
         // TODO: Determine whether this affects platforms other than wxMac.

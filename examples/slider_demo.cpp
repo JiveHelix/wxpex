@@ -189,7 +189,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
 
     this->SetSizerAndFit(topSizer.release());
 
-    positionFieldSlider->Bind(
+    this->Bind(
         wxpex::SliderDone,
         &ExampleFrame::OnSliderDone_,
         this);

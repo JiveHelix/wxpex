@@ -112,7 +112,7 @@ public:
         :
         wxFrame(nullptr, wxID_ANY, name)
     {
-        this->Show(true); 
+        this->Show(true);
     }
 };
 
@@ -157,7 +157,7 @@ public:
 private:
     void OnClose_(wxCloseEvent &event)
     {
-        this->extraWindows_.reset();    
+        this->extraWindows_.reset();
         event.Skip();
     }
 

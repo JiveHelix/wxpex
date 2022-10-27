@@ -12,22 +12,45 @@ public:
     bool OnInit() override;
 
 private:
-    void OnColor_(const tau::Hsv<float> &color)
+    void OnHsvColor_(const wxpex::Hsv &hsv)
     {
-        std::cout << "Color:\n" << color << std::endl;
+        if (this->muted_)
+        {
+            return;
+        }
+
+        this->muted_ = true;
+        this->rgbColor_.Set(tau::HsvToRgb<uint8_t>(hsv));
+        this->muted_ = false;
     }
 
-    wxpex::HsvModel color_ = wxpex::HsvModel{{{0, 1, 1}}};
+    void OnRgbColor_(const wxpex::Rgb &rgb)
+    {
+        if (this->muted_)
+        {
+            return;
+        }
 
-    using ColorTerminus = pex::Terminus<ExampleApp, wxpex::HsvModel>;
-    ColorTerminus colorTerminus_;
+        this->muted_ = true;
+        this->hsvColor_.Set(tau::RgbToHsv<float>(rgb));
+        this->muted_ = false;
+    }
+
+    wxpex::HsvModel hsvColor_ = wxpex::HsvModel{{{0, 1, 1}}};
+
+    wxpex::RgbModel rgbColor_ =
+        wxpex::RgbModel{tau::HsvToRgb<uint8_t>(hsvColor_.Get())};
+
+    wxpex::HsvTerminus<ExampleApp> hsvTerminus_;
+    wxpex::RgbTerminus<ExampleApp> rgbTerminus_;
+    bool muted_ = false;
 };
 
 
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(wxpex::HsvControl control);
+    ExampleFrame(wxpex::HsvControl hsv, wxpex::RgbControl rgb);
 };
 
 
@@ -37,14 +60,22 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
-    this->colorTerminus_.Assign(this, ColorTerminus(this, this->color_));
+    this->hsvTerminus_.Assign(
+        this,
+        wxpex::HsvTerminus<ExampleApp>(this, this->hsvColor_));
 
-    PEX_LOG("color_.Connect");
-    this->colorTerminus_.Connect(&ExampleApp::OnColor_);
+    this->hsvTerminus_.Connect(&ExampleApp::OnHsvColor_);
 
-    PEX_LOG("ExampleFrame");
+    this->rgbTerminus_.Assign(
+        this,
+        wxpex::RgbTerminus<ExampleApp>(this, this->rgbColor_));
+
+    this->rgbTerminus_.Connect(&ExampleApp::OnRgbColor_);
+
     ExampleFrame *exampleFrame =
-        new ExampleFrame(wxpex::HsvControl(this->color_));
+        new ExampleFrame(
+            wxpex::HsvControl(this->hsvColor_),
+            wxpex::RgbControl(this->rgbColor_));
 
     exampleFrame->Show();
 
@@ -52,15 +83,16 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(wxpex::HsvControl control)
+ExampleFrame::ExampleFrame(wxpex::HsvControl hsv, wxpex::RgbControl rgb)
     :
     wxFrame(nullptr, wxID_ANY, "Color Demo")
 {
-    PEX_LOG("\n\n ********* new HsvPicker ************* \n\n");
-    auto colorPicker = new wxpex::HsvPicker(this, control);
-    auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
-    
-    sizer->Add(colorPicker, 1, wxEXPAND | wxALL, 10);
+    auto hsvPicker = new wxpex::HsvPicker(this, hsv);
+    auto rgbPicker = new wxpex::RgbPicker(this, rgb);
+    auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
+
+    sizer->Add(hsvPicker, 1, wxEXPAND | wxALL, 10);
+    sizer->Add(rgbPicker, 1, wxEXPAND | wxALL, 10);
 
     this->SetSizerAndFit(sizer.release());
 }

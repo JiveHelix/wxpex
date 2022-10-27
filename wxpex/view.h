@@ -58,7 +58,6 @@ private:
     void OnValueChanged_(pex::Argument<Type> value)
     {
         this->SetLabel(Convert::ToString(value));
-        this->GetParent()->Layout();
     }
 
     using Value_ = pex::Terminus<View, Control>;
