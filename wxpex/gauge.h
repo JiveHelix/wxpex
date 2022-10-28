@@ -27,6 +27,7 @@ struct GaugeTemplate
     T<wxpex::MakeAsync<size_t>> maximum;
 };
 
+static_assert(pex::IsMakeCustom<wxpex::MakeAsync<size_t>>);
 
 using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate>;
 
