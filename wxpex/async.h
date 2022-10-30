@@ -27,25 +27,6 @@ namespace wxpex
 {
 
 
-template<typename ThreadSafe>
-class ReferenceSetter: public pex::Reference<ThreadSafe>
-{
-public:
-    using pex::Reference<ThreadSafe>::Reference;
-
-    void SetWithoutNotify(pex::Argument<typename ThreadSafe::Type> value)
-    {
-        this->SetWithoutNotify_(value);
-    }
-
-    void DoNotify()
-    {
-        this->DoNotify_();
-    }
-};
-
-
-
 template<typename T, typename Filter>
 class Async: public wxEvtHandler
 {
@@ -57,7 +38,8 @@ public:
     template<typename Observer>
     using Control = pex::control::Value<Observer, ThreadSafe>;
 
-    using Terminus = pex::Terminus<Async, ThreadSafe>;
+    template<typename Observer>
+    using Terminus = pex::Terminus<Observer, ThreadSafe>;
 
     template<typename>
     friend class pex::Reference;
@@ -213,14 +195,14 @@ private:
             this->value_ = value;
         }
 
-        ReferenceSetter<ThreadSafe>(this->model_).SetWithoutNotify(value);
+        pex::ReferenceSetter<ThreadSafe>(this->model_).SetWithoutNotify(value);
     }
 
     void DoNotify_()
     {
         // This will trigger OnWorkerChanged_, which will notify model_ in
         // the wx event loop.
-        ReferenceSetter<ThreadSafe>(this->model_).DoNotify();
+        pex::ReferenceSetter<ThreadSafe>(this->model_).DoNotify();
     }
 
 private:
@@ -228,9 +210,9 @@ private:
     bool ignoreEcho_;
     Type value_;
     ThreadSafe model_;
-    Terminus terminus_;
+    Terminus<Async> terminus_;
     ThreadSafe workerModel_;
-    Terminus workerTerminus_;
+    Terminus<Async> workerTerminus_;
 };
 
 
@@ -375,14 +357,15 @@ private:
             this->value_ = value;
         }
 
-        ReferenceSetter<ThreadSafe>(this->upstream_).SetWithoutNotify(value);
+        pex::ReferenceSetter<ThreadSafe>(this->upstream_).
+            SetWithoutNotify(value);
     }
 
     void DoNotify_()
     {
         // This will trigger OnWorkerChanged_, which will notify upstream_ in
         // the wx event loop.
-        ReferenceSetter<ThreadSafe>(this->upstream_).DoNotify();
+        pex::ReferenceSetter<ThreadSafe>(this->upstream_).DoNotify();
     }
 
 private:
