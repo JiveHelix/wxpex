@@ -1,7 +1,7 @@
 /**
-  * @file wx_chooser.h
+  * @file wx_select.h
   *
-  * @brief A utility to convert between pex::Chooser members and the wxString's
+  * @brief A utility to convert between pex::Select members and the wxString's
   * needed by the wxComboBox control.
   *
   *
@@ -23,7 +23,7 @@ namespace wxpex
 
 
 template<typename T, typename Convert = pex::Converter<T>>
-struct WxChooser
+struct WxSelect
 {
     static wxString GetSelectionAsString(
         size_t index,

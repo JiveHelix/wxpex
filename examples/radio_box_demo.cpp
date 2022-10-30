@@ -10,7 +10,7 @@
 **/
 
 #include <memory>
-#include <pex/chooser.h>
+#include <pex/select.h>
 
 #include "wxpex/view.h"
 #include "wxpex/radio_box.h"
@@ -19,8 +19,8 @@
 #include "units.h"
 
 
-using Chooser = pex::model::Chooser<UnitsModel, pex::GetTag>;
-using ChooserControl = pex::control::Chooser<void, Chooser>;
+using Select = pex::model::Select<UnitSystem>;
+using SelectControl = pex::control::Select<void, Select>;
 
 
 class ExampleApp: public wxApp
@@ -28,9 +28,8 @@ class ExampleApp: public wxApp
 public:
     ExampleApp()
         :
-        units_{UnitSystem::MKS},
-        chooser_{
-            this->units_,
+        select_{
+            UnitSystem::MKS,
             {
                 UnitSystem::MKS,
                 UnitSystem::CGS,
@@ -43,15 +42,14 @@ public:
     bool OnInit() override;
 
 private:
-    UnitsModel units_;
-    Chooser chooser_;
+    Select select_;
 };
 
 
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(ChooserControl chooser);
+    ExampleFrame(SelectControl select);
 };
 
 
@@ -62,27 +60,27 @@ wxshimIMPLEMENT_APP(ExampleApp)
 bool ExampleApp::OnInit()
 {
     ExampleFrame *exampleFrame =
-        new ExampleFrame(ChooserControl(this->chooser_));
+        new ExampleFrame(SelectControl(this->select_));
 
     exampleFrame->Show();
     return true;
 }
 
 
-ExampleFrame::ExampleFrame(ChooserControl chooserControl)
+ExampleFrame::ExampleFrame(SelectControl select)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::RadioBox Demo")
 {
     auto radioBox =
-        new wxpex::RadioBox<ChooserControl, ShortConverter>(
+        new wxpex::RadioBox<SelectControl, ShortConverter>(
             this,
-            chooserControl,
+            select,
             "Choose Units");
 
     auto view =
-        new wxpex::View<ChooserControl::Value, LongConverter>(
+        new wxpex::View<SelectControl::Value, LongConverter>(
             this,
-            chooserControl.value);
+            select.value);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 

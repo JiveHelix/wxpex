@@ -20,7 +20,7 @@
 
 #include "wxpex/wxshim.h"
 #include "wxpex/array_string.h"
-#include "wxpex/wx_chooser.h"
+#include "wxpex/wx_select.h"
 
 
 namespace wxpex
@@ -28,23 +28,23 @@ namespace wxpex
 
 
 template
-<   typename Chooser,
-    typename Convert = pex::Converter<typename Chooser::Value::Type>
+<   typename Control,
+    typename Convert = pex::Converter<typename Control::Value::Type>
 >
 class RadioBox: public wxRadioBox
 {
 public:
     static_assert(
-        !Chooser::choicesMayChange,
+        !Control::choicesMayChange,
         "RadioBox choices cannot change after creation");
 
-    using Type = typename Chooser::Type;
-    using Selection = typename Chooser::Selection;
-    using WxAdapter = WxChooser<typename Chooser::Type, Convert>;
+    using Type = typename Control::Type;
+    using Selection = typename Control::Selection;
+    using WxAdapter = WxSelect<typename Control::Type, Convert>;
 
     RadioBox(
         wxWindow *parent,
-        Chooser chooser,
+        Control select,
         const std::string &label = "",
         long style = wxRA_SPECIFY_ROWS)
         :
@@ -54,10 +54,10 @@ public:
             label,
             wxDefaultPosition,
             wxDefaultSize,
-            WxAdapter::GetChoicesAsStrings(chooser.choices.Get()),
+            WxAdapter::GetChoicesAsStrings(select.choices.Get()),
             0,
             style),
-        selection_(this, chooser.selection)
+        selection_(this, select.selection)
     {
         assert(
             this->selection_.Get() <= std::numeric_limits<int>::max());

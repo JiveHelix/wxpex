@@ -12,7 +12,7 @@
 #include <pex/value.h>
 #include <pex/initialize.h>
 #include <pex/range.h>
-#include <pex/chooser.h>
+#include <pex/select.h>
 #include <pex/converter.h>
 #include <pex/detail/filters.h>
 

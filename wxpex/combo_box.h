@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include <pex/chooser.h>
+#include <pex/select.h>
 #include <pex/terminus.h>
 
 #include "wxpex/wxshim.h"
-#include "wxpex/wx_chooser.h"
+#include "wxpex/wx_select.h"
 
 
 namespace wxpex
@@ -36,7 +36,7 @@ public:
     using Selection = pex::Terminus<ComboBox, typename Control::Selection>;
     using Choices = pex::Terminus<ComboBox, typename Control::Choices>;
     using ChoicesVector = typename Choices::Type;
-    using WxAdapter = WxChooser<typename Control::Type, Convert>;
+    using WxAdapter = WxSelect<typename Control::Type, Convert>;
 
     ComboBox(
         wxWindow *parent,

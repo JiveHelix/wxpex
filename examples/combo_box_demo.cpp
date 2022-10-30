@@ -2,7 +2,7 @@
   * @file combo_box_demo.cpp
   *
   * @brief A demonstration of wxpex::ComboBox, backed by
-  * a pex::control::Chooser.
+  * a pex::control::Select.
   *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 14 Aug 2020
@@ -15,7 +15,7 @@
 #include <vector>
 #include <memory>
 
-#include <pex/chooser.h>
+#include <pex/select.h>
 
 #include "wxpex/combo_box.h"
 #include "wxpex/check_box.h"
@@ -43,8 +43,8 @@ static inline const std::vector<UnitSystem> withFirkins
 
 std::string fffUnits = "furlong-firkin-fortnight";
 
-using Chooser = pex::model::Chooser<UnitsModel>;
-using ChooserControl = pex::control::Chooser<void, Chooser>;
+using Select = pex::model::Select<UnitSystem>;
+using SelectControl = pex::control::Select<void, Select>;
 
 using EnableFirkins = pex::model::Value<bool>;
 using EnableFirkinsControl = pex::control::Value<void, EnableFirkins>;
@@ -55,15 +55,14 @@ class ExampleApp: public wxApp
 public:
     ExampleApp()
         :
-        units_{UnitSystem::MKS},
-        chooser_{
-            this->units_,
+        select_{
+            UnitSystem::MKS,
             withoutFirkins},
         enableFirkins_(false)
     {
         this->enableFirkins_.Connect(this, &ExampleApp::OnFirkins_);
     }
-    
+
     ~ExampleApp()
     {
         this->enableFirkins_.Disconnect(this);
@@ -78,16 +77,15 @@ private:
 
         if (firkins)
         {
-            self->chooser_.SetChoices(withFirkins);
+            self->select_.SetChoices(withFirkins);
         }
         else
         {
-            self->chooser_.SetChoices(withoutFirkins);
+            self->select_.SetChoices(withoutFirkins);
         }
     }
 
-    UnitsModel units_;
-    Chooser chooser_;
+    Select select_;
     EnableFirkins enableFirkins_;
 };
 
@@ -96,7 +94,7 @@ class ExampleFrame: public wxFrame
 {
 public:
     ExampleFrame(
-        ChooserControl chooserControl,
+        SelectControl select,
         EnableFirkinsControl enableFirkinsControl);
 };
 
@@ -109,7 +107,7 @@ bool ExampleApp::OnInit()
 {
     ExampleFrame *exampleFrame =
         new ExampleFrame(
-            ChooserControl(this->chooser_),
+            SelectControl(this->select_),
             EnableFirkinsControl(this->enableFirkins_));
 
     exampleFrame->Show();
@@ -118,7 +116,7 @@ bool ExampleApp::OnInit()
 
 
 ExampleFrame::ExampleFrame(
-    ChooserControl chooserControl,
+    SelectControl select,
     EnableFirkinsControl enableFirkinsControl)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::ComboBox Demo")
@@ -130,24 +128,24 @@ ExampleFrame::ExampleFrame(
             enableFirkinsControl);
 
     auto shortComboBox =
-        new wxpex::ComboBox<ChooserControl, ShortConverter>(
+        new wxpex::ComboBox<SelectControl, ShortConverter>(
             this,
-            chooserControl);
+            select);
 
     auto longComboBox =
-        new wxpex::ComboBox<ChooserControl, LongConverter>(
+        new wxpex::ComboBox<SelectControl, LongConverter>(
             this,
-            chooserControl);
+            select);
 
     auto shortView =
-        new wxpex::View<ChooserControl::Value, ShortConverter>(
+        new wxpex::View<SelectControl::Value, ShortConverter>(
             this,
-            chooserControl.value);
+            select.value);
 
     auto longView =
-        new wxpex::View<ChooserControl::Value, LongConverter>(
+        new wxpex::View<SelectControl::Value, LongConverter>(
             this,
-            chooserControl.value);
+            select.value);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
