@@ -70,6 +70,19 @@ public:
         this->Initialize_();
     }
 
+    Async(Filter filter)
+        :
+        mutex_(),
+        ignoreEcho_(false),
+        value_{},
+        model_(this->value_, filter),
+        terminus_(this, this->model_),
+        workerModel_(this->value_, filter),
+        workerTerminus_(this, this->workerModel_)
+    {
+        this->Initialize_();
+    }
+
     Async(const Async<Type, Filter> &) = delete;
     Async(Async<Type, Filter> &&) = delete;
 
@@ -218,6 +231,38 @@ private:
 
 template<typename T, typename Filter = pex::NoFilter>
 using MakeAsync = pex::MakeCustom<Async<T, Filter>>;
+
+
+// Async can be used as the Value of a pex::model::Range, but the Range class
+// uses a private value. This class provides access to the functions unique to
+// Async.
+template<typename T, typename Minimum, typename Maximum, template<typename, typename> typename Value_>
+class AsyncRangeAccess
+    :
+    public pex::model::RangeAccess<T, Minimum, Maximum, Value_>
+{
+public:
+    using Base = pex::model::RangeAccess<T, Minimum, Maximum, Value_>;
+    using Value = typename Base::Value;
+    using Control = typename Value::template Control<void>;
+
+    AsyncRangeAccess(pex::model::Range<T, Minimum, Maximum, Value_> &range)
+        :
+        Base(range)
+    {
+
+    }
+
+    Control GetWorkerControl()
+    {
+        return this->GetValue().GetWorkerControl();
+    }
+
+    Control GetWxControl()
+    {
+        return this->GetValue().GetWxControl();
+    }
+};
 
 
 namespace experimental

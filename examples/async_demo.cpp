@@ -1,8 +1,8 @@
 /**
   * @file async_demo.cpp
-  * 
+  *
   * @brief Demonstrates asynchronous communcation from a worker thread.
-  * 
+  *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 22 Mar 2022
   * @copyright Jive Helix
@@ -44,11 +44,14 @@ struct DemoFields
 };
 
 
+static_assert(pex::IsMakeRange<pex::MakeRange<double, void, void, wxpex::Async>>);
+
+
 template<template<typename> typename T>
 struct DemoTemplate
 {
     T<double> startingAngle;
-    T<wxpex::MakeAsync<double>> currentAngle;
+    T<pex::MakeRange<double, void, void, wxpex::Async>> currentAngle;
     T<pex::MakeSignal> fail;
     T<pex::MakeSignal> threadFail;
     T<pex::MakeSignal> start;
@@ -163,7 +166,9 @@ private:
 
     void OnUpdate_(double value)
     {
-        auto control = this->model_.currentAngle.GetWxControl();
+        auto control =
+            wxpex::AsyncRangeAccess(this->model_.currentAngle).GetWxControl();
+
         control.Set(value);
     }
 
@@ -209,7 +214,9 @@ private:
 
     void WorkerThread_()
     {
-        auto workerControl = this->model_.currentAngle.GetWorkerControl();
+        auto workerControl =
+            wxpex::AsyncRangeAccess(this->model_.currentAngle)
+                .GetWorkerControl();
 
         while (this->isRunning_)
         {
@@ -274,13 +281,13 @@ ExampleFrame::ExampleFrame(DemoControl demoControl)
         LabeledWidget(
             this,
             "Radians:",
-            new View(this, demoControl.currentAngle));
+            new View(this, demoControl.currentAngle.value));
 
     auto degreesView =
         LabeledWidget(
             this,
             "Degrees:",
-            new View(this, MakeDegreesControl(demoControl.currentAngle)));
+            new View(this, MakeDegreesControl(demoControl.currentAngle.value)));
 
     auto radiansEntry =
         LabeledWidget(
@@ -292,7 +299,9 @@ ExampleFrame::ExampleFrame(DemoControl demoControl)
         LabeledWidget(
             this,
             "Degrees start:",
-            new Field(this, MakeDegreesControl(demoControl.startingAngle)));
+            new Field(
+                this,
+                MakeDegreesControl(demoControl.startingAngle)));
 
     auto startButton = new Button(this, "Start", demoControl.start);
     auto stopButton = new Button(this, "Stop", demoControl.stop);
