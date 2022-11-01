@@ -83,9 +83,65 @@ private:
 wxDEFINE_EVENT(SliderDone, wxCommandEvent);
 
 
-/** wxSlider uses `int`, so the default filter will attempt to convert T to
- ** `int`.
+/** wxSlider uses `int`. If the Range type is integral, so the default filter will attempt to convert it to `int`. Floating-point types will default to a LinearRange that maps the range of possible values across the positions of the slider.
  **/
+template<typename RangeControl, typename Enable = void>
+struct FilteredRange_ {};
+
+template<typename RangeControl>
+struct FilteredRange_
+<
+    FilteredRange,
+    std::enable_if_t<std::is_same_v<typename RangeControl::Value::Type, int>>
+>
+{
+    // This RangeControl already has type 'int'
+    using Type = RangeControl;
+};
+
+
+template<typename RangeControl>
+struct FilteredRange_
+<
+    FilteredRange,
+    std::enable_if_t
+    <
+        std::is_floating_point_v<typename RangeControl::Value::Type>
+    >
+>
+{
+    // This RangeControl has floating-point type.
+    using Type = pex::control::LinearRange
+        <
+            void,
+            typename RangeControl::Upstream,
+            1000,
+            typename RangeControl::Access
+        >;
+};
+
+
+template<typename RangeControl>
+struct FilteredRange_
+<
+    FilteredRange,
+    std::enable_if_t<std::is_integral_v<typename RangeControl::Value::Type>>
+>
+{
+    // This RangeControl has floating-point type.
+    using Type = pex::control::ConvertingRange
+        <
+            void,
+            typename RangeControl::Upstream,
+            int,
+            typename RangeControl::Access
+        >;
+};
+
+
+template<typename RangeControl>
+using FilteredRange = typename FilteredRange_<RangeControl>::Type;
+
 
 template
 <
@@ -97,8 +153,7 @@ public:
     using Base = wxSlider;
     using This = Slider<RangeControl>;
 
-    // Value and Limit are observed by This
-    using Range = pex::control::ChangeObserver<This, RangeControl>;
+    using Range = FilteredRange<RangeControl>;
 
     using Value = typename Range::Value;
     using Limit = typename Range::Limit;
