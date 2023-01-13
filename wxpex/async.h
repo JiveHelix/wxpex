@@ -27,7 +27,7 @@ namespace wxpex
 {
 
 
-template<typename T, typename Filter>
+template<typename T, typename Filter = pex::NoFilter>
 class Async: public wxEvtHandler
 {
 public:
@@ -236,7 +236,13 @@ using MakeAsync = pex::MakeCustom<Async<T, Filter>>;
 // Async can be used as the Value of a pex::model::Range, but the Range class
 // uses a private value. This class provides access to the functions unique to
 // Async.
-template<typename T, typename Minimum, typename Maximum, template<typename, typename> typename Value_>
+template
+<
+    typename T,
+    typename Minimum,
+    typename Maximum,
+    template<typename, typename> typename Value_
+>
 class AsyncRangeAccess
     :
     public pex::model::RangeAccess<T, Minimum, Maximum, Value_>

@@ -91,7 +91,7 @@ struct FilteredRange_ {};
 template<typename RangeControl>
 struct FilteredRange_
 <
-    FilteredRange,
+    RangeControl,
     std::enable_if_t<std::is_same_v<typename RangeControl::Value::Type, int>>
 >
 {
@@ -103,7 +103,7 @@ struct FilteredRange_
 template<typename RangeControl>
 struct FilteredRange_
 <
-    FilteredRange,
+    RangeControl,
     std::enable_if_t
     <
         std::is_floating_point_v<typename RangeControl::Value::Type>
@@ -124,8 +124,12 @@ struct FilteredRange_
 template<typename RangeControl>
 struct FilteredRange_
 <
-    FilteredRange,
-    std::enable_if_t<std::is_integral_v<typename RangeControl::Value::Type>>
+    RangeControl,
+    std::enable_if_t
+    <
+        !std::is_same_v<typename RangeControl::Value::Type, int>
+        && std::is_integral_v<typename RangeControl::Value::Type>
+    >
 >
 {
     // This RangeControl has floating-point type.
@@ -176,10 +180,10 @@ public:
             wxID_ANY,
             detail::StyleFilter(
                 style,
-                range.minimum.Get(),
-                range.maximum.Get())(range.value.Get()),
-            range.minimum.Get(),
-            range.maximum.Get(),
+                Range(range).minimum.Get(),
+                Range(range).maximum.Get())(Range(range).value.Get()),
+            Range(range).minimum.Get(),
+            Range(range).maximum.Get(),
             wxDefaultPosition,
             wxDefaultSize,
             style),
@@ -187,7 +191,7 @@ public:
         minimum_(this, range.minimum),
         maximum_(this, range.maximum),
         defaultValue_(this->value_.Get()),
-        styleFilter_(style, range.minimum.Get(), range.maximum.Get())
+        styleFilter_(style, Range(range).minimum.Get(), Range(range).maximum.Get())
     {
         this->value_.Connect(&Slider::OnValue_);
         this->minimum_.Connect(&Slider::OnMinimum_);
@@ -337,6 +341,18 @@ public:
                 : wxALIGN_CENTER_VERTICAL);
 
         this->SetSizerAndFit(sizer.release());
+
+        this->Bind(
+            SliderDone,
+            &SliderAndValueConvert::OnSliderDone_,
+            this);
+    }
+
+private:
+    void OnSliderDone_(wxCommandEvent &event)
+    {
+        event.Skip();
+        this->Layout();
     }
 };
 
@@ -400,6 +416,18 @@ public:
         sizer->Add(spin, 0, wxALIGN_CENTER);
 
         this->SetSizerAndFit(sizer.release());
+
+        this->Bind(
+            SliderDone,
+            &SpinSlider::OnSliderDone_,
+            this);
+    }
+
+private:
+    void OnSliderDone_(wxCommandEvent &event)
+    {
+        event.Skip();
+        this->Layout();
     }
 };
 
@@ -429,6 +457,18 @@ public:
         sizer->Add(field, 0, wxALIGN_CENTER);
 
         this->SetSizerAndFit(sizer.release());
+
+        this->Bind(
+            SliderDone,
+            &FieldSliderConvert::OnSliderDone_,
+            this);
+    }
+
+private:
+    void OnSliderDone_(wxCommandEvent &event)
+    {
+        event.Skip();
+        this->Layout();
     }
 };
 

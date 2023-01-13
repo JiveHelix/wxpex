@@ -19,7 +19,7 @@ Collapsible::Collapsible(wxWindow *parent, const std::string &label)
     this->Bind(
         wxEVT_COLLAPSIBLEPANE_CHANGED,
         &Collapsible::OnChanged_,
-        this); 
+        this);
 }
 
 

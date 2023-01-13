@@ -29,7 +29,7 @@ template<typename T>
 tau::Size<T> ToSize(const wxSize &size)
 {
     // Convert a wxSize to the desired tau::Size type.
-    return tau::Size<T>(tau::Size<int>(size.GetHeight(), size.GetWidth()));
+    return tau::Size<T>(tau::Size<int>(size.GetWidth(), size.GetHeight()));
 }
 
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <tau/point.h>
+#include <tau/vector2d.h>
 
 #include "wxpex/wxshim.h"
 
@@ -10,7 +10,7 @@ namespace wxpex
 
 
 template<typename T, typename Style = tau::Round>
-wxPoint ToWxPoint(const tau::Point<T> &point)
+wxPoint ToWxPoint(const tau::Point2d<T> &point)
 {
     if constexpr (std::is_same_v<int, T>)
     {
@@ -25,10 +25,10 @@ wxPoint ToWxPoint(const tau::Point<T> &point)
 
 
 template<typename T>
-tau::Point<T> ToPoint(const wxPoint &point)
+tau::Point2d<T> ToPoint(const wxPoint &point)
 {
-    // Convert a wxPoint to the desired tau::Point type.
-    return tau::Point<T>(tau::Point<int>(point.y, point.x));
+    // Convert a wxPoint to the desired tau::Point2d type.
+    return tau::Point2d<T>(tau::Point2d<int>(point.x, point.y));
 }
 
 
