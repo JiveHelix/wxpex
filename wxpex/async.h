@@ -279,18 +279,18 @@ template<typename Pex>
 class AddAsync: public wxEvtHandler
 {
 public:
-    using Upstream = pex::UpstreamT<Pex>;
-    using UpstreamTerminus = pex::Terminus<AddAsync, Upstream>;
-    using Type = typename Upstream::Type;
+    using UpstreamHolder = pex::UpstreamHolderT<Pex>;
+    using UpstreamTerminus = pex::Terminus<AddAsync, UpstreamHolder>;
+    using Type = typename UpstreamHolder::Type;
     using ThreadSafe = pex::model::Value<Type>;
     using WorkerTerminus = pex::Terminus<AddAsync, ThreadSafe>;
-    using Callable = typename Upstream::Callable;
+    using Callable = typename UpstreamHolder::Callable;
 
     template<typename>
     friend class pex::Reference;
 
     template<typename Observer>
-    using UserControl = pex::control::Value<Observer, Upstream>;
+    using UserControl = pex::control::Value<Observer, UpstreamHolder>;
 
     template<typename Observer>
     using Control = UserControl<Observer>;
@@ -421,7 +421,7 @@ private:
 
 private:
     mutable std::mutex mutex_;
-    Upstream upstream_;
+    UpstreamHolder upstream_;
     UpstreamTerminus upstreamTerminus_;
     std::atomic_bool ignoreEcho_;
     ThreadSafe workerModel_;
