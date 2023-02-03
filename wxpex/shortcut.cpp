@@ -155,11 +155,22 @@ ShortcutsBase::~ShortcutsBase()
 }
 
 
+void ShortcutsBase::EnsureIsShown_()
+{
+    auto wxWindow = this->window_.Get();
+
+    if (!wxWindow->IsShown())
+    {
+        wxWindow->Show(true);
+    }
+}
+
+
 void ShortcutsBase::BindAll_()
 {
     auto window = this->window_.Get();
 
-    if (!window)
+    if (!window || window->IsBeingDeleted())
     {
         std::cout << "Warning: ShortcutBase::BindAll_() without wxWindow"
             << std::endl;
@@ -190,16 +201,19 @@ void ShortcutsBase::UnbindAll_()
         return;
     }
 
-    window->Unbind(
-        wxEVT_CLOSE_WINDOW,
-        &ShortcutsBase::OnWindowClose_,
-        this);
-
-    PEX_LOG("Unbind shortcuts");
-
-    for (auto & shortcutGroup: this->groups_)
+    if (window && !window->IsBeingDeleted())
     {
-        this->UnbindShortcuts_(window, shortcutGroup.shortcuts);
+        window->Unbind(
+            wxEVT_CLOSE_WINDOW,
+            &ShortcutsBase::OnWindowClose_,
+            this);
+
+        PEX_LOG("Unbind shortcuts");
+
+        for (auto & shortcutGroup: this->groups_)
+        {
+            this->UnbindShortcuts_(window, shortcutGroup.shortcuts);
+        }
     }
 
     this->hasBindings_ = false;
@@ -233,18 +247,22 @@ void ShortcutsBase::BindShortcuts_(wxWindow *window, Shortcuts &shortcuts)
 {
     assert(window != nullptr);
 
-    for (auto &shortcut: shortcuts)
+    if (window && !window->IsBeingDeleted())
     {
-        window->Bind(
-            wxEVT_MENU,
-            ShortcutFunctor(shortcut),
-            shortcut.GetId());
+        for (auto &shortcut: shortcuts)
+        {
+            window->Bind(
+                wxEVT_MENU,
+                ShortcutFunctor(shortcut),
+                shortcut.GetId());
+        }
     }
 }
 
 void ShortcutsBase::UnbindShortcuts_(wxWindow *window, Shortcuts &shortcuts)
 {
     assert(window != nullptr);
+    assert(!window->IsBeingDeleted());
 
     for (auto &shortcut: shortcuts)
     {
@@ -271,6 +289,12 @@ MenuShortcuts::MenuShortcuts(
     ShortcutsBase(std::move(window), groups),
     menuBar_(std::make_unique<wxMenuBar>())
 {
+    // Discovered the hard way that wx GTK will segfault on exit if we call
+    // SetMenuBar on a top-level window before it is shown.
+    // Because it doesn't make sense to create a menu bar for a hidden window,
+    // this window will be shown.
+    this->EnsureIsShown_();
+
     for (auto & shortcutGroup: this->groups_)
     {
         auto menu = std::make_unique<wxMenu>();

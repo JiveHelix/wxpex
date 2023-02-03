@@ -35,13 +35,19 @@ public:
 
     Window & operator=(Window &&other)
     {
-        this->UnbindCloseHandler_();
-        other.UnbindCloseHandler_();
-
-        if (this->window_)
+        if (!other.window_)
         {
-            this->window_->Close();
+            return *this;
         }
+
+        if (other.window_->IsBeingDeleted())
+        {
+            return *this;
+        }
+
+        this->Close();
+
+        other.UnbindCloseHandler_();
 
         this->window_ = other.window_;
         this->BindCloseHandler_();
@@ -58,16 +64,13 @@ public:
 
     void Close()
     {
-        if (this->window_)
+        if (this->window_ && !this->window_->IsBeingDeleted())
         {
-            if (!this->window_->IsBeingDeleted())
-            {
-                this->UnbindCloseHandler_();
-                this->window_->Close(true);
-            }
-
-            this->window_ = nullptr;
+            this->UnbindCloseHandler_();
+            this->window_->Close(true);
         }
+
+        this->window_ = nullptr;
     }
 
     wxWindow * Get()
@@ -77,15 +80,8 @@ public:
 
     void Clear()
     {
-        if (this->window_)
-        {
-            if (!this->window_->IsBeingDeleted())
-            {
-                this->UnbindCloseHandler_();
-            }
-
-            this->window_ = nullptr;
-        }
+        this->UnbindCloseHandler_();
+        this->window_ = nullptr;
     }
 
     operator bool () const
@@ -103,8 +99,8 @@ private:
     void BindCloseHandler_()
     {
         assert(this->window_ != nullptr);
-        
-        if (this->window_)
+
+        if (this->window_ && !this->window_->IsBeingDeleted())
         {
             this->window_->Bind(wxEVT_CLOSE_WINDOW, &Window::OnClose_, this);
         }
@@ -112,7 +108,7 @@ private:
 
     void UnbindCloseHandler_()
     {
-        if (this->window_)
+        if (this->window_ && !this->window_->IsBeingDeleted())
         {
             this->window_->Unbind(wxEVT_CLOSE_WINDOW, &Window::OnClose_, this);
         }

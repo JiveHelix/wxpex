@@ -148,6 +148,9 @@ public:
     ShortcutsBase(ShortcutsBase &&);
     ShortcutsBase & operator=(ShortcutsBase &&);
 
+protected:
+    void EnsureIsShown_();
+
 private:
     void BindAll_();
 

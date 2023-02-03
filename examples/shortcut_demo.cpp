@@ -33,6 +33,7 @@ struct ApplicationFields
         fields::Field(&T::sayHello, "sayHello"),
         fields::Field(&T::sayFortyTwo, "sayFortyTwo"),
         fields::Field(&T::frobnicate, "frobnicate"),
+        fields::Field(&T::quit, "quit"),
         fields::Field(&T::message, "message"));
 };
 
@@ -43,6 +44,7 @@ struct ApplicationTemplate
     T<pex::MakeSignal> sayHello;
     T<pex::MakeSignal> sayFortyTwo;
     T<pex::MakeSignal> frobnicate;
+    T<pex::MakeSignal> quit;
     T<std::string> message;
 };
 
@@ -54,6 +56,8 @@ struct ApplicationModel: public ApplicationGroup::Model
 {
     ApplicationModel()
     {
+        this->message.Set("<message>");
+
         PEX_LOG("Connect");
         this->sayHello.Connect(
             this,
@@ -121,19 +125,32 @@ using ApplicationControl = typename ApplicationGroup::Control<void>;
 
 class ExampleApp: public wxApp
 {
+    using Quit = pex::Terminus<ExampleApp, pex::model::Signal>;
+
 public:
     ExampleApp()
         :
-        applicationModel_{}
+        applicationModel_{},
+        quit_(this, this->applicationModel_.quit)
     {
-
+        this->quit_.Connect(&ExampleApp::OnQuit_);
     }
 
     bool OnInit() override;
 
 private:
+    void OnQuit_()
+    {
+        this->anotherFrame_.Close();
+        this->exampleFrame_.Close();
+    }
 
+private:
     ApplicationModel applicationModel_;
+    Quit quit_;
+
+    wxpex::Window exampleFrame_;
+    wxpex::Window anotherFrame_;
 };
 
 
@@ -187,7 +204,7 @@ public:
         auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
         topSizer->Add(message, 0, wxALL, 10);
         topSizer->Add(view, 0, wxALL, 10);
-        this->SetSizerAndFit(topSizer.release());
+        this->SetSizer(topSizer.release());
     }
 
 private:
@@ -205,51 +222,66 @@ bool ExampleApp::OnInit()
     using namespace std::literals;
 
     auto shortcutsByMenu = wxpex::ShortcutGroups(
-        {{
-            "File", wxpex::Shortcuts(
-                {
-                wxpex::Shortcut(
-                        applicationControl.sayFortyTwo,
-                        wxACCEL_CMD,
-                        'Z',
-                        "42",
-                        "Say '42'"),
-
-                    wxpex::Shortcut(
-                        applicationControl.frobnicate,
-                        wxACCEL_CMD,
-                        'F',
-                        "Frobnicate",
-                        "Do some frobnicating")})},
         {
-            "Other", wxpex::Shortcuts(       
-                {
-                    wxpex::Shortcut(
-                        applicationControl.sayWhatsUp,
-                        wxACCEL_CMD,
-                        'W',
-                        "What's up?",
-                        "Say 'What's up?'"),
+            {
+                "File", wxpex::Shortcuts(
+                    {
+                        wxpex::Shortcut(
+                            applicationControl.sayFortyTwo,
+                            wxACCEL_CMD,
+                            'Z',
+                            "42",
+                            "Say '42'"),
 
-                    wxpex::Shortcut(
-                        applicationControl.sayHello,
-                        wxACCEL_ALT | wxACCEL_SHIFT,
-                        'H',
-                        "Hello",
-                        "Say 'Hello'")})}});
-    
-    auto exampleFrame = new ExampleFrame(
-        applicationControl,
-        shortcutsByMenu);
+                        wxpex::Shortcut(
+                            applicationControl.frobnicate,
+                            wxACCEL_CMD,
+                            'F',
+                            "Frobnicate",
+                            "Do some frobnicating"),
+
+                        wxpex::Shortcut(
+                            applicationControl.quit,
+                            wxACCEL_CMD,
+                            'Q',
+                            "Quit",
+                            "Quit the application",
+                            wxID_EXIT)
+                    })
+            },
+            {
+                "Other", wxpex::Shortcuts(
+                    {
+                        wxpex::Shortcut(
+                            applicationControl.sayWhatsUp,
+                            wxACCEL_CMD,
+                            'W',
+                            "What's up?",
+                            "Say 'What's up?'"),
+
+                        wxpex::Shortcut(
+                            applicationControl.sayHello,
+                            wxACCEL_ALT | wxACCEL_SHIFT,
+                            'H',
+                            "Hello",
+                            "Say 'Hello'")
+                    })
+            }
+        });
+
+    auto exampleFrame = new ExampleFrame(applicationControl, shortcutsByMenu);
+    this->exampleFrame_ = wxpex::Window(exampleFrame);
 
     auto anotherFrame = new AnotherFrame(shortcutsByMenu);
+    this->anotherFrame_ = wxpex::Window(anotherFrame);
 
     exampleFrame->Show();
     anotherFrame->Show();
 
-    anotherFrame->SetPosition(exampleFrame->GetRect().GetTopRight());
-
     exampleFrame->Raise();
+
+    auto position = exampleFrame->GetScreenRect().GetTopRight();
+    anotherFrame->SetPosition(position);
 
     return true;
 }
