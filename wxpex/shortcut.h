@@ -89,12 +89,12 @@ public:
     int GetModifier() const;
 
     int GetKeyAsInt() const;
-    
+
     int GetId() const;
 
     void OnEventMenu();
 
-private: 
+private:
     wxString GetMenuItemLabel_() const;
 
     SignalType signal_;

@@ -11,7 +11,7 @@ std::string Key::GetString() const
     {
         return this->keyStringByKeyCode_.at(this->code_);
     }
-    
+
     if (this->code_ > 127)
     {
         throw std::runtime_error("Unsupported key code.");
@@ -63,7 +63,7 @@ std::string GetModifierString(int modifierBitfield)
         wxACCEL_ALT
 #ifdef __APPLE__
         , wxACCEL_RAW_CTRL
-#endif 
+#endif
     };
 
     std::vector<std::string> modifiers;
@@ -113,7 +113,7 @@ void Shortcut::OnEventMenu()
 wxString Shortcut::GetMenuItemLabel_() const
 {
     auto modifier = GetModifierString(this->modifier_);
-    
+
     std::string result(this->description_);
 
     if (!modifier.empty())
@@ -132,7 +132,7 @@ wxString Shortcut::GetMenuItemLabel_() const
             '\t',
             this->key_.GetString());
     }
-    
+
     return wxString(result);
 }
 
@@ -224,7 +224,7 @@ ShortcutsBase & ShortcutsBase::operator=(ShortcutsBase &&other)
     this->window_ = std::move(other.window_);
     this->groups_ = std::move(other.groups_);
     this->BindAll_();
-    
+
     return *this;
 }
 
@@ -311,7 +311,7 @@ AcceleratorShortcuts::AcceleratorShortcuts(
     for (auto & shortcutGroup: this->groups_)
     {
         auto shortcutEntries =
-            CreateAcceleratorEntries(shortcutGroup.shortcuts); 
+            CreateAcceleratorEntries(shortcutGroup.shortcuts);
 
         entryCount += shortcutEntries.size();
         entries.push_back(shortcutEntries);
