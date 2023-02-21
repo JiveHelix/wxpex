@@ -23,6 +23,8 @@ template<typename Value>
 class CheckBox: public wxCheckBox
 {
 public:
+    static constexpr auto observerName = "CheckBox";
+
     using Base = wxCheckBox;
     using Type = typename Value::Type;
 

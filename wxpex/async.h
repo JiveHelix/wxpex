@@ -16,9 +16,11 @@
 #include <mutex>
 #include <atomic>
 
+#include <pex/terminus.h>
 #include <pex/value.h>
 #include <pex/traits.h>
 #include <pex/interface.h>
+#include <pex/range.h>
 
 #include "wxpex/wxshim.h"
 
@@ -31,6 +33,8 @@ template<typename T, typename Filter = pex::NoFilter>
 class Async: public wxEvtHandler
 {
 public:
+    static constexpr auto observerName = "wxpex::Async";
+
     using Type = T;
     using ThreadSafe = pex::model::Value_<Type, Filter>;
     using Callable = typename ThreadSafe::Callable;
@@ -39,7 +43,13 @@ public:
     using Control = pex::control::Value<Observer, ThreadSafe>;
 
     template<typename Observer>
-    using Terminus = pex::Terminus<Observer, ThreadSafe>;
+    using Terminus = pex::Terminus<Observer, Control<Observer>>;
+
+    /* TODO: Using ThreadSafe as the upstream for Terminus should work, and it
+     * does within this class.
+     * But when it is used outside of this class, pex machinery tries to create
+     * a pex::model::Value_<Observer, Filter>!!!
+     */
 
     template<typename>
     friend class pex::Reference;

@@ -31,6 +31,8 @@ template
 class Field: public wxControl
 {
 public:
+    static constexpr auto observerName = "wxpex::Field";
+
     using Base = wxControl;
     using Type = typename Control::Type;
 

@@ -18,8 +18,8 @@ struct DemoFields
 template<template<typename> typename T>
 struct DemoTemplate
 {
-    T<pex::MakeGroup<wxpex::GaugeGroup>> gauge1;
-    T<pex::MakeGroup<wxpex::GaugeGroup>> gauge2;
+    T<wxpex::GaugeGroupMaker> gauge1;
+    T<wxpex::GaugeGroupMaker> gauge2;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
 
@@ -39,6 +39,8 @@ using DemoTerminus = typename DemoGroup::template Terminus<Observer>;
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         model_{},
@@ -64,7 +66,7 @@ public:
     }
 
     bool OnInit() override;
-    
+
 private:
     void OnStart_()
     {

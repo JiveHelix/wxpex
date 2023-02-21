@@ -207,12 +207,23 @@ private:
 class ShortcutWindow: public Window
 {
 public:
-    ShortcutWindow() = default;
+    ShortcutWindow();
 
     ShortcutWindow(wxWindow *, const ShortcutGroups &);
 
+    ShortcutWindow(ShortcutWindow &&);
+
+    ShortcutWindow & operator=(ShortcutWindow &&);
+
+    void Close();
+
 private:
+    void OnCloseEvent_(wxThreadEvent &);
+
+private:
+    bool closeRequested_;
     std::unique_ptr<wxpex::AcceleratorShortcuts> acceleratorShortcuts_;
+    std::unique_ptr<wxEvtHandler> eventHandler_;
 };
 
 

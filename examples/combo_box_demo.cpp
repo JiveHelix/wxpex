@@ -53,6 +53,8 @@ using EnableFirkinsControl = pex::control::Value<void, EnableFirkins>;
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         select_{

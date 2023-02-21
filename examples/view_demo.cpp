@@ -55,6 +55,8 @@ using RadiansControl =
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         angle_{42.0},

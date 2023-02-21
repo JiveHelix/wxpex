@@ -18,6 +18,8 @@ class Knob: public wxControl
     static const double fineStepFactor_ = 0.01;
 
 public:
+    static constexpr auto observerName = "wxpex::Knob";
+
     using Base = wxControl;
     using This = Knob<Range>;
 

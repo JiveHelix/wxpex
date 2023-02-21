@@ -34,6 +34,8 @@ template
 class RadioBox: public wxRadioBox
 {
 public:
+    static constexpr auto observerName = "wxpex::RadioBox";
+
     static_assert(
         !Control::choicesMayChange,
         "RadioBox choices cannot change after creation");

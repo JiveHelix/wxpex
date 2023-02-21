@@ -30,6 +30,8 @@ template
 class ComboBox : public wxComboBox
 {
 public:
+    static constexpr auto observerName = "wxpex::ComboBox";
+
     using Base = wxComboBox;
     using This = ComboBox<Control, Convert>;
 

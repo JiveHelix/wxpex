@@ -48,6 +48,8 @@ using IsCheckedControl = decltype(DemoControl<void>::isChecked);
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         model_{{{false, "Not checked"}}},

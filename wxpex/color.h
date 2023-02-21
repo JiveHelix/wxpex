@@ -65,6 +65,7 @@ using ValueRange =
 class HsvPicker: public wxStaticBox
 {
 public:
+    static constexpr auto observerName = "HsvPicker";
 
     HsvPicker(
         wxWindow *parent,
@@ -169,6 +170,7 @@ using BlueRange =
 class RgbPicker: public wxStaticBox
 {
 public:
+    static constexpr auto observerName = "RgbPicker";
 
     RgbPicker(
         wxWindow *parent,

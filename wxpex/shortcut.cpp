@@ -306,10 +306,12 @@ MenuShortcuts::MenuShortcuts(
     }
 }
 
+
 wxMenuBar * MenuShortcuts::GetMenuBar()
 {
     return this->menuBar_.release();
 }
+
 
 void MenuShortcuts::AddToMenu(
     wxMenu *menu,
@@ -356,10 +358,12 @@ AcceleratorShortcuts::AcceleratorShortcuts(
         allEntries.data());
 }
 
+
 const wxAcceleratorTable & AcceleratorShortcuts::GetAcceleratorTable() const
 {
     return this->acceleratorTable_;
 }
+
 
 std::vector<wxAcceleratorEntry>
 AcceleratorShortcuts::CreateAcceleratorEntries(const Shortcuts &shortcuts)
@@ -376,6 +380,16 @@ AcceleratorShortcuts::CreateAcceleratorEntries(const Shortcuts &shortcuts)
 }
 
 
+ShortcutWindow::ShortcutWindow()
+    :
+    closeRequested_(false),
+    acceleratorShortcuts_(),
+    eventHandler_()
+{
+
+}
+
+
 ShortcutWindow::ShortcutWindow(
     wxWindow *window,
     const wxpex::ShortcutGroups &group)
@@ -384,10 +398,90 @@ ShortcutWindow::ShortcutWindow(
     acceleratorShortcuts_(
         std::make_unique<AcceleratorShortcuts>(
             wxpex::Window(window),
-            group))
+            group)),
+    eventHandler_(new wxEvtHandler())
 {
     window->SetAcceleratorTable(
         this->acceleratorShortcuts_->GetAcceleratorTable());
+
+    this->eventHandler_->Bind(
+        wxEVT_THREAD,
+        &ShortcutWindow::OnCloseEvent_,
+        this);
+}
+
+
+ShortcutWindow::ShortcutWindow(ShortcutWindow &&other)
+    :
+    Window(std::move(other)),
+    closeRequested_(false),
+    acceleratorShortcuts_(std::move(other.acceleratorShortcuts_)),
+    eventHandler_(std::move(other.eventHandler_))
+{
+    this->eventHandler_->Bind(
+        wxEVT_THREAD,
+        &ShortcutWindow::OnCloseEvent_,
+        this);
+}
+
+
+ShortcutWindow & ShortcutWindow::operator=(ShortcutWindow &&other)
+{
+    this->Window::operator=(std::move(other));
+
+    if (this->eventHandler_)
+    {
+        this->eventHandler_->Unbind(
+            wxEVT_THREAD,
+            &ShortcutWindow::OnCloseEvent_,
+            this);
+    }
+
+    if (other.eventHandler_)
+    {
+        other.eventHandler_->Unbind(
+            wxEVT_THREAD,
+            &ShortcutWindow::OnCloseEvent_,
+            &other);
+    }
+
+    this->acceleratorShortcuts_ = std::move(other.acceleratorShortcuts_);
+    this->eventHandler_ = std::move(other.eventHandler_);
+
+    if (this->eventHandler_)
+    {
+        this->eventHandler_->Bind(
+            wxEVT_THREAD,
+            &ShortcutWindow::OnCloseEvent_,
+            this);
+    }
+
+    return *this;
+}
+
+
+void ShortcutWindow::Close()
+{
+    if (this->closeRequested_)
+    {
+        return;
+    }
+
+    if (!this->eventHandler_)
+    {
+        return;
+    }
+
+    this->eventHandler_->QueueEvent(new wxThreadEvent());
+
+    this->closeRequested_ = true;
+}
+
+
+void ShortcutWindow::OnCloseEvent_(wxThreadEvent &)
+{
+    this->Window::Close();
+    this->acceleratorShortcuts_.reset();
 }
 
 

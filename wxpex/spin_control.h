@@ -30,6 +30,8 @@ template<typename RangeControl>
 class SpinControl: public wxSpinCtrlDouble
 {
 public:
+    static constexpr auto observerName = "wxpex::SpinControl";
+
     using Base = wxSpinCtrlDouble;
     using This = SpinControl<RangeControl>;
 

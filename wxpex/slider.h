@@ -154,6 +154,8 @@ template
 class Slider : public wxSlider
 {
 public:
+    static constexpr auto observerName = "wxpex::Slider";
+
     using Base = wxSlider;
     using This = Slider<RangeControl>;
 

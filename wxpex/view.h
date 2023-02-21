@@ -33,6 +33,8 @@ template
 class View: public wxStaticText
 {
 public:
+    static constexpr auto observerName = "wxpex::View";
+
     using Base = wxStaticText;
     using Type = typename Control::Type;
 

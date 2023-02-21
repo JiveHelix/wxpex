@@ -9,6 +9,8 @@
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     bool OnInit() override;
 
 private:

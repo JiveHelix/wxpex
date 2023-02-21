@@ -54,6 +54,8 @@ using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
 
 struct ApplicationModel: public ApplicationGroup::Model
 {
+    static constexpr auto observerName = "ApplicationModel";
+
     ApplicationModel()
     {
         this->message.Set("<message>");
@@ -128,6 +130,8 @@ class ExampleApp: public wxApp
     using Quit = pex::Terminus<ExampleApp, pex::model::Signal>;
 
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         applicationModel_{},

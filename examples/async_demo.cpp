@@ -126,6 +126,8 @@ using WindowArray = std::array<wxpex::Window, 4>;
 class ExampleApp: public wxApp
 {
 public:
+    static constexpr auto observerName = "ExampleApp";
+
     ExampleApp()
         :
         mutex_{},
