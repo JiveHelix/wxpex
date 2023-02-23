@@ -34,6 +34,16 @@ target_link_libraries(
     wxpex)
 
 
+add_executable(file_field_demo file_field_demo.cpp)
+
+target_link_libraries(
+    file_field_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(async_demo ${windowed} async_demo.cpp)
 
 target_link_libraries(

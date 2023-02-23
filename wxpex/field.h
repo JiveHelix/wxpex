@@ -42,6 +42,7 @@ public:
         long style = 0)
         :
         Base(parent, wxID_ANY),
+        minimumWidth_{},
         value_{this, value},
         displayedString_{Convert::ToString(this->value_.Get())},
         textControl_(
@@ -75,20 +76,27 @@ public:
     bool SetFont(const wxFont &font) override
     {
         bool result = this->textControl_->SetFont(font);
-
-        this->fittingSize_ = this->GetFittingSize();
-        this->SetMinClientSize(ToWxSize(this->fittingSize_));
-        this->InvalidateBestSize();
+        this->UpdateMinimumSize_();
 
         return result;
     }
 
     tau::Size<int> GetFittingSize() const
     {
-        return ToSize<int>(
+        auto fittingSize = ToSize<int>(
             this->textControl_->GetSizeFromTextSize(
                 this->textControl_->GetTextExtent(
                     Convert::ToString(this->value_.Get()))));
+
+        fittingSize.width = std::max(this->minimumWidth_, fittingSize.width);
+
+        return fittingSize;
+    }
+
+    void SetMinimumWidth(int width)
+    {
+        this->minimumWidth_ = width;
+        this->UpdateMinimumSize_();
     }
 
 protected:
@@ -142,11 +150,21 @@ private:
     {
         this->displayedString_ = Convert::ToString(value);
         this->textControl_->ChangeValue(this->displayedString_);
+        this->UpdateMinimumSize_();
 
-        // Text entry field will resize to fit whatever text is displayed.
+#ifdef __WXGTK__
+        // In GTK, ChangeValue does not reliably draw the new text in the
+        // control. A call to Update forces it.
+        this->textControl_->Update();
+#endif
+    }
+
+    void UpdateMinimumSize_()
+    {
+        // Text entry field should resize to fit whatever text is displayed.
         // TODO: Create a version that allows fixed size text entry fields.
-        auto fitting = this->GetFittingSize();
 
+        auto fitting = this->GetFittingSize();
         this->fittingSize_ = fitting;
         this->SetMinClientSize(ToWxSize(fitting));
         this->InvalidateBestSize();
@@ -154,6 +172,7 @@ private:
 
     using Value = pex::Terminus<Field, Control>;
 
+    int minimumWidth_;
     Value value_;
     std::string displayedString_;
     wxTextCtrl *textControl_;
