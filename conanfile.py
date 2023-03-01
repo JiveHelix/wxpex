@@ -25,7 +25,8 @@ class WxpexConan(ConanFile):
     no_copy_source = True
 
     default_options = {
-        "wxwidgets:exceptions": False}
+        "wxwidgets:exceptions": False,
+        "wxwidgets:stc": False}
 
     def build(self):
         cmake = CMake(self)
