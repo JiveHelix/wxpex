@@ -61,13 +61,13 @@ struct GaugeTemplate
 
 
 using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate>;
-
+using GaugeState = typename GaugeGroup::Plain;
 
 struct GaugeModel: public GaugeGroup::Model
 {
     GaugeModel()
         :
-        GaugeGroup::Model(),
+        GaugeGroup::Model(GaugeState{0, 1000}),
         internalMaximum_(this, this->maximum)
     {
         this->internalMaximum_.Connect(&GaugeModel::OnMaximum_);
@@ -107,7 +107,6 @@ public:
 template<typename Observer>
 using GaugeTerminus = typename GaugeGroup::Terminus<Observer>;
 
-using GaugeState = typename GaugeGroup::Plain;
 using GaugeGroupMaker = pex::MakeGroup<GaugeGroup, GaugeModel>;
 
 
