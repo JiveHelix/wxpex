@@ -15,6 +15,7 @@
 
 #include <mutex>
 #include <atomic>
+#include <functional>
 
 #include <pex/terminus.h>
 #include <pex/value.h>
@@ -278,6 +279,34 @@ public:
     {
         return this->GetValue().GetWxControl();
     }
+};
+
+
+class CallAfter: public wxEvtHandler
+{
+public:
+    using Function = std::function<void()>;
+
+    CallAfter(const Function &function)
+        :
+        function_(function)
+    {
+        this->Bind(wxEVT_THREAD, &CallAfter::OnWxEventLoop_, this);
+    }
+
+    void operator()()
+    {
+        this->QueueEvent(new wxThreadEvent());
+    }
+
+private:
+    void OnWxEventLoop_(wxThreadEvent &)
+    {
+        this->function_();
+    }
+
+private:
+    std::function<void()> function_;
 };
 
 
