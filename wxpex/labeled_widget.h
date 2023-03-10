@@ -55,7 +55,7 @@ public:
             ? wxRIGHT
             : wxBOTTOM | wxEXPAND;
 
-        sizer->Add(this->label_, 0, flag, 5);
+        sizer->Add(this->label_, 0, flag, 3);
         sizer->Add(this->widget_, 1, flag);
 
         return sizer;

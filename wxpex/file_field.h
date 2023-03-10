@@ -2,7 +2,6 @@
 
 
 #include <jive/path.h>
-#include <pex/value.h>
 
 #include "wxpex/ignores.h"
 
@@ -22,8 +21,6 @@ struct FileDialogOptions
 {
     long style = wxFD_OPEN | wxFD_FILE_MUST_EXIST;
     std::string message = "";
-    std::string directory = "";
-    std::string file = "";
     std::string wildcard = "";
 };
 
@@ -36,17 +33,14 @@ public:
 
     FileField(
         wxWindow *parent,
-        Control value,
+        Control control,
         const FileDialogOptions &options = FileDialogOptions{})
         :
         wxControl(parent, wxID_ANY),
-        value_{this, value},
+        value_(this, control),
         options_{options}
     {
-        this->OnValue_(this->value_.Get());
-        this->value_.Connect(&FileField<Control>::OnValue_);
-
-        auto field = new wxpex::Field(this, value);
+        auto field = new wxpex::Field(this, control);
         field->SetMinimumWidth(200);
 
         auto button = new wxButton(
@@ -61,16 +55,17 @@ public:
         this->SetSizerAndFit(sizer.release());
 
         this->Bind(wxEVT_BUTTON, &FileField::OnChoose_, this);
-
     }
 
     void OnChoose_(wxCommandEvent &)
     {
+        auto [directory, file] = jive::path::Split(this->value_.Get());
+
         wxFileDialog openFile(
             nullptr,
             wxString(this->options_.message),
-            wxString(this->options_.directory),
-            wxString(this->options_.file),
+            wxString(directory),
+            wxString(file),
             wxString(this->options_.wildcard),
             this->options_.style);
 
@@ -82,22 +77,9 @@ public:
         this->value_.Set(openFile.GetPath());
     }
 
-    void OnValue_(const std::string &value)
-    {
-        if (value.empty())
-        {
-            return;
-        }
-
-        auto split = jive::path::Split(value);
-        this->options_.directory = split.first;
-        this->options_.file = split.second;
-    }
-
 private:
-    using Value = pex::Terminus<FileField<Control>, Control>;
+    using Value = pex::Terminus<FileField, Control>;
     Value value_;
-
     FileDialogOptions options_;
 };
 
