@@ -40,7 +40,7 @@ public:
         value_(this, control),
         options_{options}
     {
-        auto field = new wxpex::Field(this, control);
+        auto field = new Field(this, control, FixedFieldTag{});
         field->SetMinimumWidth(200);
 
         auto button = new wxButton(

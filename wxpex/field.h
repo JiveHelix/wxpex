@@ -23,6 +23,9 @@ namespace wxpex
 {
 
 
+struct FixedFieldTag {};
+
+
 template
 <
     typename Control,
@@ -36,12 +39,20 @@ public:
     using Base = wxControl;
     using Type = typename Control::Type;
 
+private:
+    // long and bool are ambiguous types.
+    // Use tag dispatch to create a fixed-width Field.
+    // Existing uses of this class can continue to use the orginal constructor
+    // without modification. The default behavior is to set the minimum width
+    // to match the field text.
     Field(
         wxWindow *parent,
         Control value,
-        long style = 0)
+        bool fixedWidth,
+        long style)
         :
         Base(parent, wxID_ANY),
+        fixedWidth_(fixedWidth),
         minimumWidth_{},
         value_{this, value},
         displayedString_{Convert::ToString(this->value_.Get())},
@@ -53,8 +64,7 @@ public:
                 wxDefaultPosition,
                 wxDefaultSize,
                 style | wxTE_PROCESS_ENTER,
-                wxDefaultValidator)),
-        fittingSize_{this->GetFittingSize()}
+                wxDefaultValidator))
     {
         this->textControl_->Bind(wxEVT_TEXT_ENTER, &Field::OnEnter_, this);
         this->textControl_->Bind(wxEVT_KILL_FOCUS, &Field::OnKillFocus_, this);
@@ -68,7 +78,29 @@ public:
         sizer->Add(this->textControl_, 1, wxEXPAND);
         this->SetSizerAndFit(sizer.release());
 
-        this->SetMinClientSize(ToWxSize(this->fittingSize_));
+        this->SetMinClientSize(ToWxSize(this->GetFittingSize()));
+    }
+
+public:
+    Field(
+        wxWindow *parent,
+        Control value,
+        const FixedFieldTag &,
+        long style = 0)
+        :
+        Field(parent, value, true, style)
+    {
+
+    }
+
+    Field(
+        wxWindow *parent,
+        Control value,
+        long style = 0)
+        :
+        Field(parent, value, false, style)
+    {
+
     }
 
     // NOTE: As of wx 3.1.3, changing the font size does not affect
@@ -88,7 +120,15 @@ public:
                 this->textControl_->GetTextExtent(
                     Convert::ToString(this->value_.Get()))));
 
-        fittingSize.width = std::max(this->minimumWidth_, fittingSize.width);
+        if (this->fixedWidth_)
+        {
+            fittingSize.width = this->minimumWidth_;
+        }
+        else
+        {
+            fittingSize.width =
+                std::max(this->minimumWidth_, fittingSize.width);
+        }
 
         return fittingSize;
     }
@@ -102,8 +142,7 @@ public:
 protected:
     wxSize DoGetBestClientSize() const override
     {
-        this->fittingSize_ = this->GetFittingSize();
-        return ToWxSize(this->fittingSize_);
+        return ToWxSize(this->GetFittingSize());
     }
 
 private:
@@ -150,13 +189,17 @@ private:
     {
         this->displayedString_ = Convert::ToString(value);
         this->textControl_->ChangeValue(this->displayedString_);
-        this->UpdateMinimumSize_();
 
 #ifdef __WXGTK__
         // In GTK, ChangeValue does not reliably draw the new text in the
         // control. A call to Update forces it.
         this->textControl_->Update();
 #endif
+
+        if (!this->fixedWidth_)
+        {
+            this->UpdateMinimumSize_();
+        }
     }
 
     void UpdateMinimumSize_()
@@ -165,18 +208,17 @@ private:
         // TODO: Create a version that allows fixed size text entry fields.
 
         auto fitting = this->GetFittingSize();
-        this->fittingSize_ = fitting;
         this->SetMinClientSize(ToWxSize(fitting));
         this->InvalidateBestSize();
     }
 
     using Value = pex::Terminus<Field, Control>;
 
+    bool fixedWidth_;
     int minimumWidth_;
     Value value_;
     std::string displayedString_;
     wxTextCtrl *textControl_;
-    mutable tau::Size<int> fittingSize_;
 };
 
 
