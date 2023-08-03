@@ -47,7 +47,7 @@ struct Demo: public DemoTemplate<pex::Identity>
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate, Demo>;
 using DemoModel = typename DemoGroup::Model;
-using DemoControl = typename DemoGroup::Control<void>;
+using DemoControl = typename DemoGroup::Control;
 
 using PositionControl = decltype(DemoControl::position);
 using PositionValue = decltype(PositionControl::value);
@@ -83,7 +83,6 @@ struct PlaybackSpeedConverter:
 
 
 using FilteredPlaybackSpeed = ::pex::control::Range<
-    void,
     PlaybackSpeed,
     PlaybackSpeedFilter<float>>;
 
@@ -108,7 +107,7 @@ private:
 const int precision = 3;
 
 using PositionSlider =
-    wxpex::SliderAndValue<PositionControl, PositionValue, precision>;
+    wxpex::ValueSlider<PositionControl, PositionValue, precision>;
 
 
 using PositionFieldSlider =
@@ -116,7 +115,7 @@ using PositionFieldSlider =
 
 
 using PlaybackSpeedSlider =
-    wxpex::SliderAndValueConvert
+    wxpex::ValueSliderConvert
     <
         FilteredPlaybackSpeed,
         PlaybackSpeedValue,
@@ -165,7 +164,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
             this,
             control.position,
             control.position.value,
-            wxSL_VERTICAL);
+            wxpex::Style::vertical);
 
     auto playbackSpeedSlider =
         new PlaybackSpeedSlider(
@@ -177,7 +176,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
         this,
         FilteredPlaybackSpeed(control.playbackSpeed),
         control.playbackSpeed.value,
-        wxSL_VERTICAL);
+        wxpex::Style::vertical);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 

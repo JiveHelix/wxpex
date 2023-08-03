@@ -1,9 +1,9 @@
 /**
   * @file spin_control.h
-  * 
+  *
   * @brief A wxSpinCtrlDouble backed by a pex::Range for the value, minimum,
   * and maximum.
-  * 
+  *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 17 Aug 2020
   * @copyright Jive Helix
@@ -34,9 +34,7 @@ public:
 
     using Base = wxSpinCtrlDouble;
     using This = SpinControl<RangeControl>;
-
-    using Range = pex::control::ChangeObserver<This, RangeControl>;
-
+    using Range = RangeControl;
     using Value = pex::Terminus<SpinControl, typename Range::Value>;
     using Limit = pex::Terminus<SpinControl, typename Range::Limit>;
     using Type = typename Value::Type;

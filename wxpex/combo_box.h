@@ -97,4 +97,15 @@ public:
 };
 
 
+template
+<
+    typename Convert,
+    typename Control
+>
+ComboBox<Control, Convert> * MakeComboBox(wxWindow *parent, Control control)
+{
+    return new ComboBox<Control, Convert>(parent, control);
+}
+
+
 } // namespace wxpex

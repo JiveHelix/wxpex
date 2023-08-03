@@ -25,10 +25,10 @@
 using Angle = pex::model::Value<double>;
 
 // Create the control value without an observer.
-using DegreesControl = pex::control::Value<void, Angle>;
+using DegreesControl = pex::control::Value<Angle>;
 
 using Signal = pex::model::Signal;
-using ControlSignal = pex::control::Signal<void>;
+using ControlSignal = pex::control::Signal<>;
 
 
 /** Allow an control to use radians, while the model uses degrees. **/
@@ -49,7 +49,7 @@ struct RadiansFilter
 
 
 using RadiansControl =
-    pex::control::FilteredValue<void, Angle, RadiansFilter>;
+    pex::control::FilteredValue<Angle, RadiansFilter>;
 
 
 class ExampleApp: public wxApp
@@ -61,7 +61,7 @@ public:
         :
         angle_{42.0},
         signal_{},
-        signalControl_{this->signal_}
+        signalTerminus_{this, this->signal_, &ExampleApp::OnSignal_}
     {
 
     }
@@ -76,7 +76,9 @@ public:
 private:
     Angle angle_ = Angle(42.0);
     Signal signal_;
-    pex::control::Signal<ExampleApp> signalControl_;
+
+    using SignalTerminus = pex::Terminus<ExampleApp, Signal>;
+    SignalTerminus signalTerminus_;
 };
 
 
@@ -98,7 +100,6 @@ bool ExampleApp::OnInit()
             DegreesControl(this->angle_),
             ControlSignal(this->signal_));
 
-    this->signalControl_.Connect(this, &ExampleApp::OnSignal_);
     exampleFrame->Show();
     return true;
 }

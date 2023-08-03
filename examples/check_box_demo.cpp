@@ -36,13 +36,12 @@ struct DemoTemplate
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
 
-template<typename Observer>
-using DemoControl = typename DemoGroup::Control<Observer>;
+using DemoControl = typename DemoGroup::Control;
 
 using DemoModel = typename DemoGroup::Model;
 
 
-using IsCheckedControl = decltype(DemoControl<void>::isChecked);
+using IsCheckedControl = decltype(DemoControl::isChecked);
 
 
 class ExampleApp: public wxApp
@@ -82,7 +81,7 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl<void> control);
+    ExampleFrame(DemoControl control);
 };
 
 
@@ -93,14 +92,14 @@ wxshimIMPLEMENT_APP(ExampleApp)
 bool ExampleApp::OnInit()
 {
     ExampleFrame *exampleFrame =
-        new ExampleFrame(DemoControl<void>(this->model_));
+        new ExampleFrame(DemoControl(this->model_));
 
     exampleFrame->Show();
     return true;
 }
 
 
-ExampleFrame::ExampleFrame(DemoControl<void> control)
+ExampleFrame::ExampleFrame(DemoControl control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::CheckBox Demo")
 {

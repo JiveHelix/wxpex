@@ -64,4 +64,4 @@ struct LongConverter
 
 
 using UnitsModel = pex::model::Value<UnitSystem>;
-using UnitsControl = pex::control::Value<void, UnitsModel>;
+using UnitsControl = pex::control::Value<UnitsModel>;

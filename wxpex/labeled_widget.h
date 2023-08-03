@@ -19,6 +19,7 @@
 namespace wxpex
 {
 
+
 /**
  ** Combines a label and a wxpex widget.
  **/
@@ -137,7 +138,7 @@ void AddRow(
 
 
 template<typename ...Labeled>
-std::unique_ptr<wxSizer> LayoutLabeled(
+std::unique_ptr<wxFlexGridSizer> LayoutLabeled(
     LayoutOptions options,
     Labeled &&...labeled)
 {
@@ -202,17 +203,77 @@ std::unique_ptr<wxSizer> LayoutLabeled(
 }
 
 
+namespace detail
+{
+
+
+template<typename Tuple, size_t... I>
+void DoLayoutItems(
+    wxBoxSizer *sizer,
+    int flags,
+    int spacingFlag,
+    int spacing,
+    Tuple items,
+    std::index_sequence<I...>)
+{
+    static constexpr size_t count = sizeof...(I);
+    static_assert(count >= 1);
+
+    (sizer->Add(
+        std::get<I>(items),
+        0,
+        I < (count - 1) ? (flags | spacingFlag) : flags,
+        I < (count - 1) ? spacing : 0), ...);
+}
+
+
+} // end namespace detail
+
+
+struct ItemOptions
+{
+    int orient;
+    int flags;
+    int spacing;
+};
+
+
+inline constexpr auto horizontalItems =
+    ItemOptions{wxHORIZONTAL, wxEXPAND, 5};
+
+inline constexpr auto verticalItems =
+    ItemOptions{wxVERTICAL, wxEXPAND, 5};
+
+
 template<typename ...Items>
 std::unique_ptr<wxSizer> LayoutItems(
-    int orient,
-    int flags,
-    int spacing,
+    const ItemOptions &options,
     Items &&...items)
 {
-    auto sizer = std::make_unique<wxBoxSizer>(orient);
-    (sizer->Add(items, 0, flags, spacing), ...);
+    auto sizer = std::make_unique<wxBoxSizer>(options.orient);
+    int spacingFlag;
+
+    if (options.orient == wxHORIZONTAL)
+    {
+        spacingFlag = wxRIGHT;
+    }
+    else
+    {
+        spacingFlag = wxBOTTOM;
+    }
+
+    detail::DoLayoutItems(
+        sizer.get(),
+        options.flags,
+        spacingFlag,
+        options.spacing,
+        std::make_tuple(std::forward<Items>(items)...),
+        std::make_index_sequence<sizeof...(Items)>());
+
     return sizer;
 }
 
 
-} // end namespace pexwx
+
+
+} // end namespace wxpex

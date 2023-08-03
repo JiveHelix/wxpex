@@ -16,13 +16,14 @@
 #include <cstdint>
 
 #include <pex/range.h>
-#include <pex/converter.h>
 
 #include "wxpex/wxshim.h"
 #include "wxpex/view.h"
 #include "wxpex/spin_control.h"
 #include "wxpex/field.h"
 #include "wxpex/layout_top_level.h"
+#include "wxpex/converter.h"
+#include "wxpex/style.h"
 
 
 namespace wxpex
@@ -35,9 +36,9 @@ namespace detail
 struct StyleFilter
 {
 public:
-    StyleFilter(long style, int minimum, int maximum)
+    StyleFilter(Style style, int minimum, int maximum)
         :
-        isVertical_(style & wxSL_VERTICAL),
+        isVertical_(IsVertical(style)),
         minimum_(minimum),
         maximum_(maximum),
         offset_(maximum + minimum)
@@ -80,6 +81,7 @@ private:
 } // end namespace detail
 
 
+wxDEFINE_EVENT(SliderBegin, wxCommandEvent);
 wxDEFINE_EVENT(SliderDone, wxCommandEvent);
 
 
@@ -113,7 +115,6 @@ struct FilteredRange_
     // This RangeControl has floating-point type.
     using Type = pex::control::LinearRange
         <
-            void,
             typename RangeControl::Upstream,
             1000,
             typename RangeControl::Access
@@ -132,10 +133,9 @@ struct FilteredRange_
     >
 >
 {
-    // This RangeControl has floating-point type.
+    // This RangeControl has integral type that is not int.
     using Type = pex::control::ConvertingRange
         <
-            void,
             typename RangeControl::Upstream,
             int,
             typename RangeControl::Access
@@ -159,23 +159,17 @@ public:
     using Base = wxSlider;
     using This = Slider<RangeControl>;
 
+    // FilteredRange automatically scales floating point types to int as
+    // required by wxSlider.
     using Range = FilteredRange<RangeControl>;
 
     using Value = typename Range::Value;
     using Limit = typename Range::Limit;
 
-    static_assert(
-        std::is_same_v<int, typename Value::Type>,
-        "Slider control uses int");
-
-    static_assert(
-        std::is_same_v<int, typename Limit::Type>,
-        "Slider control uses int");
-
     Slider(
         wxWindow *parent,
         RangeControl range,
-        long style = wxSL_HORIZONTAL)
+        Style style = Style::horizontal)
         :
         Base(
             parent,
@@ -188,12 +182,15 @@ public:
             Range(range).maximum.Get(),
             wxDefaultPosition,
             wxDefaultSize,
-            style),
+            SliderStyle(style)),
         value_(this, range.value),
         minimum_(this, range.minimum),
         maximum_(this, range.maximum),
         defaultValue_(this->value_.Get()),
-        styleFilter_(style, Range(range).minimum.Get(), Range(range).maximum.Get())
+        styleFilter_(
+            style,
+            Range(range).minimum.Get(),
+            Range(range).maximum.Get())
     {
         this->value_.Connect(&Slider::OnValue_);
         this->minimum_.Connect(&Slider::OnMinimum_);
@@ -267,6 +264,8 @@ public:
         {
             event.Skip();
         }
+
+        this->AddPendingEvent(wxCommandEvent(SliderBegin));
     }
 
     void OnSliderLeftUp_(wxMouseEvent &event)
@@ -284,91 +283,113 @@ private:
 };
 
 
-template<int base, int width, int precision>
-struct ViewTraits:
-    pex::ConverterTraits<base, width, precision, jive::flag::None>
-{
-
-};
-
-
 template
 <
     typename RangeControl,
     typename ValueControl,
     typename Convert
 >
-class SliderAndValueConvert : public wxControl
+class ValueSliderConvert : public wxControl
 {
 public:
     using Base = wxControl;
+    using RangeSlider = Slider<RangeControl>;
+    using SliderRange = typename RangeSlider::Range;
+    using SliderValue = typename RangeSlider::Value;
 
     // range is filtered to an int for direct use in the wx.Slider.
     // value is the value from the model for display in the view.
-    SliderAndValueConvert(
+    ValueSliderConvert(
         wxWindow *parent,
         RangeControl range,
         ValueControl value,
-        long style = wxSL_HORIZONTAL)
+        Style style = Style::horizontal)
         :
-        Base(parent, wxID_ANY)
+        Base(parent, wxID_ANY),
+        sliderIsActive_(false),
+        value_(this, SliderRange(range).value)
+
     {
-        // Create slider and view as children of the this wxWindow.
-        // They are memory managed by the the wxWindow from their creation.
-        auto slider = new Slider<RangeControl>(this, range, style);
+        // Create slider and view as children of this wxWindow.
+        // They are memory managed by the the wxWindow.
+        auto slider = new Slider(this, range, style);
         auto view = new View<ValueControl, Convert>(this, value);
 
         // Use a mono-spaced font for display so that the width of the view
         // remains constant as the value changes.
         view->SetFont(wxFont(wxFontInfo().Family(wxFONTFAMILY_MODERN)));
 
-        auto sizerStyle =
-            (wxSL_HORIZONTAL == style) ? wxHORIZONTAL : wxVERTICAL;
+        auto sizerStyle = SizerStyle(style);
 
         auto sizer = std::make_unique<wxBoxSizer>(sizerStyle);
 
-        auto flag = (wxSL_HORIZONTAL == style)
+        auto flag = IsHorizontal(style)
             ? wxRIGHT | wxEXPAND
             : wxBOTTOM | wxEXPAND;
 
         auto spacing = 5;
-
         sizer->Add(slider, 1, flag, spacing);
 
         sizer->Add(
             view,
             0,
-            (wxSL_HORIZONTAL == wxHORIZONTAL)
-                ? wxALIGN_CENTER
-                : wxALIGN_CENTER_VERTICAL);
+            IsHorizontal(style)
+                ? wxALIGN_CENTER_VERTICAL
+                : wxALIGN_CENTER);
 
         this->SetSizerAndFit(sizer.release());
 
         this->Bind(
-            SliderDone,
-            &SliderAndValueConvert::OnSliderDone_,
+            SliderBegin,
+            &ValueSliderConvert::OnSliderBegin_,
             this);
+
+        this->Bind(
+            SliderDone,
+            &ValueSliderConvert::OnSliderDone_,
+            this);
+
+        this->value_.Connect(&ValueSliderConvert::OnValue_);
     }
 
 private:
+    void OnSliderBegin_(wxCommandEvent &event)
+    {
+        event.Skip();
+        this->sliderIsActive_ = true;
+    }
+
     void OnSliderDone_(wxCommandEvent &event)
     {
         event.Skip();
         this->Layout();
+        this->sliderIsActive_ = false;
     }
+
+    void OnValue_(int)
+    {
+        if (!this->sliderIsActive_)
+        {
+            // This is a value from the application model.
+            // Do Layout now so that the value will be displayed properly.
+            this->Layout();
+        }
+        // else
+        // Layout will be called when slider has been released.
+    }
+
+private:
+    bool sliderIsActive_;
+    pex::Terminus<ValueSliderConvert, SliderValue> value_;
 };
 
 
 template<typename RangeControl, typename ValueControl, int precision>
-using SimplifiedSliderAndValue = SliderAndValueConvert
+using ValueSliderBase = ValueSliderConvert
     <
         RangeControl,
         ValueControl,
-        pex::Converter
-        <
-            typename ValueControl::Type,
-            ViewTraits<10, 0, precision>
-        >
+        PrecisionConverter<ValueControl, precision>
     >;
 
 
@@ -378,24 +399,25 @@ template
     typename ValueControl,
     int precision = 3
 >
-class SliderAndValue
+class ValueSlider
     :
-    public SimplifiedSliderAndValue<RangeControl, ValueControl, precision>
+    public ValueSliderBase<RangeControl, ValueControl, precision>
 {
     using Base =
-        SimplifiedSliderAndValue<RangeControl, ValueControl, precision>;
+        ValueSliderBase<RangeControl, ValueControl, precision>;
 
 public:
-    SliderAndValue(
+    ValueSlider(
         wxWindow *parent,
         RangeControl range,
         ValueControl value,
-        long style = wxSL_HORIZONTAL)
+        Style style = Style::horizontal)
         :
         Base(parent, range, value, style)
     {
 
     }
+
 };
 
 
@@ -408,7 +430,7 @@ public:
         wxControl(parent, wxID_ANY)
     {
         auto slider =
-            new Slider<RangeControl>(this, range, wxSL_HORIZONTAL);
+            new Slider<RangeControl>(this, range, Style::horizontal);
 
         auto spin =
             new SpinControl(this, range, 1, 0);
@@ -450,7 +472,7 @@ public:
         wxControl(parent, wxID_ANY)
     {
         auto slider =
-            new Slider<RangeControl>(this, range, wxSL_HORIZONTAL);
+            new Slider<RangeControl>(this, range, Style::horizontal);
 
         auto field = new ValueField(this, value);
 
@@ -476,15 +498,11 @@ private:
 
 
 template<typename RangeControl, typename ValueControl, int precision>
-using SimplifiedFieldSlider = FieldSliderConvert
+using FieldSliderBase = FieldSliderConvert
     <
         RangeControl,
         ValueControl,
-        pex::Converter
-        <
-            typename ValueControl::Type,
-            ViewTraits<10, 0, precision>
-        >
+        PrecisionConverter<ValueControl, precision>
     >;
 
 
@@ -496,10 +514,10 @@ template
 >
 class FieldSlider
     :
-    public SimplifiedFieldSlider<RangeControl, ValueControl, precision>
+    public FieldSliderBase<RangeControl, ValueControl, precision>
 {
     using Base =
-        SimplifiedFieldSlider<RangeControl, ValueControl, precision>;
+        FieldSliderBase<RangeControl, ValueControl, precision>;
 
 public:
     FieldSlider(
@@ -514,6 +532,26 @@ public:
 };
 
 
+template<int precision, typename RangeControl, typename ValueControl>
+auto CreateFieldSlider(
+    wxWindow *parent,
+    RangeControl range,
+    ValueControl value)
+{
+    using Result = FieldSlider<RangeControl, ValueControl, precision>;
+    return new Result(parent, range, value);
+}
+
+
+template<int precision, typename RangeControl, typename ValueControl>
+auto CreateValueSlider(
+    wxWindow *parent,
+    RangeControl range,
+    ValueControl value)
+{
+    using Result = ValueSlider<RangeControl, ValueControl, precision>;
+    return new Result(parent, range, value);
+}
 
 
 } // namespace wxpex

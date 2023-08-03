@@ -19,6 +19,7 @@
 #include <fields/fields.h>
 
 #include <pex/group.h>
+#include <pex/endpoint.h>
 #include <pex/value.h>
 #include <pex/signal.h>
 
@@ -31,20 +32,42 @@
 #include "wxpex/window.h"
 
 
+
+template<typename T, typename Enable = std::void_t<>>
+struct HasControl_: std::false_type {};
+
+template<typename T>
+struct HasControl_
+<
+    T,
+    std::void_t<typename T::Control>
+>
+: std::true_type {};
+
+template<typename T>
+inline constexpr bool HasControl = HasControl_<T>::value;
+
+
+static_assert(HasControl<wxpex::Async<double>>);
+
+
+
+
+
 template<typename T>
 struct DemoFields
 {
     static constexpr auto fields = std::make_tuple(
         fields::Field(&T::startingAngle, "startingAngle"),
         fields::Field(&T::currentAngle, "currentAngle"),
-        fields::Field(&T::fail, "fail"),
-        fields::Field(&T::threadFail, "threadFail"),
+        fields::Field(&T::reset, "reset"),
         fields::Field(&T::start, "start"),
         fields::Field(&T::stop, "stop"));
 };
 
 
-static_assert(pex::IsMakeRange<pex::MakeRange<double, void, void, wxpex::Async>>);
+static_assert(
+    pex::IsMakeRange<pex::MakeRange<double, void, void, wxpex::Async>>);
 
 
 template<template<typename> typename T>
@@ -52,8 +75,7 @@ struct DemoTemplate
 {
     T<double> startingAngle;
     T<pex::MakeRange<double, void, void, wxpex::Async>> currentAngle;
-    T<pex::MakeSignal> fail;
-    T<pex::MakeSignal> threadFail;
+    T<pex::MakeSignal> reset;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
 
@@ -63,15 +85,32 @@ struct DemoTemplate
 
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
-using DemoControl = typename DemoGroup::Control<void>;
+using DemoControl = typename DemoGroup::Control;
 using DemoModel = typename DemoGroup::Model;
 
-template<typename Observer>
-using DemoTerminus = typename DemoGroup::template Terminus<Observer>;
+using CurrentAngleModel = decltype(DemoModel::currentAngle);
+
+static_assert(
+    std::is_same_v<wxpex::Async<double, pex::model::RangeFilter<double>>,
+    typename CurrentAngleModel::Value>);
+
+static_assert(HasControl<typename CurrentAngleModel::Value>);
+
+static_assert(pex::control::HasControl<typename CurrentAngleModel::Value>);
+
+static_assert(
+    std::is_same_v
+    <
+        CurrentAngleModel,
+        typename decltype(DemoControl::currentAngle)::Upstream
+    >);
+
+
+using AngleControl = decltype(decltype(DemoControl::currentAngle)::value);
 
 
 template<typename Upstream>
-using RadiansControl = pex::control::Value<void, Upstream>;
+using RadiansControl = pex::control::Value<Upstream>;
 
 template<typename Upstream>
 auto MakeRadiansControl(Upstream &upstream)
@@ -98,7 +137,7 @@ struct DegreesFilter
 
 template<typename Upstream>
 using DegreesControl =
-    pex::control::FilteredValue<void, Upstream, DegreesFilter>;
+    pex::control::FilteredValue<Upstream, DegreesFilter>;
 
 
 template<typename Upstream>
@@ -106,18 +145,6 @@ auto MakeDegreesControl(Upstream &upstream)
 {
     return DegreesControl<Upstream>(upstream);
 }
-
-
-class ExtraWindow: public wxFrame
-{
-public:
-    ExtraWindow(const std::string &name)
-        :
-        wxFrame(nullptr, wxID_ANY, name)
-    {
-        this->Show(true);
-    }
-};
 
 
 using WindowArray = std::array<wxpex::Window, 4>;
@@ -132,24 +159,17 @@ public:
         :
         mutex_{},
         model_{},
-        terminus_(this, this->model_),
+        control_(this->model_),
+        currentAngleSetWait_(this->control_.currentAngle.value),
+        endpoints_(this, this->control_),
         isRunning_{},
-        threadFail_{},
-        worker_{},
-        extraWindows_{std::make_unique<WindowArray>()}
+        reset_{},
+        worker_{}
     {
-        for (size_t i = 0; i < 4; ++i)
-        {
-            this->extraWindows_->at(i) =
-                wxpex::Window(
-                    new ExtraWindow("Extra Window " + std::to_string(i)));
-        }
-
-        this->terminus_.startingAngle.Connect(&ExampleApp::OnUpdate_);
-        this->terminus_.fail.Connect(&ExampleApp::OnFail_);
-        this->terminus_.threadFail.Connect(&ExampleApp::OnThreadFail_);
-        this->terminus_.start.Connect(&ExampleApp::OnStart_);
-        this->terminus_.stop.Connect(&ExampleApp::OnStop_);
+        this->endpoints_.startingAngle.Connect(&ExampleApp::OnUpdate_);
+        this->endpoints_.reset.Connect(&ExampleApp::OnReset_);
+        this->endpoints_.start.Connect(&ExampleApp::OnStart_);
+        this->endpoints_.stop.Connect(&ExampleApp::OnStop_);
     }
 
     bool OnInit() override;
@@ -160,18 +180,9 @@ public:
     }
 
 private:
-    void OnClose_(wxCloseEvent &event)
-    {
-        this->extraWindows_.reset();
-        event.Skip();
-    }
-
     void OnUpdate_(double value)
     {
-        auto control =
-            wxpex::AsyncRangeAccess(this->model_.currentAngle).GetWxControl();
-
-        control.Set(value);
+        this->control_.currentAngle.value.Set(value);
     }
 
     void OnStart_()
@@ -187,17 +198,9 @@ private:
             std::bind(&ExampleApp::WorkerThread_, this));
     }
 
-    void OnFail_()
+    void OnReset_()
     {
-        std::cerr << "Throwing a runtime_error from the event loop."
-            << std::endl;
-
-        throw std::runtime_error("fail");
-    }
-
-    void OnThreadFail_()
-    {
-        this->threadFail_ = true;
+        this->reset_ = true;
     }
 
     void OnStop_()
@@ -217,14 +220,18 @@ private:
     void WorkerThread_()
     {
         auto workerControl =
-            wxpex::AsyncRangeAccess(this->model_.currentAngle)
-                .GetWorkerControl();
+            this->control_.currentAngle.value.GetWorkerControl();
 
         while (this->isRunning_)
         {
-            if (this->threadFail_)
+            if (this->reset_)
             {
-                throw std::runtime_error("thread fail");
+                this->currentAngleSetWait_.Set(
+                    this->control_.startingAngle.Get());
+
+                this->reset_ = false;
+
+                continue;
             }
 
             auto next =
@@ -240,13 +247,13 @@ private:
 private:
     std::mutex mutex_;
     DemoModel model_;
-    DemoTerminus<ExampleApp> terminus_;
+    DemoControl control_;
+    wxpex::SetWait<AngleControl> currentAngleSetWait_;
+    pex::EndpointGroup<ExampleApp, DemoControl> endpoints_;
 
     std::atomic_bool isRunning_;
-    std::atomic_bool threadFail_;
+    std::atomic_bool reset_;
     std::thread worker_;
-
-    std::unique_ptr<WindowArray> extraWindows_;
 };
 
 
@@ -264,9 +271,6 @@ wxshimIMPLEMENT_APP(ExampleApp)
 bool ExampleApp::OnInit()
 {
     auto exampleFrame = new ExampleFrame(DemoControl(this->model_));
-
-    exampleFrame->Bind(wxEVT_CLOSE_WINDOW, &ExampleApp::OnClose_, this);
-
     exampleFrame->Show();
 
     return true;
@@ -308,18 +312,8 @@ ExampleFrame::ExampleFrame(DemoControl demoControl)
     auto startButton = new Button(this, "Start", demoControl.start);
     auto stopButton = new Button(this, "Stop", demoControl.stop);
 
-    // fail button allows the user to test whether exceptions thrown in the
-    // main thread propagate as expected.
-    //
-    // With exceptions disabled in wxWidgets, an unhandled exception will
-    // terminate the program like normal. With wxWidgets exceptions enabled,
-    // wxWidgets silently consumes all exceptions and exits without any error
-    // message.
-    auto failButton = new Button(this, "Fail", demoControl.fail);
-
-    // Same as fail button, but throws an error from a child thread instead.
-    auto threadFailButton =
-        new Button(this, "Thread Fail", demoControl.threadFail);
+    auto resetButton =
+        new Button(this, "Reset to start value", demoControl.reset);
 
     auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
@@ -333,8 +327,7 @@ ExampleFrame::ExampleFrame(DemoControl demoControl)
     sizer->Add(fieldsSizer.release(), 0, wxALL, 10);
 
     auto buttonSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
-    buttonSizer->Add(failButton, 0, wxRIGHT, 5);
-    buttonSizer->Add(threadFailButton, 0, wxRIGHT, 5);
+    buttonSizer->Add(resetButton, 0, wxRIGHT, 5);
     buttonSizer->Add(startButton, 0, wxRIGHT, 5);
     buttonSizer->Add(stopButton);
 

@@ -4,6 +4,17 @@ elseif (APPLE)
     set(windowed MACOSX_BUNDLE)
 endif ()
 
+
+add_executable(sandbox sandbox.cpp)
+
+target_link_libraries(
+    sandbox
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(view_demo ${windowed} view_demo.cpp)
 
 target_link_libraries(
@@ -125,7 +136,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(settings_demo ${windowed} settings_demo.cpp)
+add_executable(settings_demo settings_demo.cpp)
 
 target_link_libraries(
     settings_demo
@@ -143,3 +154,23 @@ target_link_libraries(
     project_warnings
     project_options
     wxpex)
+
+
+add_executable(transparency_demo transparency_demo.cpp)
+
+target_link_libraries(
+    transparency_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
+# add_executable(drawing_demo drawing_demo.cpp)
+
+# target_link_libraries(
+#    drawing_demo
+#    PRIVATE
+#    project_warnings
+#    project_options
+#    wxpex)

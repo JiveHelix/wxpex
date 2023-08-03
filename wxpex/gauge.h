@@ -4,7 +4,9 @@
 
 #include <wx/gauge.h>
 #include <pex/group.h>
-#include <wxpex/async.h>
+#include <pex/endpoint.h>
+#include "wxpex/async.h"
+#include "wxpex/style.h"
 
 
 namespace wxpex
@@ -57,20 +59,33 @@ struct GaugeTemplate
 {
     T<wxpex::MakeAsync<size_t, GaugeFilter>> value;
     T<wxpex::MakeAsync<size_t>> maximum;
+
+    static constexpr auto fields = GaugeFields<GaugeTemplate>::fields;
 };
 
 
 using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate>;
 using GaugeState = typename GaugeGroup::Plain;
+using GaugeControl = typename GaugeGroup::Control;
+
+static_assert(
+    std::is_same_v
+    <
+        decltype(GaugeControl::maximum),
+        typename Async<size_t>::Control
+    >);
 
 struct GaugeModel: public GaugeGroup::Model
 {
     GaugeModel()
         :
-        GaugeGroup::Model(GaugeState{0, 1000}),
-        internalMaximum_(this, this->maximum)
+        GaugeGroup::Model(GaugeState{{0, 1000}}),
+        internalMaximum_(
+            this,
+            GaugeControl(*this).maximum,
+            &GaugeModel::OnMaximum_)
     {
-        this->internalMaximum_.Connect(&GaugeModel::OnMaximum_);
+
     }
 
 private:
@@ -80,13 +95,10 @@ private:
     }
 
     using Internal =
-        pex::Terminus<GaugeModel, wxpex::Async<size_t>>;
+        pex::Endpoint<GaugeModel, typename wxpex::Async<size_t>::Control>;
 
     Internal internalMaximum_;
 };
-
-
-using GaugeControl = typename GaugeGroup::Control<void>;
 
 
 struct GaugeWorker: public GaugeControl
@@ -96,16 +108,13 @@ public:
 
     GaugeWorker(GaugeModel &model)
         :
-        GaugeControl()
+        GaugeControl(model)
     {
         this->value = model.value.GetWorkerControl();
         this->maximum = model.maximum.GetWorkerControl();
     }
 };
 
-
-template<typename Observer>
-using GaugeTerminus = typename GaugeGroup::Terminus<Observer>;
 
 using GaugeGroupMaker = pex::MakeGroup<GaugeGroup, GaugeModel>;
 
@@ -120,14 +129,31 @@ public:
     Gauge(
         wxWindow *parent,
         GaugeControl control,
-        long style = wxGA_HORIZONTAL);
+        Style style = Style::horizontal);
 
 private:
     void OnValue_(size_t value);
 
     void OnMaximum_(size_t maximum);
 
-    GaugeTerminus<Gauge> terminus_;
+    pex::EndpointGroup<Gauge, GaugeControl> endpoints_;
+};
+
+
+class ValueGauge: public wxControl
+{
+public:
+    using ValueControl = decltype(GaugeControl::value);
+
+    ValueGauge(
+        wxWindow *parent,
+        GaugeControl control,
+        Style style = Style::horizontal);
+
+    void OnValue_(size_t);
+
+private:
+    pex::Terminus<ValueGauge, ValueControl> value_;
 };
 
 

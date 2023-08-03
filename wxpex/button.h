@@ -41,7 +41,7 @@ public:
     Button(
         wxWindow *parent,
         const std::string &label,
-        pex::control::Signal<void> signal,
+        pex::control::Signal<> signal,
         const ButtonOptions &options = ButtonOptions{})
         :
         Base(
@@ -59,7 +59,7 @@ public:
     Button(
         wxWindow *parent,
         const std::string &label,
-        pex::control::Signal<void> signal,
+        pex::control::Signal<> signal,
         long style)
         :
         Base(parent, wxID_ANY, label, wxDefaultPosition, wxDefaultSize, style),
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    pex::control::Signal<Button> signal_;
+    pex::control::Signal<> signal_;
 };
 
 

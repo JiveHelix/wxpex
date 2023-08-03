@@ -44,10 +44,10 @@ static inline const std::vector<UnitSystem> withFirkins
 std::string fffUnits = "furlong-firkin-fortnight";
 
 using Select = pex::model::Select<UnitSystem>;
-using SelectControl = pex::control::Select<void, Select>;
+using SelectControl = pex::control::Select<Select>;
 
 using EnableFirkins = pex::model::Value<bool>;
-using EnableFirkinsControl = pex::control::Value<void, EnableFirkins>;
+using EnableFirkinsControl = pex::control::Value<EnableFirkins>;
 
 
 class ExampleApp: public wxApp

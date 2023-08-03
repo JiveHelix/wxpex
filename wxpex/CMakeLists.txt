@@ -19,10 +19,15 @@ target_link_libraries(
 target_sources(
     wxpex
     PRIVATE
+    border_sizer.cpp
     collapsible.cpp
     gauge.cpp
+    indent_sizer.cpp
     layout_top_level.cpp
+    modifier.cpp
+    scrolled.cpp
     shortcut.cpp
+    static_box.cpp
     tile.cpp)
 
 

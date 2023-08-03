@@ -1,7 +1,8 @@
 #pragma once
 
-
+#include <memory>
 #include "wxpex/wxshim.h"
+#include <wxpex/size.h>
 #include <wx/collpane.h>
 
 
@@ -14,10 +15,31 @@ class Collapsible: public wxCollapsiblePane
 public:
     Collapsible(wxWindow *parent, const std::string &label);
 
-    void ConfigureTopSizer(wxSizer *sizer);
+    void ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer);
+
+    void ConfigureBorderPane(
+        int pixels,
+        std::unique_ptr<wxSizer> &&sizer);
+
+#ifdef __WXGTK__
+    // WXGTK uses DoGetBestSize, and WXMAC ignores it.
+    // TODO: See what MSW does.
+    // TODO: Submit a PR to make all three consistent.
+    wxSize DoGetBestSize() const override;
+#else
+    wxSize DoGetBestClientSize() const override;
+#endif
+
+    wxPanel * GetBorderPane(long borderStyle = wxBORDER_SIMPLE);
 
 protected:
     void OnChanged_(wxCollapsiblePaneEvent &);
+
+    void UpdateMinimumSize_() const;
+
+private:
+    wxPanel *borderPane_;
+    std::string label_;
 };
 
 

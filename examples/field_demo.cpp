@@ -50,11 +50,8 @@ struct ApplicationTemplate
 
 
 using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
-
 using Model = typename ApplicationGroup::Model;
-
-template<typename Observer>
-using Control = typename ApplicationGroup::Control<Observer>;
+using Control = typename ApplicationGroup::Control;
 
 
 /** Allow a control to use degrees, while the model uses radians. **/
@@ -77,8 +74,7 @@ struct DegreesFilter
 using DegreesControl =
     pex::control::FilteredValue
     <
-        void,
-        decltype(Control<void>::angle),
+        decltype(Control::angle),
         DegreesFilter
     >;
 
@@ -115,7 +111,7 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(Control<void> control);
+    ExampleFrame(Control control);
 };
 
 
@@ -126,7 +122,7 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 bool ExampleApp::OnInit()
 {
     ExampleFrame *exampleFrame =
-        new ExampleFrame(Control<void>(this->model_));
+        new ExampleFrame(Control(this->model_));
 
     exampleFrame->Show();
 
@@ -134,7 +130,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(Control<void> control)
+ExampleFrame::ExampleFrame(Control control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Field Demo")
 {

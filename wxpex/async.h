@@ -15,9 +15,13 @@
 
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 #include <functional>
+#include <queue>
+#include <optional>
 
-#include <pex/terminus.h>
+#include <jive/comparison_operators.h>
+#include <pex/endpoint.h>
 #include <pex/value.h>
 #include <pex/traits.h>
 #include <pex/interface.h>
@@ -34,36 +38,111 @@ template<typename T, typename Filter = pex::NoFilter>
 class Async: public wxEvtHandler
 {
 public:
+    static_assert(
+        jive::HasEqualTo<T>,
+        "type must support operator==");
+
     static constexpr auto observerName = "wxpex::Async";
 
     using Type = T;
-    using ThreadSafe = pex::model::Value_<Type, Filter>;
+    using ThreadSafe = pex::model::LockedValue<Type, Filter>;
     using Callable = typename ThreadSafe::Callable;
-
-    template<typename Observer>
-    using Control = pex::control::Value<Observer, ThreadSafe>;
-
-    template<typename Observer>
-    using Terminus = pex::Terminus<Observer, Control<Observer>>;
-
-    /* TODO: Using ThreadSafe as the upstream for Terminus should work, and it
-     * does within this class.
-     * But when it is used outside of this class, pex machinery tries to create
-     * a pex::model::Value_<Observer, Filter>!!!
-     */
 
     template<typename>
     friend class pex::Reference;
 
+    template<typename ControlFilter, typename ControlAccess>
+    struct FilteredControl
+        :
+        public pex::control::Value_<ThreadSafe, ControlFilter, ControlAccess>
+    {
+        using Base =
+            pex::control::Value_<ThreadSafe, ControlFilter, ControlAccess>;
+
+        FilteredControl()
+            :
+            Base(),
+            async_(nullptr)
+        {
+
+        }
+
+        FilteredControl(const FilteredControl &other)
+            :
+            Base(other),
+            async_(other.async_)
+        {
+
+        }
+
+        FilteredControl & operator=(const FilteredControl &other)
+        {
+            if (&other == this)
+            {
+                return *this;
+            }
+
+            this->Base::operator=(other);
+            this->async_ = other.async_;
+
+            return *this;
+        }
+
+        template<typename, typename>
+        friend struct FilteredControl;
+
+        template<typename OtherFilter, typename OtherAccess>
+        FilteredControl(const FilteredControl<OtherFilter, OtherAccess> &other)
+            :
+            Base(other),
+            async_(other.async_)
+        {
+
+        }
+
+        template<typename OtherFilter, typename OtherAccess>
+        FilteredControl & operator=(
+            const FilteredControl<OtherFilter, OtherAccess> &other)
+        {
+            this->Base::operator=(other);
+            this->async_ = other.async_;
+
+            return *this;
+        }
+
+        FilteredControl(ThreadSafe &threadSafe, Async *async)
+            :
+            Base(threadSafe),
+            async_(async)
+        {
+
+        }
+
+        FilteredControl GetWorkerControl()
+        {
+            if (!this->async_)
+            {
+                throw std::logic_error("Unitialized control");
+            }
+
+            return FilteredControl(this->async_->workerModel_, this->async_);
+        }
+
+    private:
+        Async *async_;
+    };
+
+    using Control = FilteredControl<pex::NoFilter, pex::GetAndSetTag>;
+
     Async(pex::Argument<Type> value = Type{})
         :
         mutex_(),
-        ignoreEcho_(false),
-        value_(value),
+        ignoredValue_(),
         model_(value),
-        terminus_(this, this->model_),
+        endpoint_(this, Control(this->model_, this)),
+        workerQueuedValues_(),
         workerModel_(value),
-        workerTerminus_(this, this->workerModel_)
+        workerEndpoint_(this, Control(this->workerModel_, this))
     {
         this->Initialize_();
     }
@@ -71,12 +150,12 @@ public:
     Async(pex::Argument<Type> value, Filter filter)
         :
         mutex_(),
-        ignoreEcho_(false),
-        value_(value),
+        ignoredValue_(),
         model_(value, filter),
-        terminus_(this, this->model_),
+        endpoint_(this, Control(this->model_, this)),
+        workerQueuedValues_(),
         workerModel_(value, filter),
-        workerTerminus_(this, this->workerModel_)
+        workerEndpoint_(this, Control(this->workerModel_, this))
     {
         this->Initialize_();
     }
@@ -84,12 +163,12 @@ public:
     Async(Filter filter)
         :
         mutex_(),
-        ignoreEcho_(false),
-        value_{},
-        model_(this->value_, filter),
-        terminus_(this, this->model_),
-        workerModel_(this->value_, filter),
-        workerTerminus_(this, this->workerModel_)
+        ignoredValue_(),
+        model_(filter),
+        endpoint_(this, Control(this->model_, this)),
+        workerQueuedValues_(),
+        workerModel_(filter),
+        workerEndpoint_(this, Control(this->workerModel_, this))
     {
         this->Initialize_();
     }
@@ -101,19 +180,19 @@ protected:
     void Initialize_()
     {
         this->Bind(wxEVT_THREAD, &Async::OnWxEventLoop_, this);
-        this->terminus_.Connect(&Async::OnWxChanged_);
-        this->workerTerminus_.Connect(&Async::OnWorkerChanged_);
+        this->endpoint_.Connect(&Async::OnWxChanged_);
+        this->workerEndpoint_.Connect(&Async::OnWorkerChanged_);
     }
 
 public:
-    Control<void> GetWorkerControl()
+    Control GetWorkerControl()
     {
-        return Control<void>(this->workerModel_);
+        return Control(this->workerModel_, this);
     }
 
-    Control<void> GetWxControl()
+    Control GetWxControl()
     {
-        return Control<void>(this->model_);
+        return Control(this->model_, this);
     }
 
     Async & operator=(pex::Argument<Type> value)
@@ -136,21 +215,18 @@ public:
 
     Type Get() const
     {
-        std::lock_guard<std::mutex> lock(this->mutex_);
-        return this->value_;
+        return this->model_.Get();
     }
 
     explicit operator Type () const
     {
-        std::lock_guard<std::mutex> lock(this->mutex_);
-        return this->value_;
+        return this->model_.Get();
     }
 
     // The defaut control is for the wx event loop.
-    template<typename Observer>
-    explicit operator Control<Observer> ()
+    operator Control ()
     {
-        return Control<Observer>(this->model_);
+        return Control(this->model_, this);
     }
 
     void Connect(void * observer, Callable callable)
@@ -166,14 +242,14 @@ public:
 private:
     void OnWorkerChanged_(pex::Argument<Type> value)
     {
-        if (this->ignoreEcho_)
+        if (this->ignoredValue_ && value == *this->ignoredValue_)
         {
             return;
         }
 
         {
             std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
+            this->workerQueuedValues_.push(value);
         }
 
         // Queue the event for the wxWidgets event loop.
@@ -182,104 +258,69 @@ private:
 
     void OnWxEventLoop_(wxThreadEvent &)
     {
+        // Retrieve values from the worker queue
         Type value;
 
         {
             std::lock_guard<std::mutex> lock(this->mutex_);
-            value = this->value_;
+
+            if (this->workerQueuedValues_.empty())
+            {
+                return;
+            }
+
+            value = this->workerQueuedValues_.front();
+            this->workerQueuedValues_.pop();
+
+            if (!this->workerQueuedValues_.empty())
+            {
+                // Repeat until all queued values have been forwarded.
+                this->QueueEvent(new wxThreadEvent());
+            }
         }
 
-        this->ignoreEcho_ = true;
+        this->ignoredValue_ = value;
         this->model_.Set(value);
-        this->ignoreEcho_ = false;
+        this->ignoredValue_.reset();
     }
 
     void OnWxChanged_(pex::Argument<Type> value)
     {
-        if (this->ignoreEcho_)
+        if (this->ignoredValue_ && value == *this->ignoredValue_)
         {
             return;
         }
 
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
-        }
-
-        this->ignoreEcho_ = true;
+        this->ignoredValue_ = value;
         this->workerModel_.Set(value);
-        this->ignoreEcho_ = false;
+        this->ignoredValue_.reset();
     }
 
 
     void SetWithoutNotify_(pex::Argument<Type> value)
     {
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
-        }
-
-        pex::ReferenceSetter<ThreadSafe>(this->model_).SetWithoutNotify(value);
+        pex::detail::AccessReference<ThreadSafe>(this->model_)
+            .SetWithoutNotify(value);
     }
 
     void DoNotify_()
     {
-        // This will trigger OnWorkerChanged_, which will notify model_ in
-        // the wx event loop.
-        pex::ReferenceSetter<ThreadSafe>(this->model_).DoNotify();
+        pex::detail::AccessReference<ThreadSafe>(this->model_).DoNotify();
     }
 
 private:
     mutable std::mutex mutex_;
-    bool ignoreEcho_;
-    Type value_;
+    std::optional<Type> ignoredValue_;
     ThreadSafe model_;
-    Terminus<Async> terminus_;
+    pex::Endpoint<Async, Control> endpoint_;
+    std::queue<Type> workerQueuedValues_;
     ThreadSafe workerModel_;
-    Terminus<Async> workerTerminus_;
+    pex::Endpoint<Async, Control> workerEndpoint_;
 };
 
 
 template<typename T, typename Filter = pex::NoFilter>
 using MakeAsync = pex::MakeCustom<Async<T, Filter>>;
-
-
-// Async can be used as the Value of a pex::model::Range, but the Range class
-// uses a private value. This class provides access to the functions unique to
-// Async.
-template
-<
-    typename T,
-    typename Minimum,
-    typename Maximum,
-    template<typename, typename> typename Value_
->
-class AsyncRangeAccess
-    :
-    public pex::model::RangeAccess<T, Minimum, Maximum, Value_>
-{
-public:
-    using Base = pex::model::RangeAccess<T, Minimum, Maximum, Value_>;
-    using Value = typename Base::Value;
-    using Control = typename Value::template Control<void>;
-
-    AsyncRangeAccess(pex::model::Range<T, Minimum, Maximum, Value_> &range)
-        :
-        Base(range)
-    {
-
-    }
-
-    Control GetWorkerControl()
-    {
-        return this->GetValue().GetWorkerControl();
-    }
-
-    Control GetWxControl()
-    {
-        return this->GetValue().GetWxControl();
-    }
-};
 
 
 class CallAfter: public wxEvtHandler
@@ -310,166 +351,78 @@ private:
 };
 
 
-namespace experimental
-{
-// Don't rely on this being availabe in future versions of this library.
-
-template<typename Pex>
-class AddAsync: public wxEvtHandler
+template<typename Control>
+class SetWait
 {
 public:
-    using UpstreamHolder = pex::UpstreamHolderT<Pex>;
-    using UpstreamTerminus = pex::Terminus<AddAsync, UpstreamHolder>;
-    using Type = typename UpstreamHolder::Type;
-    using ThreadSafe = pex::model::Value<Type>;
-    using WorkerTerminus = pex::Terminus<AddAsync, ThreadSafe>;
-    using Callable = typename UpstreamHolder::Callable;
+    using ValueType = typename Control::Type;
+    using AsyncValue = Async<ValueType>;
+    using WorkerControl = typename AsyncValue::Control;
 
-    template<typename>
-    friend class pex::Reference;
+    using Endpoint =
+        pex::Endpoint<SetWait, WorkerControl>;
 
-    template<typename Observer>
-    using UserControl = pex::control::Value<Observer, UpstreamHolder>;
-
-    template<typename Observer>
-    using Control = UserControl<Observer>;
-
-    template<typename Observer>
-    using WorkerControl = pex::control::Value<Observer, ThreadSafe>;
-
-    AddAsync(pex::PexArgument<Pex> pex)
+    SetWait(Control control)
         :
         mutex_(),
-        upstream_(pex),
-        upstreamTerminus_(this, this->upstream_),
-        ignoreEcho_(false),
-        workerModel_(),
-        workerTerminus_(this, this->workerModel_),
-        value_(this->upstream_.Get())
+        condition_(),
+        isWaiting_(false),
+        control_(control),
+        async_(control.Get()),
+        endpoint_(this, this->async_.GetWxControl(), &SetWait::OnMainThread_),
+        workerControl_(this->async_.GetWorkerControl())
     {
-        this->Bind(wxEVT_THREAD, &AddAsync::OnWxEventLoop_, this);
-        this->upstreamTerminus_.Connect(&AddAsync::OnUpstreamChanged_);
-        this->workerTerminus_.Connect(&AddAsync::OnWorkerChanged_);
+
     }
 
-    WorkerControl<void> GetWorkerControl()
+    void Set(const ValueType &value)
     {
-        return WorkerControl<void>(this->workerModel_);
+        this->isWaiting_ = true;
+        this->workerControl_.Set(value);
+
+        {
+            std::unique_lock lock(this->mutex_);
+
+            if (this->isWaiting_)
+            {
+                // Wait for the settings to be updated in the GUI thread.
+                this->condition_.wait(
+                    lock,
+                    [this]() -> bool
+                    {
+                        return !this->isWaiting_;
+                    });
+            }
+        }
     }
 
-    UserControl<void> GetWxControl()
+    Control GetControl() const
     {
-        return UserControl<void>(this->upstream_);
-    }
-
-    Type Get() const
-    {
-        std::lock_guard<std::mutex> lock(this->mutex_);
-        return this->value_;
-    }
-
-    explicit operator Type () const
-    {
-        std::lock_guard<std::mutex> lock(this->mutex_);
-        return this->value_;
-    }
-
-    // The defaut control is for the wx event loop.
-    template<typename Observer>
-    explicit operator UserControl<Observer> ()
-    {
-        return UserControl<Observer>(this->upstream_);
-    }
-
-    void Connect(void * observer, Callable callable)
-    {
-        this->upstream_.Connect(observer, callable);
-    }
-
-    void Disconnect(void * observer)
-    {
-        this->upstream_.Disconnect(observer);
+        return this->control_;
     }
 
 private:
-    void OnWorkerChanged_(pex::Argument<Type> value)
+    void OnMainThread_(pex::Argument<ValueType> value)
     {
-        if (this->ignoreEcho_)
-        {
-            return;
-        }
+        this->control_.Set(value);
 
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
-        }
-
-        // Queue the event for the wxWidgets event loop.
-        this->QueueEvent(new wxThreadEvent());
-    }
-
-    void OnWxEventLoop_(wxThreadEvent &)
-    {
-        Type value;
-
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            value = this->value_;
-        }
-
-        this->ignoreEcho_ = true;
-        this->upstream_.Set(value);
-        this->ignoreEcho_ = false;
-    }
-
-    void OnUpstreamChanged_(pex::Argument<Type> value)
-    {
-        if (this->ignoreEcho_)
-        {
-            return;
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
-        }
-
-        this->ignoreEcho_ = true;
-        this->workerModel_.Set(value);
-        this->ignoreEcho_ = false;
-    }
-
-
-    void SetWithoutNotify_(pex::Argument<Type> value)
-    {
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->value_ = value;
-        }
-
-        pex::ReferenceSetter<ThreadSafe>(this->upstream_).
-            SetWithoutNotify(value);
-    }
-
-    void DoNotify_()
-    {
-        // This will trigger OnWorkerChanged_, which will notify upstream_ in
-        // the wx event loop.
-        pex::ReferenceSetter<ThreadSafe>(this->upstream_).DoNotify();
+        // The main thread has been notified.
+        // Notify the waiting condition.
+        std::lock_guard lock(this->mutex_);
+        this->isWaiting_ = false;
+        this->condition_.notify_one();
     }
 
 private:
-    mutable std::mutex mutex_;
-    UpstreamHolder upstream_;
-    UpstreamTerminus upstreamTerminus_;
-    std::atomic_bool ignoreEcho_;
-    ThreadSafe workerModel_;
-    WorkerTerminus workerTerminus_;
-    Type value_;
+    std::mutex mutex_;
+    std::condition_variable condition_;
+    std::atomic_bool isWaiting_;
+
+    Control control_;
+    AsyncValue async_;
+    Endpoint endpoint_;
+    WorkerControl workerControl_;
 };
-
-
-} // end namespace experimental
 
 
 } // end namespace wxpex

@@ -4,10 +4,12 @@
 
 #include <pex/pex.h>
 
-#include "wxpex/wxshim.h"
-#include "wxpex/field.h"
-#include "wxpex/view.h"
-#include "wxpex/labeled_widget.h"
+#include <wxpex/field.h>
+#include <wxpex/view.h>
+#include <wxpex/labeled_widget.h>
+#include <wxpex/collapsible.h>
+#include <wxpex/border_sizer.h>
+#include <wx/statbox.h>
 
 
 template<typename T>
@@ -33,8 +35,7 @@ using WeaponsGroup = pex::Group<WeaponsFields, WeaponsTemplate>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
-template<typename Observer>
-using WeaponsControl = typename WeaponsGroup::Control<Observer>;
+using WeaponsControl = typename WeaponsGroup::Control;
 
 
 inline WeaponsPlain DefaultWeapons()
@@ -73,8 +74,7 @@ using GpsGroup = pex::Group<GpsFields, GpsTemplate>;
 using GpsPlain = typename GpsGroup::Plain;
 using GpsModel = typename GpsGroup::Model;
 
-template<typename Observer>
-using GpsControl = typename GpsGroup::Control<Observer>;
+using GpsControl = typename GpsGroup::Control;
 
 
 inline GpsPlain DefaultGps()
@@ -123,54 +123,50 @@ struct DataModel
 };
 
 
-template<typename Observer>
 struct DataControls
 {
-    WeaponsControl<Observer> weapons;
-    GpsControl<Observer> gps;
+    WeaponsControl weapons;
+    GpsControl gps;
 
     DataControls(DataModel &dataModel)
     {
         fields::AssignConvert<DataFields>(*this, dataModel);
     }
-
-    template<typename Other>
-    DataControls(const DataControls<Other> &other)
-    {
-        fields::AssignConvert<DataFields>(*this, other); 
-    }
 };
 
 
 template<template<typename, typename> typename Widget>
-class WeaponsWidget: public wxStaticBox
+class WeaponsWidget: public wxpex::Collapsible
 {
 public:
     using LayoutOptions = wxpex::LayoutOptions;
 
     WeaponsWidget(
         wxWindow *parent,
-        typename WeaponsGroup::Control<void> controls,
-        const LayoutOptions &layoutOptions = LayoutOptions{})
+        const std::string &name,
+        typename WeaponsGroup::Control controls,
+        const LayoutOptions &layoutOptions)
         :
-        wxStaticBox(parent, wxID_ANY, "Weapons")
+        wxpex::Collapsible(parent, name)
     {
         using namespace wxpex;
 
+        auto pane = this->GetBorderPane();
+
         auto firstFruit = LabeledWidget(
-            this,
+            pane,
             "firstFruit",
-            new Widget(this, controls.firstFruit));
+            new Widget(pane, controls.firstFruit));
 
         auto secondFruit = LabeledWidget(
-            this,
+            pane,
             "secondFruit",
-            new Widget(this, controls.secondFruit));
+            new Widget(pane, controls.secondFruit));
 
         auto notFruit = LabeledWidget(
-            this,
+            pane,
             "notFruit",
-            new Widget(this, controls.notFruit));
+            new Widget(pane, controls.notFruit));
 
         auto sizer = LayoutLabeled(
             layoutOptions,
@@ -178,48 +174,52 @@ public:
             secondFruit,
             notFruit);
 
-        this->SetSizerAndFit(sizer.release());
+        this->ConfigureBorderPane(5, std::move(sizer));
     }
 };
+
 
 using WeaponsView = WeaponsWidget<wxpex::View>;
 using WeaponsEntry = WeaponsWidget<wxpex::Field>;
 
 
 template<template<typename, typename> typename Widget>
-class GpsWidget: public wxStaticBox
+class GpsWidget: public wxpex::Collapsible
 {
 public:
     using LayoutOptions = wxpex::LayoutOptions;
 
     GpsWidget(
         wxWindow *parent,
-        GpsControl<void> controls,
+        const std::string &name,
+        GpsControl controls,
         const LayoutOptions &layoutOptions = LayoutOptions{})
         :
-        wxStaticBox(parent, wxID_ANY, "Gps")
+        wxpex::Collapsible(parent, name)
     {
         using namespace wxpex;
 
+        auto pane = this->GetBorderPane();
+
         auto time = LabeledWidget(
-            this,
+            pane,
             "time",
-            new Widget(this, controls.time));
+            new Widget(pane, controls.time));
 
         auto latitude = LabeledWidget(
-            this,
+            pane,
             "latitude",
-            new Widget(this, controls.latitude));
+            new Widget(pane, controls.latitude));
 
         auto longitude = LabeledWidget(
-            this,
+            pane,
             "longitude",
-            new Widget(this, controls.longitude));
+            new Widget(pane, controls.longitude));
 
         auto elevation = LabeledWidget(
-            this,
+            pane,
             "elevation",
-            new Widget(this, controls.elevation));
+            new Widget(pane, controls.elevation));
 
         auto sizer = LayoutLabeled(
             layoutOptions,
@@ -228,12 +228,86 @@ public:
             longitude,
             elevation);
 
-        this->SetSizerAndFit(sizer.release());
+        this->ConfigureBorderPane(5, std::move(sizer));
     }
 };
 
+
 using GpsView = GpsWidget<wxpex::View>;
 using GpsEntry = GpsWidget<wxpex::Field>;
+
+
+class GpsViews: public wxpex::Collapsible
+{
+public:
+    using LayoutOptions = wxpex::LayoutOptions;
+
+    GpsViews(
+        wxWindow *parent,
+        DataControls controls,
+        const LayoutOptions &layoutOptions)
+        :
+        wxpex::Collapsible(parent, "GPS")
+    {
+        auto borderPane = this->GetBorderPane();
+
+        auto gpsView =
+            new GpsWidget<wxpex::View>(
+                borderPane,
+                "GPS View",
+                controls.gps,
+                layoutOptions);
+
+        auto gpsEntry =
+            new GpsWidget<wxpex::Field>(
+                borderPane,
+                "GPS Entry",
+                controls.gps,
+                layoutOptions);
+
+        this->ConfigureBorderPane(
+            5,
+            wxpex::LayoutItems(wxpex::verticalItems, gpsView, gpsEntry));
+    }
+};
+
+
+class WeaponsViews: public wxpex::Collapsible
+{
+public:
+    using LayoutOptions = wxpex::LayoutOptions;
+
+    WeaponsViews(
+        wxWindow *parent,
+        DataControls controls,
+        const LayoutOptions &layoutOptions)
+        :
+        wxpex::Collapsible(parent, "Weapons")
+    {
+        auto borderPane = this->GetBorderPane();
+
+        auto weaponsView =
+            new WeaponsView(
+                borderPane,
+                "Weapons View",
+                controls.weapons,
+                layoutOptions);
+
+        auto weaponsEntry =
+            new WeaponsEntry(
+                borderPane,
+                "Weapons Entry",
+                controls.weapons,
+                layoutOptions);
+
+        auto sizer = wxpex::LayoutItems(
+            wxpex::verticalItems,
+            weaponsView,
+            weaponsEntry);
+
+        this->ConfigureBorderPane(5, std::move(sizer));
+    }
+};
 
 
 class DataView: public wxPanel
@@ -243,50 +317,17 @@ public:
 
     DataView(
         wxWindow *parent,
-        DataControls<void> controls,
+        DataControls controls,
         const LayoutOptions &layoutOptions = LayoutOptions{})
         :
         wxPanel(parent, wxID_ANY)
     {
-        auto weaponsView = wxpex::LabeledWidget(
-            this,
-            "Weapons View",
-            new WeaponsView(
-                this,
-                controls.weapons,
-                layoutOptions));
 
-        auto weaponsEntry = wxpex::LabeledWidget(
-            this,
-            "Weapons Entry",
-            new WeaponsEntry(
-                this,
-                controls.weapons,
-                layoutOptions));
-
-        auto gpsView = wxpex::LabeledWidget(
-            this,
-            "GPS View",
-            new GpsView(
-                this,
-                controls.gps,
-                layoutOptions));
-
-        auto gpsEntry = wxpex::LabeledWidget(
-            this,
-            "GPS Entry",
-            new GpsEntry(
-                this,
-                controls.gps,
-                layoutOptions));
+        auto weapons = new WeaponsViews(this, controls, layoutOptions);
+        auto gps = new GpsViews(this, controls, layoutOptions);
 
         this->SetSizerAndFit(
-            LayoutLabeled(
-                layoutOptions,
-                weaponsView,
-                weaponsEntry,
-                gpsView,
-                gpsEntry).release());
+            wxpex::LayoutItems(wxpex::verticalItems, weapons, gps).release());
     }
 };
 
@@ -294,13 +335,13 @@ public:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DataControls<void> controls)
+    ExampleFrame(DataControls controls)
         :
         wxFrame(nullptr, wxID_ANY, "Settings Demo")
     {
         auto dataView = new DataView(this, controls);
         auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
-        sizer->Add(dataView, 1, wxALL | wxEXPAND, 10); 
+        sizer->Add(dataView, 1, wxALL | wxEXPAND, 10);
         this->SetSizerAndFit(sizer.release());
     }
 };
@@ -319,7 +360,7 @@ public:
     bool OnInit() override
     {
         ExampleFrame *exampleFrame =
-            new ExampleFrame(DataControls<void>(this->data_));
+            new ExampleFrame(DataControls(this->data_));
 
         exampleFrame->Show();
 
@@ -332,4 +373,4 @@ private:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)

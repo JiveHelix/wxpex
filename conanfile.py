@@ -45,8 +45,8 @@ class WxpexConan(ConanFile):
         self.test_requires("catch2/2.13.8")
 
     def requirements(self):
-        self.requires("jive/[~1.0]")
-        self.requires("fields/[~1]")
-        self.requires("tau/[~1.7]")
-        self.requires("pex/[~0.8]")
-        self.requires("wxwidgets/3.2.1@jivehelix/stable")
+        self.requires("jive/[~1.1]")
+        self.requires("fields/[~1.2]")
+        self.requires("tau/[~1.9]")
+        self.requires("pex/[0.9.2]")
+        self.requires("wxwidgets/3.2.2.1@jivehelix/stable")

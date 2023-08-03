@@ -122,7 +122,7 @@ struct ApplicationModel: public ApplicationGroup::Model
 };
 
 
-using ApplicationControl = typename ApplicationGroup::Control<void>;
+using ApplicationControl = typename ApplicationGroup::Control;
 
 
 class ExampleApp: public wxApp

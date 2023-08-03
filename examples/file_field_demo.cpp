@@ -48,7 +48,7 @@ using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
 
 using Model = typename ApplicationGroup::Model;
 
-using Control = typename ApplicationGroup::Control<void>;
+using Control = typename ApplicationGroup::Control;
 
 
 class ExampleApp: public wxApp

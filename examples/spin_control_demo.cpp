@@ -19,7 +19,7 @@ using pex::Limit;
 
 
 using Wibble = pex::model::Range<double, Limit<0>, Limit<20>>;
-using WibbleControl = pex::control::Range<void, Wibble>;
+using WibbleControl = pex::control::Range<Wibble>;
 using WibbleValue = typename WibbleControl::Value;
 
 inline constexpr double defaultWibble = 10;
@@ -27,7 +27,7 @@ inline constexpr double wibbleIncrement = 1;
 
 
 using Wobble = pex::model::Range<float, Limit<-100>, Limit<100>>;
-using WobbleControl = pex::control::Range<void, Wobble>;
+using WobbleControl = pex::control::Range<Wobble>;
 using WobbleValue = typename WobbleControl::Value;
 
 inline constexpr float defaultWobble = 0;

@@ -20,7 +20,7 @@
 
 
 using Select = pex::model::Select<UnitSystem>;
-using SelectControl = pex::control::Select<void, Select>;
+using SelectControl = pex::control::Select<Select>;
 
 
 class ExampleApp: public wxApp

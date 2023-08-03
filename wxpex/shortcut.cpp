@@ -54,9 +54,7 @@ std::string GetModifierString(int modifierBitfield)
         {wxACCEL_RAW_CTRL, "RAWCTRL"}
     };
 
-    static const std::vector<wxAcceleratorEntryFlags>
-
-    modifierOrder
+    static const std::vector<wxAcceleratorEntryFlags> modifierOrder
     {
         wxACCEL_CTRL,
         wxACCEL_SHIFT,

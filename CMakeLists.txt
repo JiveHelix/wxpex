@@ -21,6 +21,10 @@ endif ()
 
 if (${PROJECT_IS_TOP_LEVEL})
 
+    if (ENABLE_TESTING)
+        add_subdirectory(test)
+    endif()
+
     if (${BUILD_EXAMPLES})
         add_subdirectory(examples)
     endif ()

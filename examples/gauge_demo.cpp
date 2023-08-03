@@ -1,5 +1,5 @@
-
 #include <thread>
+#include <pex/endpoint.h>
 #include "wxpex/gauge.h"
 #include "wxpex/button.h"
 
@@ -11,7 +11,8 @@ struct DemoFields
         fields::Field(&T::gauge1, "gauge1"),
         fields::Field(&T::gauge2, "gauge2"),
         fields::Field(&T::start, "start"),
-        fields::Field(&T::stop, "stop"));
+        fields::Field(&T::stop, "stop"),
+        fields::Field(&T::values, "values"));
 };
 
 
@@ -22,6 +23,7 @@ struct DemoTemplate
     T<wxpex::GaugeGroupMaker> gauge2;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
+    T<wxpex::MakeAsync<int>> values;
 
     static constexpr auto fields = DemoFields<DemoTemplate>::fields;
     static constexpr auto fieldsTypeName = "Demo";
@@ -29,11 +31,8 @@ struct DemoTemplate
 
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
-using DemoControl = typename DemoGroup::Control<void>;
+using DemoControl = typename DemoGroup::Control;
 using DemoModel = typename DemoGroup::Model;
-
-template<typename Observer>
-using DemoTerminus = typename DemoGroup::template Terminus<Observer>;
 
 
 class ExampleApp: public wxApp
@@ -44,15 +43,17 @@ public:
     ExampleApp()
         :
         model_{},
-        terminus_(this, this->model_),
+        endpoints_(this, this->model_),
+        observedValues_(),
         isRunning_{false},
         worker1_{},
         worker2_{}
     {
         this->model_.gauge1.Set(wxpex::GaugeState{{0, 100}});
         this->model_.gauge2.Set(wxpex::GaugeState{{0, 100}});
-        this->terminus_.start.Connect(&ExampleApp::OnStart_);
-        this->terminus_.stop.Connect(&ExampleApp::OnStop_);
+        this->endpoints_.start.Connect(&ExampleApp::OnStart_);
+        this->endpoints_.stop.Connect(&ExampleApp::OnStop_);
+        this->endpoints_.values.Connect(&ExampleApp::OnValues_);
     }
 
     ~ExampleApp()
@@ -82,6 +83,11 @@ private:
 
         this->worker2_ = std::thread(
             std::bind(&ExampleApp::WorkerThread2_, this));
+
+        this->observedValues_.clear();
+
+        this->worker3_ = std::thread(
+            std::bind(&ExampleApp::WorkerThread3_, this));
     }
 
     void OnStop_()
@@ -94,6 +100,17 @@ private:
         this->isRunning_ = false;
         this->worker1_.join();
         this->worker2_.join();
+        this->worker3_.join();
+
+        for (auto &i: this->observedValues_)
+        {
+            std::cout << i << std::endl;
+        }
+    }
+
+    void OnValues_(int values)
+    {
+        this->observedValues_.push_back(values);
     }
 
     void WorkerThread1_()
@@ -130,12 +147,30 @@ private:
         }
     }
 
+    void WorkerThread3_()
+    {
+        auto control = this->model_.values.GetWorkerControl();
+
+        for (int i = 0; i < 100; ++i)
+        {
+            if (i % 5 == 0)
+            {
+                using namespace std::chrono_literals;
+                std::this_thread::sleep_for(20ms);
+            }
+
+            control.Set(i);
+        }
+    }
+
 private:
     DemoModel model_;
-    DemoTerminus<ExampleApp> terminus_;
+    pex::EndpointGroup<ExampleApp, DemoControl> endpoints_;
+    std::vector<int> observedValues_;
     std::atomic_bool isRunning_;
     std::thread worker1_;
     std::thread worker2_;
+    std::thread worker3_;
 };
 
 
@@ -166,7 +201,7 @@ ExampleFrame::ExampleFrame(DemoControl demoControl)
     using namespace wxpex;
 
     auto gauge1 = new Gauge(this, demoControl.gauge1);
-    auto gauge2 = new Gauge(this, demoControl.gauge2);
+    auto gauge2 = new ValueGauge(this, demoControl.gauge2);
     auto startButton = new Button(this, "Start", demoControl.start);
     auto stopButton = new Button(this, "Stop", demoControl.stop);
 

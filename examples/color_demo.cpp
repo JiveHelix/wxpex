@@ -1,8 +1,10 @@
+#include <jive/scope_flag.h>
 #include <tau/color.h>
 #include <pex/value.h>
+#include <pex/endpoint.h>
 
-#include "wxpex/wxshim.h"
-#include "wxpex/color.h"
+#include <wxpex/wxshim.h>
+#include <wxpex/color_picker.h>
 
 
 
@@ -21,9 +23,8 @@ private:
             return;
         }
 
-        this->muted_ = true;
+        auto mute = jive::ScopeFlag(this->muted_);
         this->rgbColor_.Set(tau::HsvToRgb<uint8_t>(hsv));
-        this->muted_ = false;
     }
 
     void OnRgbColor_(const wxpex::Rgb &rgb)
@@ -33,18 +34,26 @@ private:
             return;
         }
 
-        this->muted_ = true;
-        this->hsvColor_.Set(tau::RgbToHsv<float>(rgb));
-        this->muted_ = false;
+        auto mute = jive::ScopeFlag(this->muted_);
+        this->hsvColor_.Set(tau::RgbToHsv<double>(rgb));
     }
 
-    wxpex::HsvModel hsvColor_ = wxpex::HsvModel{{{0, 1, 1}}};
+    wxpex::HsvModel hsvColor_ = wxpex::HsvModel{{{0, 1, 0.5}}};
 
     wxpex::RgbModel rgbColor_ =
         wxpex::RgbModel{tau::HsvToRgb<uint8_t>(hsvColor_.Get())};
 
-    wxpex::HsvTerminus<ExampleApp> hsvTerminus_;
-    wxpex::RgbTerminus<ExampleApp> rgbTerminus_;
+    wxpex::HsvControl hsvControl_;
+    wxpex::RgbControl rgbControl_;
+
+    using HsvConnect = pex::MakeConnector<ExampleApp, wxpex::HsvControl>;
+
+    std::unique_ptr<HsvConnect> hsvConnect_;
+
+    using RgbConnect = pex::MakeConnector<ExampleApp, wxpex::RgbControl>;
+
+    std::unique_ptr<RgbConnect> rgbConnect_;
+
     bool muted_ = false;
 };
 
@@ -62,22 +71,22 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
-    this->hsvTerminus_.Assign(
+    this->hsvControl_ = wxpex::HsvControl(this->hsvColor_);
+
+    this->hsvConnect_ = std::make_unique<HsvConnect>(
         this,
-        wxpex::HsvTerminus<ExampleApp>(this, this->hsvColor_));
+        this->hsvControl_,
+        &ExampleApp::OnHsvColor_);
 
-    this->hsvTerminus_.Connect(&ExampleApp::OnHsvColor_);
+    this->rgbControl_ = wxpex::RgbControl(this->rgbColor_);
 
-    this->rgbTerminus_.Assign(
+    this->rgbConnect_ = std::make_unique<RgbConnect>(
         this,
-        wxpex::RgbTerminus<ExampleApp>(this, this->rgbColor_));
-
-    this->rgbTerminus_.Connect(&ExampleApp::OnRgbColor_);
+        this->rgbControl_,
+        &ExampleApp::OnRgbColor_);
 
     ExampleFrame *exampleFrame =
-        new ExampleFrame(
-            wxpex::HsvControl(this->hsvColor_),
-            wxpex::RgbControl(this->rgbColor_));
+        new ExampleFrame(this->hsvControl_, this->rgbControl_);
 
     exampleFrame->Show();
 
@@ -89,8 +98,8 @@ ExampleFrame::ExampleFrame(wxpex::HsvControl hsv, wxpex::RgbControl rgb)
     :
     wxFrame(nullptr, wxID_ANY, "Color Demo")
 {
-    auto hsvPicker = new wxpex::HsvPicker(this, hsv);
-    auto rgbPicker = new wxpex::RgbPicker(this, rgb);
+    auto hsvPicker = new wxpex::HsvPicker(this, "HSV", hsv);
+    auto rgbPicker = new wxpex::RgbPicker(this, "RGB", rgb);
     auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
     sizer->Add(hsvPicker, 1, wxEXPAND | wxALL, 10);
