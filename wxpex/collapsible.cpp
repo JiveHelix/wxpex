@@ -49,7 +49,7 @@ void Collapsible::ConfigureBorderPane(
     int pixels,
     std::unique_ptr<wxSizer> &&sizer)
 {
-    auto borderSizer = wxpex::BorderSizer(pixels, std::move(sizer));
+    auto borderSizer = wxpex::BorderSizer(std::move(sizer), pixels);
 
     this->borderPane_->SetSizer(borderSizer.get());
     borderSizer->SetSizeHints(this->borderPane_);

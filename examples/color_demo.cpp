@@ -102,8 +102,8 @@ ExampleFrame::ExampleFrame(wxpex::HsvControl hsv, wxpex::RgbControl rgb)
     auto rgbPicker = new wxpex::RgbPicker(this, "RGB", rgb);
     auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
-    sizer->Add(hsvPicker, 1, wxEXPAND | wxALL, 10);
-    sizer->Add(rgbPicker, 1, wxEXPAND | wxALL, 10);
+    sizer->Add(hsvPicker, 0, wxEXPAND | wxALL, 10);
+    sizer->Add(rgbPicker, 0, wxEXPAND | wxBOTTOM | wxLEFT | wxRIGHT, 10);
 
     this->SetSizerAndFit(sizer.release());
 }

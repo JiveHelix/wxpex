@@ -16,6 +16,10 @@
 #include "wxpex/color.h"
 #include "wxpex/graphics.h"
 
+#ifdef __WXMSW__
+#include <wx/dcbuffer.h>
+#endif
+
 
 namespace wxpex
 {
@@ -207,6 +211,11 @@ public:
         highlight_(settings.GetHighlightColor()),
         outline_(settings.GetOutlineColor())
     {
+#ifdef __WXMSW__
+        this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+#else
+        this->SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+#endif
         this->value_.Connect(&Knob::OnValue_);
         this->minimum_.Connect(&Knob::OnMinimum_);
         this->maximum_.Connect(&Knob::OnMaximum_);
@@ -311,9 +320,15 @@ private:
 
     void OnPaint_(wxPaintEvent &)
     {
+
+#ifdef __WXMSW__
+        wxBufferedPaintDC dc(this);
+#else
         wxPaintDC dc(this);
+#endif
 
         auto size = ToSize<double>(this->GetClientSize());
+
         auto center = (size / 2).ToPoint2d();
         auto gradientOffset = center;
         auto radius = double(this->radius_);
@@ -323,6 +338,12 @@ private:
         gradientOffset.y -= offset;
         auto gradientBegin = ToWxPoint(gradientOffset);
         auto gradientEnd = ToWxPoint(center);
+
+#ifdef __WXMSW__
+        auto backgroundColor = this->GetBackgroundColour();
+        dc.SetBrush(wxBrush(backgroundColor));
+        dc.DrawRectangle(wxPoint(0, 0), ToWxSize(size));
+#endif
 
         GraphicsContext graphicsContext(dc);
 

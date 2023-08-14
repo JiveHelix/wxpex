@@ -7,7 +7,17 @@
 #endif
 
 
-#ifndef _WIN32
+#if defined _WIN32 && !(defined __MINGW32__ || __MINGW64__)
+
+#define WXSHIM_PUSH_IGNORES \
+    __pragma(warning(push)) \
+    __pragma(warning(disable:4996)) \
+    __pragma(warning(disable:4242))
+
+#define WXSHIM_POP_IGNORES \
+    __pragma(warning(pop))
+
+#else
 
 #define WXSHIM_PUSH_IGNORES \
     DO_PRAGMA(GCC diagnostic push); \
@@ -17,15 +27,5 @@
 
 #define WXSHIM_POP_IGNORES \
     DO_PRAGMA(GCC diagnostic pop)
-
-#else
-
-#define WXSHIM_PUSH_IGNORES \
-    __pragma(warning(push)) \
-    __pragma(warning(disable:4996)) \
-    __pragma(warning(disable:4242))
-
-#define WXSHIM_POP_IGNORES \
-    __pragma(warning(pop))
 
 #endif

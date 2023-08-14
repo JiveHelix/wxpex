@@ -19,6 +19,46 @@ target_link_libraries(
 target_sources(
     wxpex
     PRIVATE
+    app.h
+    array_string.h
+    bitset_check_boxes.h
+    border_sizer.h
+    button.h
+    check_box.h
+    collapsible.h
+    color.h
+    color_picker.h
+    combo_box.h
+    converter.h
+    cursor.h
+    directory_field.h
+    field.h
+    file_field.h
+    gauge.h
+    graphics.h
+    ignores.h
+    indent_sizer.h
+    knob.h
+    labeled_widget.h
+    layout_top_level.h
+    modifier.h
+    point.h
+    radio_box.h
+    region.h
+    scrolled.h
+    shape.h
+    shortcut.h
+    size.h
+    slider.h
+    spin_control.h
+    static_box.h
+    style.h
+    tile.h
+    view.h
+    window.h
+    wxshim.h
+    wx_ostream.h
+    wx_select.h
     border_sizer.cpp
     collapsible.cpp
     gauge.cpp

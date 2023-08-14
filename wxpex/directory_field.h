@@ -17,24 +17,23 @@ namespace wxpex
 {
 
 
-struct FileDialogOptions
+struct DirectoryDialogOptions
 {
-    long style = wxFD_OPEN | wxFD_FILE_MUST_EXIST;
+    long style = wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST;
     std::string message = "";
-    std::string wildcard = "";
 };
 
 
 template<typename Control>
-class FileField: public wxControl
+class DirectoryField: public wxControl
 {
 public:
-    static constexpr auto observerName = "FileField";
+    static constexpr auto observerName = "DirectoryField";
 
-    FileField(
+    DirectoryField(
         wxWindow *parent,
         Control control,
-        const FileDialogOptions &options = FileDialogOptions{})
+        const DirectoryDialogOptions &options = DirectoryDialogOptions{})
         :
         wxControl(parent, wxID_ANY),
         value_(control),
@@ -54,32 +53,30 @@ public:
 
         this->SetSizerAndFit(sizer.release());
 
-        this->Bind(wxEVT_BUTTON, &FileField::OnChoose_, this);
+        this->Bind(wxEVT_BUTTON, &DirectoryField::OnChoose_, this);
     }
 
     void OnChoose_(wxCommandEvent &)
     {
-        auto [directory, file] = jive::path::Split(this->value_.Get());
+        directory = this->value_.Get();
 
-        wxFileDialog openFile(
+        wxDirDialog directoryDialog(
             nullptr,
             wxString(this->options_.message),
             wxString(directory),
-            wxString(file),
-            wxString(this->options_.wildcard),
             this->options_.style);
 
-        if (openFile.ShowModal() == wxID_CANCEL)
+        if (directoryDialog.ShowModal() == wxID_CANCEL)
         {
             return;
         }
 
-        this->value_.Set(openFile.GetPath());
+        this->value_.Set(directoryDialog.GetPath());
     }
 
 private:
     Control value_;
-    FileDialogOptions options_;
+    DirectoryDialogOptions options_;
 };
 
 
