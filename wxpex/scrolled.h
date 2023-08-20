@@ -2,8 +2,13 @@
 
 
 #include <memory>
+
+#include "wxpex/ignores.h"
+
+WXSHIM_PUSH_IGNORES
 #include <wx/sizer.h>
 #include <wx/scrolwin.h>
+WXSHIM_POP_IGNORES
 
 
 namespace wxpex

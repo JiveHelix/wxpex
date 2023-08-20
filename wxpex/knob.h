@@ -17,8 +17,10 @@
 #include "wxpex/graphics.h"
 
 #ifdef __WXMSW__
+WXSHIM_PUSH_IGNORES
 #include <wx/dcbuffer.h>
-#endif
+WXSHIM_POP_IGNORES
+#endif // __WXMSW__
 
 
 namespace wxpex

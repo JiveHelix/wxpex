@@ -1,10 +1,14 @@
 #pragma once
 
-#include "wxpex/wxshim.h"
-
-#include <wx/gauge.h>
 #include <pex/group.h>
 #include <pex/endpoint.h>
+
+#include "wxpex/ignores.h"
+
+WXSHIM_PUSH_IGNORES
+#include <wx/gauge.h>
+WXSHIM_POP_IGNORES
+
 #include "wxpex/async.h"
 #include "wxpex/style.h"
 

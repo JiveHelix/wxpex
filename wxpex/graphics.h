@@ -1,13 +1,17 @@
 #pragma once
 
-
-#include <wx/graphics.h>
-#include <wx/dcgraph.h>
 #include <fields/fields.h>
 #include <jive/equal.h>
 #include <jive/create_exception.h>
 #include <tau/size.h>
 #include <tau/scale.h>
+
+#include "wxpex/ignores.h"
+
+WXSHIM_PUSH_IGNORES
+#include <wx/graphics.h>
+#include <wx/dcgraph.h>
+WXSHIM_POP_IGNORES
 
 
 namespace wxpex

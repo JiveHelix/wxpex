@@ -1,9 +1,14 @@
 #pragma once
 
 #include <memory>
-#include "wxpex/wxshim.h"
-#include <wxpex/size.h>
+
+#include "wxpex/ignores.h"
+
+WXSHIM_PUSH_IGNORES
 #include <wx/collpane.h>
+WXSHIM_POP_IGNORES
+
+#include "wxpex/size.h"
 
 
 namespace wxpex
