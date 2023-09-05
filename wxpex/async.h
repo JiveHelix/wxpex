@@ -351,6 +351,170 @@ private:
 };
 
 
+class AsyncSignal: public wxEvtHandler
+{
+public:
+    static constexpr auto observerName = "wxpex::AsyncSignal";
+
+    using ThreadSafe = pex::model::Signal;
+    using Callable = typename ThreadSafe::Callable;
+
+    struct Control
+        :
+        public pex::control::Signal<>
+    {
+        using Base = pex::control::Signal<>;
+
+        Control()
+            :
+            Base(),
+            async_(nullptr)
+        {
+
+        }
+
+        Control(const Control &other)
+            :
+            Base(other),
+            async_(other.async_)
+        {
+
+        }
+
+        Control & operator=(const Control &other)
+        {
+            if (&other == this)
+            {
+                return *this;
+            }
+
+            this->Base::operator=(other);
+            this->async_ = other.async_;
+
+            return *this;
+        }
+
+        Control(ThreadSafe &threadSafe, AsyncSignal *async)
+            :
+            Base(threadSafe),
+            async_(async)
+        {
+
+        }
+
+        Control GetWorkerControl()
+        {
+            if (!this->async_)
+            {
+                throw std::logic_error("Unitialized control");
+            }
+
+            return Control(this->async_->workerModel_, this->async_);
+        }
+
+    private:
+        AsyncSignal *async_;
+    };
+
+
+    AsyncSignal()
+        :
+        mutex_(),
+        ignoreTrigger_(),
+        model_(),
+        endpoint_(this, Control(this->model_, this)),
+        workerModel_(),
+        workerEndpoint_(this, Control(this->workerModel_, this))
+    {
+        this->Initialize_();
+    }
+
+    AsyncSignal(const AsyncSignal &) = delete;
+    AsyncSignal(AsyncSignal &&) = delete;
+
+protected:
+    void Initialize_()
+    {
+        this->Bind(wxEVT_THREAD, &AsyncSignal::OnWxEventLoop_, this);
+        this->endpoint_.Connect(&AsyncSignal::OnWxChanged_);
+        this->workerEndpoint_.Connect(&AsyncSignal::OnWorkerChanged_);
+    }
+
+public:
+    Control GetWorkerControl()
+    {
+        return Control(this->workerModel_, this);
+    }
+
+    Control GetWxControl()
+    {
+        return Control(this->model_, this);
+    }
+
+    void Trigger()
+    {
+        this->model_.Trigger();
+    }
+    // The defaut control is for the wx event loop.
+    operator Control ()
+    {
+        return Control(this->model_, this);
+    }
+
+    void Connect(void * observer, Callable callable)
+    {
+        this->model_.Connect(observer, callable);
+    }
+
+    void Disconnect(void * observer)
+    {
+        this->model_.Disconnect(observer);
+    }
+
+private:
+    void OnWorkerChanged_()
+    {
+        if (this->ignoreTrigger_)
+        {
+            return;
+        }
+
+        // Queue the event for the wxWidgets event loop.
+        this->QueueEvent(new wxThreadEvent());
+    }
+
+    void OnWxEventLoop_(wxThreadEvent &)
+    {
+        this->ignoreTrigger_ = true;
+        this->model_.Trigger();
+        this->ignoreTrigger_ = false;
+    }
+
+    void OnWxChanged_()
+    {
+        if (this->ignoreTrigger_)
+        {
+            return;
+        }
+
+        this->ignoreTrigger_ = true;
+        this->workerModel_.Trigger();
+        this->ignoreTrigger_ = false;
+    }
+
+private:
+    mutable std::mutex mutex_;
+    bool ignoreTrigger_;
+    ThreadSafe model_;
+    pex::Endpoint<AsyncSignal, Control> endpoint_;
+    ThreadSafe workerModel_;
+    pex::Endpoint<AsyncSignal, Control> workerEndpoint_;
+};
+
+
+static_assert(pex::IsControlSignal<typename AsyncSignal::Control>);
+
+
 template<typename Control>
 class SetWait
 {
@@ -420,6 +584,83 @@ private:
 
     Control control_;
     AsyncValue async_;
+    Endpoint endpoint_;
+    WorkerControl workerControl_;
+};
+
+
+class TriggerWait
+{
+public:
+    using Control = pex::control::Signal<>;
+    using WorkerControl = typename AsyncSignal::Control;
+
+    using Endpoint =
+        pex::Endpoint<TriggerWait, WorkerControl>;
+
+    TriggerWait(const Control &control)
+        :
+        mutex_(),
+        condition_(),
+        isWaiting_(false),
+        control_(control),
+        asyncSignal_(),
+
+        endpoint_(
+            this,
+            this->asyncSignal_.GetWxControl(),
+            &TriggerWait::OnMainThread_),
+
+        workerControl_(this->asyncSignal_.GetWorkerControl())
+    {
+
+    }
+
+    void Trigger()
+    {
+        this->isWaiting_ = true;
+        this->workerControl_.Trigger();
+
+        {
+            std::unique_lock lock(this->mutex_);
+
+            if (this->isWaiting_)
+            {
+                // Wait for the settings to be updated in the GUI thread.
+                this->condition_.wait(
+                    lock,
+                    [this]() -> bool
+                    {
+                        return !this->isWaiting_;
+                    });
+            }
+        }
+    }
+
+    Control GetControl() const
+    {
+        return this->control_;
+    }
+
+private:
+    void OnMainThread_()
+    {
+        this->control_.Trigger();
+
+        // The main thread has been notified.
+        // Notify the waiting condition.
+        std::lock_guard lock(this->mutex_);
+        this->isWaiting_ = false;
+        this->condition_.notify_one();
+    }
+
+private:
+    std::mutex mutex_;
+    std::condition_variable condition_;
+    std::atomic_bool isWaiting_;
+
+    Control control_;
+    AsyncSignal asyncSignal_;
     Endpoint endpoint_;
     WorkerControl workerControl_;
 };
