@@ -26,7 +26,7 @@ public:
         auto userControls = this->brain_->GetUserControls();
         this->quit_.Assign(this, Quit(this, userControls.quit));
         this->quit_.Connect(&App<Brain>::OnQuit_);
-        this->brain_->LayoutWindows();
+        this->brain_->CreateFrame();
 
         this->doQuit_ = std::make_unique<wxpex::CallAfter>(
             [this]() -> void
