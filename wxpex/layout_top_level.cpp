@@ -1,5 +1,8 @@
 #include "wxpex/layout_top_level.h"
 
+#include <iostream>
+#include "wxpex/size.h"
+
 
 namespace wxpex
 {

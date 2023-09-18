@@ -174,7 +174,7 @@ public:
             secondFruit,
             notFruit);
 
-        this->ConfigureBorderPane(5, std::move(sizer));
+        this->ConfigureBorderPane(std::move(sizer), 0);
     }
 };
 
@@ -199,7 +199,7 @@ public:
     {
         using namespace wxpex;
 
-        auto pane = this->GetBorderPane();
+        auto pane = this->GetPane();
 
         auto time = LabeledWidget(
             pane,
@@ -228,7 +228,7 @@ public:
             longitude,
             elevation);
 
-        this->ConfigureBorderPane(5, std::move(sizer));
+        this->ConfigureTopSizer(std::move(sizer));
     }
 };
 
@@ -249,24 +249,23 @@ public:
         :
         wxpex::Collapsible(parent, "GPS")
     {
-        auto borderPane = this->GetBorderPane();
+        auto pane = this->GetPane();
 
         auto gpsView =
             new GpsWidget<wxpex::View>(
-                borderPane,
+                pane,
                 "GPS View",
                 controls.gps,
                 layoutOptions);
 
         auto gpsEntry =
             new GpsWidget<wxpex::Field>(
-                borderPane,
+                pane,
                 "GPS Entry",
                 controls.gps,
                 layoutOptions);
 
-        this->ConfigureBorderPane(
-            5,
+        this->ConfigureTopSizer(
             wxpex::LayoutItems(wxpex::verticalItems, gpsView, gpsEntry));
     }
 };
@@ -284,18 +283,18 @@ public:
         :
         wxpex::Collapsible(parent, "Weapons")
     {
-        auto borderPane = this->GetBorderPane();
+        auto pane = this->GetPane();
 
         auto weaponsView =
             new WeaponsView(
-                borderPane,
+                pane,
                 "Weapons View",
                 controls.weapons,
                 layoutOptions);
 
         auto weaponsEntry =
             new WeaponsEntry(
-                borderPane,
+                pane,
                 "Weapons Entry",
                 controls.weapons,
                 layoutOptions);
@@ -305,7 +304,7 @@ public:
             weaponsView,
             weaponsEntry);
 
-        this->ConfigureBorderPane(5, std::move(sizer));
+        this->ConfigureTopSizer(std::move(sizer));
     }
 };
 

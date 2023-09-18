@@ -20,7 +20,12 @@ Collapsible::Collapsible(
         wxDefaultSize,
         wxTAB_TRAVERSAL | wxCP_NO_TLW_RESIZE),
     borderPane_(nullptr),
-    label_(label)
+    label_(label),
+    doLayoutTopLevel_(
+        [this]() -> void
+        {
+            wxpex::LayoutTopLevel(this);
+        })
 {
     this->Bind(
         wxEVT_COLLAPSIBLEPANE_CHANGED,
@@ -46,26 +51,55 @@ wxPanel * Collapsible::GetBorderPane(long borderStyle)
 
 
 void Collapsible::ConfigureBorderPane(
-    int pixels,
-    std::unique_ptr<wxSizer> &&sizer)
+    std::unique_ptr<wxSizer> &&sizer,
+    int pixels)
 {
     auto borderSizer = wxpex::BorderSizer(std::move(sizer), pixels);
+
 
     this->borderPane_->SetSizer(borderSizer.get());
     borderSizer->SetSizeHints(this->borderPane_);
     borderSizer.release();
 
     auto paneSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
+
+#ifdef __WXMSW__
+    // Add correction to prevent panel members from running off the right edge
+    // of the pane.
+    auto correctionSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+
+    correctionSizer->Add(
+        this->borderPane_,
+        1,
+        wxEXPAND | wxRIGHT | wxBOTTOM,
+        5);
+
+    paneSizer->Add(correctionSizer.release(), 1, wxEXPAND);
+#else
     paneSizer->Add(this->borderPane_, 1, wxEXPAND);
-    this->ConfigureTopSizer(std::move(paneSizer));
+#endif
+
+    this->GetPane()->SetSizer(paneSizer.get());
+    paneSizer->Fit(this->GetPane());
+    paneSizer.release();
 }
 
 
 void Collapsible::ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer)
 {
+#ifdef __WXMSW__
+    // Add correction to prevent panel members from running off the right edge
+    // of the pane.
+    auto correctionSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+    correctionSizer->Add(sizer.release(), 1, wxEXPAND | wxRIGHT | wxBOTTOM, 5);
+    this->GetPane()->SetSizer(correctionSizer.get());
+    correctionSizer->Fit(this->GetPane());
+    correctionSizer.release();
+#else
     this->GetPane()->SetSizer(sizer.get());
     sizer->Fit(this->GetPane());
     sizer.release();
+#endif
 }
 
 
@@ -86,7 +120,7 @@ void Collapsible::UpdateMinimumSize_() const
     }
 }
 
-#ifdef __WXGTK__
+#if defined(__WXGTK__)
 
 wxSize Collapsible::DoGetBestSize() const
 {
@@ -103,23 +137,48 @@ wxSize Collapsible::DoGetBestSize() const
 wxSize Collapsible::DoGetBestClientSize() const
 {
     // Always require the minimum width of expanded children.
-    auto paneBestSize = this->GetPane()->GetBestSize();
-    wxSize superBestSize = this->wxCollapsiblePane::DoGetBestClientSize();
-    superBestSize.SetWidth(paneBestSize.GetWidth());
+    // Adapted from the parent class's implementation of DoGetBestClientSize.
+    auto size = this->m_sz->GetMinSize();
+    size.SetWidth(std::max(size.x, this->m_pPane->GetBestSize().x));
 
-    return superBestSize;
+    if (this->IsExpanded())
+    {
+        size.SetHeight(
+            size.y + this->GetBorder() + this->m_pPane->GetBestSize().y);
+    }
+
+    return size;
 }
 
 #endif
 
+
+void Collapsible::ReportWindowSize_(wxWindow *window, size_t depth)
+{
+    std::cout << std::string(depth * 4, ' ') << depth << std::endl;
+
+    auto bestSize = window->GetBestSize();
+    auto size = window->GetSize();
+
+    std::cout << std::string(depth * 4, ' ')
+        << "best size: " << wxpex::ToSize<int>(bestSize) << std::endl;
+
+    std::cout << std::string(depth * 4, ' ')
+        << "size: " << wxpex::ToSize<int>(size) << std::endl;
+}
+
+
+void Collapsible::FixWindowSize_(wxWindow *window)
+{
+    window->InvalidateBestSize();
+    window->SetInitialSize();
+}
+
+
 void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
 {
-    // Allow parent windows to listen for this event.
-    event.Skip();
-
     this->UpdateMinimumSize_();
 
-    // Invalide best size of all parents.
     wxWindow *window;
 
     if (this->borderPane_)
@@ -131,18 +190,27 @@ void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
         window = this->GetPane();
     }
 
-#if 1
-    window->InvalidateBestSize();
-#else
+    // Invalidate best size of all parents.
     auto top = wxGetTopLevelParent(window);
+
+    std::vector<wxWindow *> windows;
 
     for (; window != top; window = window->GetParent())
     {
-        window->InvalidateBestSize();
+        windows.push_back(window);
     }
-#endif
 
-    wxpex::LayoutTopLevel(this);
+    windows.push_back(top);
+
+    for (size_t depth = 0; depth < windows.size(); ++depth)
+    {
+        this->FixWindowSize_(windows[depth]);
+    }
+
+    this->doLayoutTopLevel_();
+
+    // Allow parent windows to listen for this event.
+    event.Skip();
 }
 
 

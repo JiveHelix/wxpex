@@ -9,6 +9,7 @@ WXSHIM_PUSH_IGNORES
 WXSHIM_POP_IGNORES
 
 #include "wxpex/size.h"
+#include "wxpex/async.h"
 
 
 namespace wxpex
@@ -23,13 +24,11 @@ public:
     void ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer);
 
     void ConfigureBorderPane(
-        int pixels,
-        std::unique_ptr<wxSizer> &&sizer);
+        std::unique_ptr<wxSizer> &&sizer,
+        int pixels);
 
-#ifdef __WXGTK__
-    // WXGTK uses DoGetBestSize, and WXMAC ignores it.
-    // TODO: See what MSW does.
-    // TODO: Submit a PR to make all three consistent.
+#if defined(__WXGTK__)
+    // WXGTK uses DoGetBestSize, and WXMAC/WXMSW ignore it.
     wxSize DoGetBestSize() const override;
 #else
     wxSize DoGetBestClientSize() const override;
@@ -37,14 +36,19 @@ public:
 
     wxPanel * GetBorderPane(long borderStyle = wxBORDER_SIMPLE);
 
+
 protected:
     void OnChanged_(wxCollapsiblePaneEvent &);
 
     void UpdateMinimumSize_() const;
 
+    void ReportWindowSize_(wxWindow *window, size_t depth);
+    void FixWindowSize_(wxWindow *window);
+
 private:
     wxPanel *borderPane_;
     std::string label_;
+    wxpex::CallAfter doLayoutTopLevel_;
 };
 
 
