@@ -19,13 +19,12 @@ namespace wxpex
 class Collapsible: public wxCollapsiblePane
 {
 public:
-    Collapsible(wxWindow *parent, const std::string &label);
+    Collapsible(
+        wxWindow *parent,
+        const std::string &label,
+        long borderStyle = wxBORDER_NONE);
 
     void ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer);
-
-    void ConfigureBorderPane(
-        std::unique_ptr<wxSizer> &&sizer,
-        int pixels);
 
 #if defined(__WXGTK__)
     // WXGTK uses DoGetBestSize, and WXMAC/WXMSW ignore it.
@@ -34,10 +33,14 @@ public:
     wxSize DoGetBestClientSize() const override;
 #endif
 
-    wxPanel * GetBorderPane(long borderStyle = wxBORDER_SIMPLE);
+    wxWindow * GetPanel();
 
 
 protected:
+    void ConfigureBorderPane_(
+        std::unique_ptr<wxSizer> &&sizer,
+        int pixels);
+
     void OnChanged_(wxCollapsiblePaneEvent &);
 
     void UpdateMinimumSize_() const;

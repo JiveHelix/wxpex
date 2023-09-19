@@ -4,7 +4,7 @@ from conans import ConanFile, CMake, tools
 
 class WxpexConan(ConanFile):
     name = "wxpex"
-    version = "0.9.2"
+    version = "0.9.3"
 
     scm = {
         "type": "git",

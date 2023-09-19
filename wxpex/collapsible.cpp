@@ -10,7 +10,8 @@ namespace wxpex
 
 Collapsible::Collapsible(
     wxWindow *parent,
-    const std::string &label)
+    const std::string &label,
+    long borderStyle)
     :
     wxCollapsiblePane(
         parent,
@@ -27,6 +28,16 @@ Collapsible::Collapsible(
             wxpex::LayoutTopLevel(this);
         })
 {
+    if (borderStyle != wxBORDER_NONE)
+    {
+        this->borderPane_ = new wxPanel(
+            this->m_pPane,
+            wxID_ANY,
+            wxDefaultPosition,
+            wxDefaultSize,
+            borderStyle);
+    }
+
     this->Bind(
         wxEVT_COLLAPSIBLEPANE_CHANGED,
         &Collapsible::OnChanged_,
@@ -34,23 +45,18 @@ Collapsible::Collapsible(
 }
 
 
-wxPanel * Collapsible::GetBorderPane(long borderStyle)
+wxWindow * Collapsible::GetPanel()
 {
     if (this->borderPane_)
     {
         return this->borderPane_;
     }
 
-    return this->borderPane_ = new wxPanel(
-        this->GetPane(),
-        wxID_ANY,
-        wxDefaultPosition,
-        wxDefaultSize,
-        borderStyle);
+    return this->m_pPane;
 }
 
 
-void Collapsible::ConfigureBorderPane(
+void Collapsible::ConfigureBorderPane_(
     std::unique_ptr<wxSizer> &&sizer,
     int pixels)
 {
@@ -79,25 +85,31 @@ void Collapsible::ConfigureBorderPane(
     paneSizer->Add(this->borderPane_, 1, wxEXPAND);
 #endif
 
-    this->GetPane()->SetSizer(paneSizer.get());
-    paneSizer->Fit(this->GetPane());
+    this->m_pPane->SetSizer(paneSizer.get());
+    paneSizer->Fit(this->m_pPane);
     paneSizer.release();
 }
 
 
 void Collapsible::ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer)
 {
+    if (this->borderPane_)
+    {
+        this->ConfigureBorderPane_(std::move(sizer), 3);
+        return;
+    }
+
 #ifdef __WXMSW__
     // Add correction to prevent panel members from running off the right edge
     // of the pane.
     auto correctionSizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
     correctionSizer->Add(sizer.release(), 1, wxEXPAND | wxRIGHT | wxBOTTOM, 5);
-    this->GetPane()->SetSizer(correctionSizer.get());
-    correctionSizer->Fit(this->GetPane());
+    this->m_pPane->SetSizer(correctionSizer.get());
+    correctionSizer->Fit(this->m_pPane);
     correctionSizer.release();
 #else
-    this->GetPane()->SetSizer(sizer.get());
-    sizer->Fit(this->GetPane());
+    this->m_pPane->SetSizer(sizer.get());
+    sizer->Fit(this->m_pPane);
     sizer.release();
 #endif
 }
@@ -108,10 +120,10 @@ void Collapsible::UpdateMinimumSize_() const
     if (this->borderPane_)
     {
         // If the borderPane_ has changed size, the sizer on its parent
-        // (GetPane()) stubbornly refuses to acknowledge it, and continues to
+        // (m_pPane) stubbornly refuses to acknowledge it, and continues to
         // report the initial minimum size.
         auto borderBestSize = this->borderPane_->GetBestSize();
-        wxSizer *paneSizer = this->GetPane()->GetSizer();
+        wxSizer *paneSizer = this->m_pPane->GetSizer();
 
         if (paneSizer)
         {
@@ -125,7 +137,7 @@ void Collapsible::UpdateMinimumSize_() const
 wxSize Collapsible::DoGetBestSize() const
 {
     // Always require the minimum width of expanded children.
-    auto paneBestSize = this->GetPane()->GetBestSize();
+    auto paneBestSize = this->m_pPane->GetBestSize();
     wxSize superBestSize = this->wxCollapsiblePane::DoGetBestSize();
     superBestSize.SetWidth(paneBestSize.GetWidth());
 
@@ -187,7 +199,7 @@ void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
     }
     else
     {
-        window = this->GetPane();
+        window = this->m_pPane;
     }
 
     // Invalidate best size of all parents.

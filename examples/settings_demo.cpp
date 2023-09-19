@@ -147,11 +147,11 @@ public:
         typename WeaponsGroup::Control controls,
         const LayoutOptions &layoutOptions)
         :
-        wxpex::Collapsible(parent, name)
+        wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
     {
         using namespace wxpex;
 
-        auto pane = this->GetBorderPane();
+        auto pane = this->GetPanel();
 
         auto firstFruit = LabeledWidget(
             pane,
@@ -174,7 +174,7 @@ public:
             secondFruit,
             notFruit);
 
-        this->ConfigureBorderPane(std::move(sizer), 0);
+        this->ConfigureTopSizer(std::move(sizer));
     }
 };
 
@@ -199,27 +199,27 @@ public:
     {
         using namespace wxpex;
 
-        auto pane = this->GetPane();
+        auto panel = this->GetPanel();
 
         auto time = LabeledWidget(
-            pane,
+            panel,
             "time",
-            new Widget(pane, controls.time));
+            new Widget(panel, controls.time));
 
         auto latitude = LabeledWidget(
-            pane,
+            panel,
             "latitude",
-            new Widget(pane, controls.latitude));
+            new Widget(panel, controls.latitude));
 
         auto longitude = LabeledWidget(
-            pane,
+            panel,
             "longitude",
-            new Widget(pane, controls.longitude));
+            new Widget(panel, controls.longitude));
 
         auto elevation = LabeledWidget(
-            pane,
+            panel,
             "elevation",
-            new Widget(pane, controls.elevation));
+            new Widget(panel, controls.elevation));
 
         auto sizer = LayoutLabeled(
             layoutOptions,
@@ -249,18 +249,18 @@ public:
         :
         wxpex::Collapsible(parent, "GPS")
     {
-        auto pane = this->GetPane();
+        auto panel = this->GetPanel();
 
         auto gpsView =
             new GpsWidget<wxpex::View>(
-                pane,
+                panel,
                 "GPS View",
                 controls.gps,
                 layoutOptions);
 
         auto gpsEntry =
             new GpsWidget<wxpex::Field>(
-                pane,
+                panel,
                 "GPS Entry",
                 controls.gps,
                 layoutOptions);
@@ -283,18 +283,18 @@ public:
         :
         wxpex::Collapsible(parent, "Weapons")
     {
-        auto pane = this->GetPane();
+        auto panel = this->GetPanel();
 
         auto weaponsView =
             new WeaponsView(
-                pane,
+                panel,
                 "Weapons View",
                 controls.weapons,
                 layoutOptions);
 
         auto weaponsEntry =
             new WeaponsEntry(
-                pane,
+                panel,
                 "Weapons Entry",
                 controls.weapons,
                 layoutOptions);
