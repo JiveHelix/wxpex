@@ -51,6 +51,8 @@ target_sources(
     size.h
     slider.h
     spin_control.h
+    splitter.h
+    splitter.cpp
     static_box.h
     style.h
     tile.h

@@ -9,7 +9,6 @@ WXSHIM_PUSH_IGNORES
 WXSHIM_POP_IGNORES
 
 #include "wxpex/size.h"
-#include "wxpex/async.h"
 
 
 namespace wxpex
@@ -46,12 +45,12 @@ protected:
     void UpdateMinimumSize_() const;
 
     void ReportWindowSize_(wxWindow *window, size_t depth);
-    void FixWindowSize_(wxWindow *window);
+    void FixCollapsibleSize_(wxWindow *window);
+    void FixContainerSize_(wxWindow *window);
 
 private:
     wxPanel *borderPane_;
     std::string label_;
-    wxpex::CallAfter doLayoutTopLevel_;
 };
 
 
