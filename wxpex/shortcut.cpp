@@ -136,10 +136,10 @@ wxString Shortcut::GetMenuItemLabel_() const
 
 
 ShortcutsBase::ShortcutsBase(
-    Window &&window,
+    const UnclosedWindow &window,
     const ShortcutGroups &groups)
     :
-    window_(std::move(window)),
+    window_(window),
     hasBindings_(false),
     groups_(groups)
 {
@@ -281,10 +281,10 @@ void ShortcutsBase::OnWindowClose_(wxCloseEvent &event)
 
 
 MenuShortcuts::MenuShortcuts(
-    Window &&window,
+    const UnclosedWindow &window,
     const ShortcutGroups &groups)
     :
-    ShortcutsBase(std::move(window), groups),
+    ShortcutsBase(window, groups),
     menuBar_(std::make_unique<wxMenuBar>())
 {
     // Discovered the hard way that wx GTK will segfault on exit if we call
@@ -323,7 +323,7 @@ void MenuShortcuts::AddToMenu(
 
 
 AcceleratorShortcuts::AcceleratorShortcuts(
-    Window &&window,
+    const UnclosedWindow &window,
     const ShortcutGroups &groups)
     :
     ShortcutsBase(std::move(window), groups),
@@ -392,10 +392,10 @@ ShortcutWindow::ShortcutWindow(
     wxWindow *window,
     const wxpex::ShortcutGroups &group)
     :
-    Window(window),
+    UnclosedWindow(window),
     acceleratorShortcuts_(
         std::make_unique<AcceleratorShortcuts>(
-            wxpex::Window(window),
+            UnclosedWindow(window),
             group)),
     eventHandler_(new wxEvtHandler())
 {
@@ -411,7 +411,7 @@ ShortcutWindow::ShortcutWindow(
 
 ShortcutWindow::ShortcutWindow(ShortcutWindow &&other)
     :
-    Window(std::move(other)),
+    UnclosedWindow(other),
     closeRequested_(false),
     acceleratorShortcuts_(std::move(other.acceleratorShortcuts_)),
     eventHandler_(std::move(other.eventHandler_))
@@ -425,7 +425,7 @@ ShortcutWindow::ShortcutWindow(ShortcutWindow &&other)
 
 ShortcutWindow & ShortcutWindow::operator=(ShortcutWindow &&other)
 {
-    this->Window::operator=(std::move(other));
+    this->UnclosedWindow::operator=(other);
 
     if (this->eventHandler_)
     {
@@ -478,8 +478,8 @@ void ShortcutWindow::Close()
 
 void ShortcutWindow::OnCloseEvent_(wxThreadEvent &)
 {
-    this->Window::Close();
     this->acceleratorShortcuts_.reset();
+    this->UnclosedWindow::Close();
 }
 
 

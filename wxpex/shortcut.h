@@ -137,7 +137,7 @@ class ShortcutsBase
 {
 public:
     ShortcutsBase(
-        Window &&window,
+        const UnclosedWindow &window,
         const ShortcutGroups &groups);
 
     ~ShortcutsBase();
@@ -163,7 +163,7 @@ private:
     void OnWindowClose_(wxCloseEvent &event);
 
 private:
-    Window window_;
+    UnclosedWindow window_;
     bool hasBindings_;
 
 protected:
@@ -175,7 +175,7 @@ class MenuShortcuts: public ShortcutsBase
 {
 public:
     MenuShortcuts(
-        Window &&window,
+        const UnclosedWindow &window,
         const ShortcutGroups &groups);
 
     wxMenuBar * GetMenuBar();
@@ -191,7 +191,7 @@ class AcceleratorShortcuts: public ShortcutsBase
 {
 public:
     AcceleratorShortcuts(
-        Window &&window,
+        const UnclosedWindow &window,
         const ShortcutGroups &groups);
 
     const wxAcceleratorTable & GetAcceleratorTable() const;
@@ -204,7 +204,7 @@ private:
 };
 
 
-class ShortcutWindow: public Window
+class ShortcutWindow: public UnclosedWindow
 {
 public:
     ShortcutWindow();

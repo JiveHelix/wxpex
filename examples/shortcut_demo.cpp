@@ -164,7 +164,7 @@ public:
     AnotherFrame(const wxpex::ShortcutGroups & shortcuts)
         :
         wxFrame(nullptr, wxID_ANY, "A frame with no menus"),
-        acceleratorShortcuts_(wxpex::Window(this), shortcuts)
+        acceleratorShortcuts_(wxpex::UnclosedWindow(this), shortcuts)
     {
         this->SetAcceleratorTable(
             this->acceleratorShortcuts_.GetAcceleratorTable());
@@ -193,7 +193,7 @@ public:
         )
         :
         wxFrame(nullptr, wxID_ANY, "wxpex::Shortcut Demo"),
-        menuShortcuts_(wxpex::Window(this), shortcuts)
+        menuShortcuts_(wxpex::UnclosedWindow(this), shortcuts)
     {
         this->SetMenuBar(this->menuShortcuts_.GetMenuBar());
 
