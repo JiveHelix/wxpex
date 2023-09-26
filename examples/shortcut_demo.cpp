@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <string>
-#include <string_view>
 
 #include <fields/fields.h>
 #include <fields/assign.h>
