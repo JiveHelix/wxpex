@@ -29,6 +29,11 @@ public:
         this->BindCloseHandler_();
     }
 
+    ~Unclosed()
+    {
+        this->UnbindCloseHandler_();
+    }
+
     Unclosed & operator=(const Unclosed &other)
     {
         if (!other.window_)

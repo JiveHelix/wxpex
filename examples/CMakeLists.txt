@@ -25,6 +25,16 @@ target_link_libraries(
     wxpex)
 
 
+add_executable(scroll_demo scroll_demo.cpp)
+
+target_link_libraries(
+    scroll_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(check_box_demo ${windowed} check_box_demo.cpp)
 
 target_link_libraries(

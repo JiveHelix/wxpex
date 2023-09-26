@@ -196,6 +196,14 @@ void Collapsible::FixCollapsibleSize_(wxWindow *window)
 
 void Collapsible::FixContainerSize_(wxWindow *window)
 {
+    auto scrolled = dynamic_cast<Scrolled *>(window);
+
+    if (scrolled)
+    {
+        scrolled->FitInside();
+        return;
+    }
+
     // Reset the minimum size.
     window->SetMinSize(wxDefaultSize);
 
@@ -212,14 +220,6 @@ void Collapsible::FixContainerSize_(wxWindow *window)
     if (windowSize != updatedSize)
     {
         window->SetSize(updatedSize);
-    }
-
-    auto scrolled = dynamic_cast<Scrolled *>(window);
-    auto splitter = dynamic_cast<Splitter *>(window);
-
-    if (splitter || scrolled)
-    {
-        window->SendSizeEvent();
     }
 }
 
@@ -301,6 +301,10 @@ void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
     if (topSize != postLayoutSize)
     {
         top->SetSize(wxpex::ToWxSize(topSize));
+    }
+    else
+    {
+        top->SendSizeEvent();
     }
 
     // Allow parent windows to listen for this event.
