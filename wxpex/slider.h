@@ -199,6 +199,7 @@ public:
         this->Bind(wxEVT_SLIDER, &Slider::OnSlider_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Slider::OnSliderLeftDown_, this);
         this->Bind(wxEVT_LEFT_UP, &Slider::OnSliderLeftUp_, this);
+        this->Bind(wxEVT_MOUSEWHEEL, &Slider::OnMousewheel_, this);
 
         // wxSlider appears to underreport its minimum size, which causes the
         // thumb to be clipped.
@@ -272,6 +273,32 @@ public:
     {
         event.Skip();
         this->AddPendingEvent(wxCommandEvent(SliderDone));
+    }
+
+    void ForwardMousewheelEvent(wxMouseEvent &event)
+    {
+        wxWindow *top = wxGetTopLevelParent(this);
+        wxWindow *target = this->GetParent();
+
+        while (true)
+        {
+            if (target->ProcessWindowEvent(event))
+            {
+                return;
+            }
+
+            if (target == top)
+            {
+                return;
+            }
+
+            target = target->GetParent();
+        }
+    }
+
+    void OnMousewheel_(wxMouseEvent &event)
+    {
+        this->ForwardMousewheelEvent(event);
     }
 
 private:
