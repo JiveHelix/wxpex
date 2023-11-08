@@ -1,4 +1,5 @@
 #include "wxpex/splitter.h"
+#include "wxpex/size.h"
 
 
 namespace wxpex
@@ -49,19 +50,19 @@ bool Splitter::CheckSashWithWindow_(
     bool leftOrTop,
     int newSashPosition)
 {
-    auto bestSize = window->GetBestSize();
+    auto minimumSize = window->GetMinSize();
     int thisSize;
     int minimumChildSize;
 
     if (this->GetSplitMode() == wxSPLIT_VERTICAL)
     {
         thisSize = this->GetSize().GetWidth();
-        minimumChildSize = bestSize.GetWidth();
+        minimumChildSize = minimumSize.GetWidth();
     }
     else
     {
         thisSize = this->GetSize().GetHeight();
-        minimumChildSize = bestSize.GetHeight();
+        minimumChildSize = minimumSize.GetHeight();
     }
 
     if (leftOrTop)
@@ -82,8 +83,6 @@ bool Splitter::Layout()
         // Once the user has selected their desired size, do not change it.
         return true;
     }
-
-    auto size = this->GetSize();
 
     if (this->firstPriority_)
     {
@@ -147,7 +146,7 @@ void Splitter::SplitVerticallyRight(wxWindow *left, wxWindow *right)
 
 void Splitter::SplitHorizontallyTop(wxWindow *top, wxWindow *bottom)
 {
-    this->SplitVertically(top, bottom, 0);
+    this->SplitHorizontally(top, bottom, 0);
     this->firstPriority_ = top;
     this->secondPriority_ = nullptr;
     this->Layout();
@@ -156,7 +155,7 @@ void Splitter::SplitHorizontallyTop(wxWindow *top, wxWindow *bottom)
 
 void Splitter::SplitHorizontallyBottom(wxWindow *top, wxWindow *bottom)
 {
-    this->SplitVertically(top, bottom, 0);
+    this->SplitHorizontally(top, bottom, 0);
     this->firstPriority_ = nullptr;
     this->secondPriority_ = bottom;
     this->Layout();
