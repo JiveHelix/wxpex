@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <fields/fields.h>
 #include <jive/equal.h>
 #include <jive/create_exception.h>
@@ -38,6 +39,15 @@ enum class InterpolationQuality: int
 };
 
 
+std::vector<InterpolationQuality> GetInterpolationQualities();
+
+
+struct InterpolationQualityConverter
+{
+    static std::string ToString(InterpolationQuality interpolationQuality);
+};
+
+
 enum class CompositionMode
 {
     invalid = wxCOMPOSITION_INVALID,
@@ -58,61 +68,12 @@ enum class CompositionMode
 };
 
 
+std::vector<CompositionMode> GetCompositionModes();
+
+
 struct CompositionModeConverter
 {
-    static std::string ToString(CompositionMode compositionMode)
-    {
-        switch (compositionMode)
-        {
-            case (CompositionMode::invalid):
-                return "invalid";
-
-            case (CompositionMode::clear):
-                return "clear";
-
-            case (CompositionMode::source):
-                return "source";
-
-            case (CompositionMode::over):
-                return "over";
-
-            case (CompositionMode::in):
-                return "in";
-
-            case (CompositionMode::out):
-                return "out";
-
-            case (CompositionMode::atop):
-                return "atop";
-
-            case (CompositionMode::dest):
-                return "dest";
-
-            case (CompositionMode::destOver):
-                return "dest over";
-
-            case (CompositionMode::destIn):
-                return "dest in";
-
-            case (CompositionMode::destOut):
-                return "dest out";
-
-            case (CompositionMode::destAtop):
-                return "dest atop";
-
-            case (CompositionMode::XOR):
-                return "XOR";
-
-            case (CompositionMode::add):
-                return "add";
-
-            case (CompositionMode::diff):
-                return "diff";
-
-            default:
-                throw std::logic_error("Unknown CompositionMode");
-        }
-    }
+    static std::string ToString(CompositionMode compositionMode);
 };
 
 

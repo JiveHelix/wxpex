@@ -48,4 +48,5 @@ class WxpexConan(ConanFile):
         self.requires("fields/[~1.3]")
         self.requires("pex/[>=0.9.5 <0.10]")
         self.requires("tau/[~1.10]")
+        self.requires("pkgconf/2.0.3")
         self.requires("wxwidgets/3.2.2.1@jivehelix/stable")

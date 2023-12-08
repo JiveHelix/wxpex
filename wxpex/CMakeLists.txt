@@ -64,6 +64,7 @@ target_sources(
     border_sizer.cpp
     collapsible.cpp
     gauge.cpp
+    graphics.cpp
     indent_sizer.cpp
     layout_top_level.cpp
     modifier.cpp

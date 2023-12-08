@@ -219,7 +219,7 @@ public:
         :
         recipe_(this, settings.recipe),
         color_(settings.color),
-        polygon_(this->recipe_.control.Get())
+        polygon_(this->recipe_.GetControl().Get())
     {
         this->recipe_.Connect(&DrawControl::OnRecipe_);
     }
@@ -240,7 +240,7 @@ private:
     }
 
 private:
-    pex::EndpointControl<Draw, RecipeControl> recipe_;
+    pex::Endpoint<Draw, RecipeControl> recipe_;
     ColorControl color_;
     Polygon polygon_;
 };
