@@ -290,6 +290,7 @@ void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
         this->FixContainerSize_(*i);
     }
 
+    (*endOfCollapsible)->SendSizeEvent();
     top->Layout();
 
     auto postLayoutSize = wxpex::ToSize<int>(top->GetSize());

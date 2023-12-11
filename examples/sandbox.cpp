@@ -101,13 +101,28 @@ bool ExampleApp::OnInit()
 }
 
 
+using VelocityControl = decltype(DemoControl::velocity);
+using VelocityValueControl = decltype(VelocityControl::value);
+
+using VelocityRange = pex::control::LinearRange<VelocityControl, 1>;
+
+using VelocityKnob = wxpex::ValueKnob
+<
+    VelocityControl,
+    VelocityValueControl,
+    4,
+    2
+>;
+
+
 ExampleFrame::ExampleFrame([[maybe_unused]] DemoControl control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Sandbox")
 {
-    auto velocityLabel = new wxStaticText(this, wxID_ANY, "Velocity");
-    auto vv = new wxpex::View(this, control.velocity.value);
-    auto vk = new wxpex::Knob(this, control.velocity);
+    auto velocityKnob = new VelocityKnob(
+        this,
+        control.velocity,
+        control.velocity.value);
 
     auto azimuthLabel = new wxStaticText(this, wxID_ANY, "Azimuth");
     auto av = new wxpex::View(this, control.azimuth.value);
@@ -118,13 +133,6 @@ ExampleFrame::ExampleFrame([[maybe_unused]] DemoControl control)
     auto ek = new wxpex::Knob(this, control.elevation);
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
-
-    auto velocitySizer =
-        wxpex::LayoutItems(
-            wxpex::horizontalItems,
-            velocityLabel,
-            vv,
-            vk);
 
     auto azimuthSizer =
         wxpex::LayoutItems(
@@ -142,7 +150,7 @@ ExampleFrame::ExampleFrame([[maybe_unused]] DemoControl control)
 
     auto sizer = wxpex::LayoutItems(
         wxpex::verticalItems,
-        velocitySizer.release(),
+        velocityKnob,
         azimuthSizer.release(),
         elevationSizer.release());
 

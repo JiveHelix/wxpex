@@ -36,18 +36,18 @@ template<typename Control, typename Derived>
 class HsvKnobs_
 {
 public:
-    using HueRange =
-        pex::control::LinearRange<decltype(Control::hue), 10>;
-
-    using SaturationRange =
-        pex::control::LinearRange<decltype(Control::saturation), 100>;
-
-    using ValueRange =
-        pex::control::LinearRange<decltype(Control::value), 100>;
-
     using HueControl = decltype(Control::hue);
     using SaturationControl = decltype(Control::saturation);
     using ValueControl = decltype(Control::value);
+
+    using HueRange =
+        pex::control::LinearRange<HueControl, 100>;
+
+    using SaturationRange =
+        pex::control::LinearRange<SaturationControl, 256>;
+
+    using ValueRange =
+        pex::control::LinearRange<ValueControl, 256>;
 
     using HueKnob =
         wxpex::ValueKnob<HueRange, typename HueControl::Value, 5, 1>;

@@ -165,6 +165,13 @@ public:
 };
 
 
+template<typename Terminus>
+auto Get(const Terminus &terminus)
+{
+    return terminus.Get();
+}
+
+
 template<typename Range>
 class Knob: public wxWindow
 {
@@ -177,13 +184,12 @@ public:
     using Rgb = typename KnobSettings::Rgb;
 
     // Value and Limit are observed by This
-    using Value =
-        pex::Terminus<This, typename Range::Value>;
+    using ValueTerminus = pex::Terminus<This, typename Range::Value>;
 
-    using Limit =
+    using LimitTerminus =
         pex::Terminus<This, typename Range::Limit>;
 
-    using Type = typename Value::Type;
+    using Type = typename Range::Value::Type;
 
     Knob(
         wxWindow *parent,
@@ -191,13 +197,13 @@ public:
         const KnobSettings &settings = KnobSettings())
         :
         Base(parent, wxID_ANY),
-        value_(this, control.value),
-        localValue_(static_cast<double>(this->value_.Get())),
-        minimum_(this, control.minimum),
-        maximum_(this, control.maximum),
+        value_(this, control.value, &Knob::OnValue_),
+        localValue_(static_cast<double>(Get(this->value_))),
+        minimum_(this, control.minimum, &Knob::OnMinimum_),
+        maximum_(this, control.maximum, &Knob::OnMaximum_),
         settings_(settings),
         stepSize_(
-            this->GetStepSize_(this->minimum_.Get(), this->maximum_.Get())),
+            this->GetStepSize_(Get(this->minimum_), Get(this->maximum_))),
         fineStepSize_(this->GetFineStepSize_(this->stepSize_)),
         radius_(settings.radius),
         startAngle_(settings.startAngle),
@@ -205,8 +211,8 @@ public:
         continuous_(settings.continuous),
         angleRange_(settings.GetAngleRange()),
         valueRange_(
-            static_cast<double>(this->maximum_.Get() - this->minimum_.Get())),
-        valueOffset_(-static_cast<double>(this->minimum_.Get())),
+            static_cast<double>(Get(this->maximum_) - Get(this->minimum_))),
+        valueOffset_(-static_cast<double>(Get(this->minimum_))),
         hasCapturedMouse_(false),
         mousePosition_(),
         color_(settings.GetBaseColor()),
@@ -218,10 +224,6 @@ public:
 #else
         this->SetBackgroundStyle(wxBG_STYLE_SYSTEM);
 #endif
-        this->value_.Connect(&Knob::OnValue_);
-        this->minimum_.Connect(&Knob::OnMinimum_);
-        this->maximum_.Connect(&Knob::OnMaximum_);
-
         this->Bind(wxEVT_PAINT, &Knob::OnPaint_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Knob::OnMouseEvents_, this);
         this->Bind(wxEVT_MOTION, &Knob::OnMouseEvents_, this);
@@ -283,11 +285,11 @@ private:
 
     void OnMinimum_(Type minimum)
     {
-        this->stepSize_ = this->GetStepSize_(minimum, this->maximum_.Get());
+        this->stepSize_ = this->GetStepSize_(minimum, Get(this->maximum_));
         this->fineStepSize_ = this->GetFineStepSize_(this->stepSize_);
 
         this->valueRange_ =
-            static_cast<double>(this->maximum_.Get() - minimum);
+            static_cast<double>(Get(this->maximum_) - minimum);
 
         this->valueOffset_ = -minimum;
 
@@ -296,11 +298,11 @@ private:
 
     void OnMaximum_(Type maximum)
     {
-        this->stepSize_ = this->GetStepSize_(this->minimum_.Get(), maximum);
+        this->stepSize_ = this->GetStepSize_(Get(this->minimum_), maximum);
         this->fineStepSize_ = this->GetFineStepSize_(this->stepSize_);
 
         this->valueRange_ =
-            static_cast<double>(maximum - this->minimum_.Get());
+            static_cast<double>(maximum - Get(this->minimum_));
 
         this->Refresh();
     }
@@ -310,8 +312,8 @@ private:
         // scaled ranges from 0 to 1, and is a measure of how far we have
         // progressed through the possible range of values.
         double scaled =
-            (this->value_.Get()
-                - static_cast<double>(this->minimum_.Get()))
+            (Get(this->value_)
+                - static_cast<double>(Get(this->minimum_)))
             / this->valueRange_;
 
         // 0 degrees is straight up, with positive angles clockwise.
@@ -322,7 +324,6 @@ private:
 
     void OnPaint_(wxPaintEvent &)
     {
-
 #ifdef __WXMSW__
         wxBufferedPaintDC dc(this);
 #else
@@ -423,7 +424,9 @@ private:
 
                 // On mouse up, the value has finished adjusting. Update
                 // localValue_ to the final value.
-                this->localValue_ = static_cast<double>(this->value_.Get());
+                this->localValue_ = static_cast<double>(
+                    Get(this->value_));
+
                 this->AddPendingEvent(wxCommandEvent(KnobDone));
             }
         }
@@ -495,10 +498,10 @@ private:
 #endif
 
 private:
-    Value value_;
+    ValueTerminus value_;
     double localValue_;
-    Limit minimum_;
-    Limit maximum_;
+    LimitTerminus minimum_;
+    LimitTerminus maximum_;
     KnobSettings settings_;
     double stepSize_;
     double fineStepSize_;
