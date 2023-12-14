@@ -47,6 +47,7 @@ public:
     using Type = T;
     using ThreadSafe = pex::model::LockedValue<Type, Filter>;
     using Callable = typename ThreadSafe::Callable;
+    using Access = pex::GetAndSetTag;
 
     template<typename>
     friend class pex::Reference;
@@ -597,6 +598,8 @@ public:
 
     using Endpoint =
         pex::Endpoint<TriggerWait, WorkerControl>;
+
+    static constexpr auto observerName = "TriggerWait";
 
     TriggerWait(const Control &control)
         :

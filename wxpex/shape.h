@@ -219,7 +219,7 @@ public:
         :
         recipe_(this, settings.recipe),
         color_(settings.color),
-        polygon_(this->recipe_.GetControl().Get())
+        polygon_(this->recipe_.Get())
     {
         this->recipe_.Connect(&DrawControl::OnRecipe_);
     }

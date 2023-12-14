@@ -324,6 +324,8 @@ public:
     using SliderRange = typename RangeSlider::Range;
     using SliderValue = typename RangeSlider::Value;
 
+    static constexpr auto observerName = "wxpex::ValueSliderConvert";
+
     // range is filtered to an int for direct use in the wx.Slider.
     // value is the value from the model for display in the view.
     ValueSliderConvert(
