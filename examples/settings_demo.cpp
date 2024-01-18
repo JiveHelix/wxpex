@@ -40,10 +40,10 @@ using WeaponsControl = typename WeaponsGroup::Control;
 
 inline WeaponsPlain DefaultWeapons()
 {
-    return {{
+    return {
         "passion fruit",
         "banana",
-        "pointed stick"}};
+        "pointed stick"};
 };
 
 
@@ -79,11 +79,11 @@ using GpsControl = typename GpsGroup::Control;
 
 inline GpsPlain DefaultGps()
 {
-    return {{
+    return {
         1334706453,
         40.56923581063791,
         -111.63928609736942,
-        3322.0}};
+        3322.0};
 }
 
 

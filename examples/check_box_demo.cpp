@@ -51,7 +51,7 @@ public:
 
     ExampleApp()
         :
-        model_{{{false, "Not checked"}}},
+        model_{{false, "Not checked"}},
         isChecked{this, this->model_.isChecked}
     {
         this->isChecked.Connect(&ExampleApp::OnIsChecked_);

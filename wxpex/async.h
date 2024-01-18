@@ -34,7 +34,11 @@ namespace wxpex
 {
 
 
-template<typename T, typename Filter = pex::NoFilter>
+template
+<
+    typename T,
+    typename Filter = pex::NoFilter,
+    typename Access_ = pex::GetAndSetTag>
 class Async: public wxEvtHandler
 {
 public:
@@ -47,7 +51,7 @@ public:
     using Type = T;
     using ThreadSafe = pex::model::LockedValue<Type, Filter>;
     using Callable = typename ThreadSafe::Callable;
-    using Access = pex::GetAndSetTag;
+    using Access = Access_;
 
     template<typename>
     friend class pex::Reference;
@@ -133,7 +137,7 @@ public:
         Async *async_;
     };
 
-    using Control = FilteredControl<pex::NoFilter, pex::GetAndSetTag>;
+    using Control = FilteredControl<pex::NoFilter, Access>;
 
     Async(pex::Argument<Type> value = Type{})
         :

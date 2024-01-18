@@ -202,8 +202,8 @@ struct DrawFields
 template<template<typename> typename T>
 struct DrawTemplate
 {
-    T<pex::MakeGroup<RecipeGroup>> recipe;
-    T<pex::MakeGroup<ColorGroup>> color;
+    T<RecipeGroup> recipe;
+    T<ColorGroup> color;
 };
 
 

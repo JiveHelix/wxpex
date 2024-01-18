@@ -19,8 +19,8 @@ struct DemoFields
 template<template<typename> typename T>
 struct DemoTemplate
 {
-    T<wxpex::GaugeGroupMaker> gauge1;
-    T<wxpex::GaugeGroupMaker> gauge2;
+    T<wxpex::GaugeGroup> gauge1;
+    T<wxpex::GaugeGroup> gauge2;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
     T<wxpex::MakeAsync<int>> values;
@@ -49,8 +49,8 @@ public:
         worker1_{},
         worker2_{}
     {
-        this->model_.gauge1.Set(wxpex::GaugeState{{0, 100}});
-        this->model_.gauge2.Set(wxpex::GaugeState{{0, 100}});
+        this->model_.gauge1.Set(wxpex::GaugeState{0, 100});
+        this->model_.gauge2.Set(wxpex::GaugeState{0, 100});
         this->endpoints_.start.Connect(&ExampleApp::OnStart_);
         this->endpoints_.stop.Connect(&ExampleApp::OnStop_);
         this->endpoints_.values.Connect(&ExampleApp::OnValues_);

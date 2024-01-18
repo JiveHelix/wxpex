@@ -68,7 +68,38 @@ struct GaugeTemplate
 };
 
 
-using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate>;
+struct GaugeGroupTemplates
+{
+    template<typename GroupBase>
+    struct Model: public GroupBase
+    {
+        Model()
+            :
+            GroupBase(typename GroupBase::Plain{0, 1000}),
+            internalMaximum_(
+                this,
+                typename GroupBase::ControlType(*this).maximum,
+                &Model::OnMaximum_)
+        {
+
+        }
+
+    private:
+        void OnMaximum_(size_t maximumValue)
+        {
+            this->value.SetFilter(GaugeFilter(maximumValue));
+        }
+
+        using Internal =
+            pex::Endpoint<Model, typename wxpex::Async<size_t>::Control>;
+
+        Internal internalMaximum_;
+    };
+};
+
+
+using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate, GaugeGroupTemplates>;
+using GaugeModel = typename GaugeGroup::Model;
 using GaugeState = typename GaugeGroup::Plain;
 using GaugeControl = typename GaugeGroup::Control;
 
@@ -78,31 +109,6 @@ static_assert(
         decltype(GaugeControl::maximum),
         typename Async<size_t>::Control
     >);
-
-struct GaugeModel: public GaugeGroup::Model
-{
-    GaugeModel()
-        :
-        GaugeGroup::Model(GaugeState{{0, 1000}}),
-        internalMaximum_(
-            this,
-            GaugeControl(*this).maximum,
-            &GaugeModel::OnMaximum_)
-    {
-
-    }
-
-private:
-    void OnMaximum_(size_t maximumValue)
-    {
-        this->value.SetFilter(GaugeFilter(maximumValue));
-    }
-
-    using Internal =
-        pex::Endpoint<GaugeModel, typename wxpex::Async<size_t>::Control>;
-
-    Internal internalMaximum_;
-};
 
 
 struct GaugeWorker: public GaugeControl
@@ -118,9 +124,6 @@ public:
         this->maximum = model.maximum.GetWorkerControl();
     }
 };
-
-
-using GaugeGroupMaker = pex::MakeGroup<GaugeGroup, GaugeModel>;
 
 
 class Gauge: public wxGauge
