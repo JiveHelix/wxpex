@@ -45,7 +45,7 @@ struct Demo: public DemoTemplate<pex::Identity>
     }
 };
 
-using DemoGroup = pex::Group<DemoFields, DemoTemplate, Demo>;
+using DemoGroup = pex::Group<DemoFields, DemoTemplate, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::Control;
 
