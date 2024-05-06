@@ -20,7 +20,7 @@ wxSize ToWxSize(const tau::Size<T> &size)
     }
     else
     {
-        return ToWxSize(size.template Convert<int, Style>());
+        return ToWxSize(size.template Cast<int, Style>());
     }
 }
 

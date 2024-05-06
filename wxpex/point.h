@@ -19,7 +19,7 @@ wxPoint ToWxPoint(const tau::Point2d<T> &point)
     }
     else
     {
-        return ToWxPoint(point.template Convert<int, Style>());
+        return ToWxPoint(point.template Cast<int, Style>());
     }
 }
 
