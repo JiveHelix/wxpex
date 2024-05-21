@@ -22,6 +22,7 @@ struct FileDialogOptions
     long style = wxFD_OPEN | wxFD_FILE_MUST_EXIST;
     std::string message = "";
     std::string wildcard = "";
+    bool isFolder = false;
 };
 
 
@@ -59,22 +60,42 @@ public:
 
     void OnChoose_(wxCommandEvent &)
     {
-        auto [directory, file] = jive::path::Split(this->value_.Get());
-
-        wxFileDialog openFile(
-            nullptr,
-            wxString(this->options_.message),
-            wxString(directory),
-            wxString(file),
-            wxString(this->options_.wildcard),
-            this->options_.style);
-
-        if (openFile.ShowModal() == wxID_CANCEL)
+        if (this->options_.isFolder)
         {
-            return;
-        }
+            wxDirDialog openFolder(
+                nullptr,
+                wxString(this->options_.message),
+                wxString(this->value_.Get()),
+                (this->options_.style & wxFD_FILE_MUST_EXIST)
+                    ? wxDD_DIR_MUST_EXIST | wxDD_DEFAULT_STYLE
+                    : wxDD_DEFAULT_STYLE);
 
-        this->value_.Set(openFile.GetPath());
+            if (openFolder.ShowModal() == wxID_CANCEL)
+            {
+                return;
+            }
+
+            this->value_.Set(openFolder.GetPath());
+        }
+        else
+        {
+            auto [directory, file] = jive::path::Split(this->value_.Get());
+
+            wxFileDialog openFile(
+                nullptr,
+                wxString(this->options_.message),
+                wxString(directory),
+                wxString(file),
+                wxString(this->options_.wildcard),
+                this->options_.style);
+
+            if (openFile.ShowModal() == wxID_CANCEL)
+            {
+                return;
+            }
+
+            this->value_.Set(openFile.GetPath());
+        }
     }
 
 private:
