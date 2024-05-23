@@ -210,6 +210,7 @@ namespace detail
 template<typename Tuple, size_t... I>
 void DoLayoutItems(
     wxBoxSizer *sizer,
+    int proportion,
     int flags,
     int spacingFlag,
     int spacing,
@@ -221,7 +222,7 @@ void DoLayoutItems(
 
     (sizer->Add(
         std::get<I>(items),
-        0,
+        proportion,
         I < (count - 1) ? (flags | spacingFlag) : flags,
         I < (count - 1) ? spacing : 0), ...);
 }
@@ -235,14 +236,39 @@ struct ItemOptions
     int orient;
     int flags;
     int spacing;
+    int proportion;
+
+    ItemOptions & SetOrient(int orient_)
+    {
+        this->orient = orient_;
+        return *this;
+    }
+
+    ItemOptions & SetFlags(int flags_)
+    {
+        this->flags = flags_;
+        return *this;
+    }
+
+    ItemOptions & SetSpacing(int spacing_)
+    {
+        this->spacing = spacing_;
+        return *this;
+    }
+
+    ItemOptions & SetProportion(int proportion_)
+    {
+        this->proportion = proportion;
+        return *this;
+    }
 };
 
 
 inline constexpr auto horizontalItems =
-    ItemOptions{wxHORIZONTAL, wxEXPAND, 5};
+    ItemOptions{wxHORIZONTAL, wxEXPAND, 5, 0};
 
 inline constexpr auto verticalItems =
-    ItemOptions{wxVERTICAL, wxEXPAND, 5};
+    ItemOptions{wxVERTICAL, wxEXPAND, 5, 0};
 
 
 template<typename ...Items>
@@ -264,6 +290,7 @@ std::unique_ptr<wxSizer> LayoutItems(
 
     detail::DoLayoutItems(
         sizer.get(),
+        options.proportion,
         options.flags,
         spacingFlag,
         options.spacing,
