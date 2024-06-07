@@ -2,6 +2,9 @@
 
 #include <memory>
 
+#include <pex/model_value.h>
+#include <pex/control_value.h>
+#include <pex/endpoint.h>
 #include "wxpex/ignores.h"
 
 WXSHIM_PUSH_IGNORES
@@ -18,6 +21,15 @@ namespace wxpex
 class Collapsible: public wxCollapsiblePane
 {
 public:
+    using StateModel = pex::model::Value<bool>;
+    using StateControl = pex::control::Value<StateModel>;
+
+    Collapsible(
+        wxWindow *parent,
+        const std::string &label,
+        StateControl stateControl,
+        long borderStyle = wxBORDER_NONE);
+
     Collapsible(
         wxWindow *parent,
         const std::string &label,
@@ -49,8 +61,17 @@ protected:
     void FixContainerSize_(wxWindow *window);
 
 private:
+    void OnState_(bool isExpanded);
+
+    void HandleStateChange_();
+
     wxPanel *borderPane_;
     std::string label_;
+
+    using StateEndpoint = pex::Endpoint<Collapsible, StateControl>;
+    StateEndpoint stateEndpoint_;
+    bool hasStateEndpoint_;
+    bool ignoreState_;
 };
 
 

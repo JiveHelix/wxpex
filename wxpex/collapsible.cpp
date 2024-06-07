@@ -1,3 +1,4 @@
+#include <jive/scope_flag.h>
 #include "wxpex/collapsible.h"
 #include "wxpex/layout_top_level.h"
 #include "wxpex/size.h"
@@ -24,7 +25,10 @@ Collapsible::Collapsible(
         wxDefaultSize,
         wxTAB_TRAVERSAL | wxCP_NO_TLW_RESIZE),
     borderPane_(nullptr),
-    label_(label)
+    label_(label),
+    stateEndpoint_(),
+    hasStateEndpoint_(false),
+    ignoreState_(false)
 {
     if (borderStyle != wxBORDER_NONE)
     {
@@ -40,6 +44,23 @@ Collapsible::Collapsible(
         wxEVT_COLLAPSIBLEPANE_CHANGED,
         &Collapsible::OnChanged_,
         this);
+}
+
+
+Collapsible::Collapsible(
+    wxWindow *parent,
+    const std::string &label,
+    StateControl stateControl,
+    long borderStyle)
+    :
+    Collapsible(parent, label, borderStyle)
+{
+    this->stateEndpoint_ =
+        StateEndpoint(this, stateControl, &Collapsible::OnState_);
+    
+    this->hasStateEndpoint_ = true;
+
+    this->OnState_(stateControl.Get());
 }
 
 
@@ -224,7 +245,7 @@ void Collapsible::FixContainerSize_(wxWindow *window)
 }
 
 
-void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
+void Collapsible::HandleStateChange_()
 {
     Freezer freezer(this);
 
@@ -308,8 +329,39 @@ void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
         top->SendSizeEvent();
     }
 
+    if (this->ignoreState_)
+    {
+        return;
+    }
+
+    if (this->hasStateEndpoint_)
+    {
+        jive::ScopeFlag ignoreState(this->ignoreState_);
+        this->stateEndpoint_.Set(this->IsExpanded());
+    }
+
+}
+
+
+void Collapsible::OnChanged_(wxCollapsiblePaneEvent &event)
+{
+    this->HandleStateChange_();
+
     // Allow parent windows to listen for this event.
     event.Skip();
+}
+
+
+void Collapsible::OnState_(bool isExpanded)
+{
+    if (this->ignoreState_)
+    {
+        return;
+    }
+
+    jive::ScopeFlag ignoreState(this->ignoreState_);
+    this->Collapse(!isExpanded);
+    this->HandleStateChange_();
 }
 
 

@@ -19,26 +19,9 @@
 #include "units.h"
 
 
-using Select = pex::model::Select<UnitSystem>;
-using SelectControl = pex::control::Select<Select>;
-
-
 class ExampleApp: public wxApp
 {
 public:
-    ExampleApp()
-        :
-        select_{
-            UnitSystem::MKS,
-            {
-                UnitSystem::MKS,
-                UnitSystem::CGS,
-                UnitSystem::FPS,
-                UnitSystem::FFF}}
-    {
-
-    }
-
     bool OnInit() override;
 
 private:

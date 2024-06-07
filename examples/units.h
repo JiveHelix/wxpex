@@ -65,3 +65,23 @@ struct LongConverter
 
 using UnitsModel = pex::model::Value<UnitSystem>;
 using UnitsControl = pex::control::Value<UnitsModel>;
+
+
+struct UnitChoices
+{
+    static std::vector<UnitSystem> GetChoices()
+    {
+        return
+            {
+                UnitSystem::MKS,
+                UnitSystem::CGS,
+                UnitSystem::FPS,
+                UnitSystem::FFF};
+    }
+};
+
+
+using Select = pex::model::Select<UnitSystem, UnitChoices>;
+using SelectControl = pex::control::Select<Select>;
+
+

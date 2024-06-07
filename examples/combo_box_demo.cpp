@@ -41,11 +41,6 @@ static inline const std::vector<UnitSystem> withFirkins
 };
 
 
-std::string fffUnits = "furlong-firkin-fortnight";
-
-using Select = pex::model::Select<UnitSystem>;
-using SelectControl = pex::control::Select<Select>;
-
 using EnableFirkins = pex::model::Value<bool>;
 using EnableFirkinsControl = pex::control::Value<EnableFirkins>;
 
@@ -57,10 +52,8 @@ public:
 
     ExampleApp()
         :
-        select_{
-            UnitSystem::MKS,
-            withoutFirkins},
-        enableFirkins_(false)
+        select_{},
+        enableFirkins_(true)
     {
         this->enableFirkins_.Connect(this, &ExampleApp::OnFirkins_);
     }

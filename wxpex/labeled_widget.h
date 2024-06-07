@@ -258,7 +258,7 @@ struct ItemOptions
 
     ItemOptions & SetProportion(int proportion_)
     {
-        this->proportion = proportion;
+        this->proportion = proportion_;
         return *this;
     }
 };

@@ -14,9 +14,10 @@ public:
     Widget(
         wxWindow *parent,
         const std::string &name,
-        const wxColor &color)
+        const wxColor &color,
+        wxpex::Collapsible::StateControl stateControl)
         :
-        wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
+        wxpex::Collapsible(parent, name, stateControl, wxBORDER_SIMPLE)
     {
         auto coloredSquare = new wxPanel(this->GetPanel());
         coloredSquare->SetBackgroundColour(color);
@@ -30,18 +31,60 @@ public:
 };
 
 
+template<typename T>
+struct ColorsStateFields
+{
+    static constexpr auto fields = std::make_tuple(
+        fields::Field(&T::blue, "blue"),
+        fields::Field(&T::cyan, "cyan"),
+        fields::Field(&T::green, "green"),
+        fields::Field(&T::yellow, "yellow"),
+        fields::Field(&T::red, "red"));
+};
+
+
+template<template<typename> typename T>
+struct StateTemplate
+{
+    T<bool> blue;
+    T<bool> cyan;
+    T<bool> green;
+    T<bool> yellow;
+    T<bool> red;
+
+    static constexpr auto fields = ColorsStateFields<StateTemplate>::fields;
+};
+
+
+using ColorsStateGroup = pex::Group<ColorsStateFields, StateTemplate>;
+using ColorsStateModel = typename ColorsStateGroup::Model;
+using ColorsStateControl = typename ColorsStateGroup::Control;
+
+
 class Colors: public wxpex::Collapsible
 {
 public:
-    Colors(wxWindow *parent, const std::string &name)
+    Colors(
+        wxWindow *parent,
+        const std::string &name,
+        ColorsStateControl state)
         :
         wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
     {
-        auto blue = new Widget(this->GetPanel(), "Blue", *wxBLUE);
-        auto cyan = new Widget(this->GetPanel(), "Cyan", *wxCYAN);
-        auto green = new Widget(this->GetPanel(), "Green", *wxGREEN);
-        auto yellow = new Widget(this->GetPanel(), "Yellow", *wxYELLOW);
-        auto red = new Widget(this->GetPanel(), "Red", *wxRED);
+        auto blue =
+            new Widget(this->GetPanel(), "Blue", *wxBLUE, state.blue);
+
+        auto cyan =
+            new Widget(this->GetPanel(), "Cyan", *wxCYAN, state.cyan);
+
+        auto green =
+            new Widget(this->GetPanel(), "Green", *wxGREEN, state.green);
+
+        auto yellow =
+            new Widget(this->GetPanel(), "Yellow", *wxYELLOW, state.yellow);
+
+        auto red =
+            new Widget(this->GetPanel(), "Red", *wxRED, state.red);
 
         auto sizer = wxpex::LayoutItems(
             wxpex::verticalItems,
@@ -59,13 +102,13 @@ public:
 class ColorSets: public wxpex::Scrolled
 {
 public:
-    ColorSets(wxWindow *parent)
+    ColorSets(wxWindow *parent, ColorsStateControl state)
         :
         wxpex::Scrolled(parent)
     {
-        auto set1 = new Colors(this, "Set 1");
-        auto set2 = new Colors(this, "Set 2");
-        auto set3 = new Colors(this, "Set 3");
+        auto set1 = new Colors(this, "Set 1", state);
+        auto set2 = new Colors(this, "Set 2", state);
+        auto set3 = new Colors(this, "Set 3", state);
 
         auto sizer = wxpex::LayoutItems(
             wxpex::verticalItems,
@@ -84,17 +127,17 @@ public:
 class LeftControls: public wxPanel
 {
 public:
-    LeftControls(wxWindow *parent)
+    LeftControls(wxWindow *parent, ColorsStateControl state)
         :
         wxPanel(parent)
     {
         auto topPanel = new wxPanel(this);
         topPanel->SetMinSize(wxSize(400, 100));
 
-        auto colorSets = new ColorSets(this);
+        auto colorSets = new ColorSets(this, state);
 
         auto bottomPanel = new wxPanel(this);
-        bottomPanel->SetMinSize(wxSize(400, 400));
+        bottomPanel->SetMinSize(wxSize(400, 100));
 
         auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 
@@ -113,9 +156,9 @@ public:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame()
+    ExampleFrame(ColorsStateControl state)
         :
-        wxFrame(nullptr, wxID_ANY, "Settings Demo")
+        wxFrame(nullptr, wxID_ANY, "Scroll Demo")
     {
         auto splitter = new wxpex::Splitter(this);
 
@@ -124,7 +167,7 @@ public:
         auto localCopy = topSizer.get();
         this->SetSizer(topSizer.release());
 
-        auto controls = new LeftControls(splitter);
+        auto controls = new LeftControls(splitter, state);
 
         auto rightPanel = new wxPanel(splitter);
         rightPanel->SetMinSize(wxSize(600, 600));
@@ -144,12 +187,14 @@ public:
     bool OnInit() override
     {
         ExampleFrame *exampleFrame =
-            new ExampleFrame();
+            new ExampleFrame(ColorsStateControl(this->colorsStateModel_));
 
         exampleFrame->Show();
 
         return true;
     }
+
+    ColorsStateModel colorsStateModel_;
 };
 
 
