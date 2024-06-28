@@ -222,4 +222,17 @@ private:
 };
 
 
+template<typename Control, typename Traits = pex::DefaultConverterTraits>
+wxWindow * MakeOptionalField(wxWindow *parent, Control control)
+{
+    using OptionalType = typename Control::Type;
+    using ValueType = typename OptionalType::value_type;
+
+    using OptionalField =
+        Field<Control, pex::OptionalConverter<ValueType, Traits>>;
+
+    return new OptionalField(parent, control);
+}
+
+
 } // namespace wxpex

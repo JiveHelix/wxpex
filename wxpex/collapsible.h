@@ -24,6 +24,8 @@ public:
     using StateModel = pex::model::Value<bool>;
     using StateControl = pex::control::Value<StateModel>;
 
+    static constexpr auto observerName = "wxpex::Collapsible";
+
     Collapsible(
         wxWindow *parent,
         const std::string &label,
