@@ -15,8 +15,8 @@
 #include <string>
 
 #include <pex/value.h>
-#include <pex/converter.h>
 #include <pex/argument.h>
+#include <wxpex/converter.h>
 
 #include "wxpex/wxshim.h"
 
@@ -75,6 +75,15 @@ template
 View<Value, Convert> * MakeView(wxWindow *parent, Value value, long style = 0)
 {
     return new View<Value, Convert>(parent, value, style);
+}
+
+
+template<int precision, typename Control>
+auto CreateView(wxWindow *parent, Control control)
+{
+    using Result = View<Control, PrecisionConverter<Control, precision>>;
+
+    return new Result(parent, control);
 }
 
 

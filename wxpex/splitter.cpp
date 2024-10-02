@@ -20,7 +20,7 @@ Splitter::Splitter(
     secondPriority_(nullptr),
     userSashPosition_(-1)
 {
-    this->SetAutoLayout(true);
+    // this->SetAutoLayout(true);
 }
 
 
@@ -81,6 +81,8 @@ bool Splitter::Layout()
     if (this->userSashPosition_ > -1)
     {
         // Once the user has selected their desired size, do not change it.
+        this->wxSplitterWindow::Layout();
+
         return true;
     }
 
@@ -92,6 +94,8 @@ bool Splitter::Layout()
     {
         this->SetSashWithWindow_(this->secondPriority_, true);
     }
+
+    this->wxSplitterWindow::Layout();
 
     return true;
 }

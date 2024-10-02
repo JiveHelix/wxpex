@@ -191,7 +191,7 @@ ExampleFrame::ExampleFrame(Control control)
         LabeledWidget(
             this,
             "The Answer:",
-            MakeOptionalField(this, control.theAnswer));
+            CreateField<2>(this, control.theAnswer));
 
     auto messageField =
         LabeledWidget(

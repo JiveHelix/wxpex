@@ -16,14 +16,23 @@ struct ViewTraits:
 };
 
 
+template<int precision>
+struct PreciseTraits: public ViewTraits<10, 0, precision> {};
+
+
+template<int width>
+struct WidthTraits: public ViewTraits<10, width, -1> {};
+
+
+
 template<typename Control, int precision>
 using PrecisionConverter =
-    pex::Converter<typename Control::Type, ViewTraits<10, 0, precision>>;
+    pex::Converter<typename Control::Type, PreciseTraits<precision>>;
 
 
 template<typename Control, int width>
 using WidthConverter =
-    pex::Converter<typename Control::Type, ViewTraits<10, width, -1>>;
+    pex::Converter<typename Control::Type, WidthTraits<width>>;
 
 
 template<typename Control, int width, int precision>

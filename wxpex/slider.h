@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <cstdint>
 
+#include <jive/optional.h>
 #include <pex/range.h>
 
 #include "wxpex/wxshim.h"
@@ -85,16 +86,35 @@ wxDEFINE_EVENT(SliderBegin, wxCommandEvent);
 wxDEFINE_EVENT(SliderDone, wxCommandEvent);
 
 
+template<typename T>
+using RangeValue = typename T::Value;
+
+template<typename T>
+using RangeValueType = typename RangeValue<T>::Type;
+
+
+template<typename T>
+using NotOptional = jive::RemoveOptional<RangeValueType<T>>;
+
+
 /** wxSlider uses `int`. If the Range type is integral, so the default filter will attempt to convert it to `int`. Floating-point types will default to a LinearRange that maps the range of possible values across the positions of the slider.
  **/
 template<typename RangeControl, typename Enable = void>
 struct FilteredRange_ {};
 
+
 template<typename RangeControl>
 struct FilteredRange_
 <
     RangeControl,
-    std::enable_if_t<std::is_same_v<typename RangeControl::Value::Type, int>>
+    std::enable_if_t
+    <
+        std::is_same_v
+        <
+            NotOptional<RangeControl>,
+            int
+        >
+    >
 >
 {
     // This RangeControl already has type 'int'
@@ -108,7 +128,10 @@ struct FilteredRange_
     RangeControl,
     std::enable_if_t
     <
-        std::is_floating_point_v<typename RangeControl::Value::Type>
+        std::is_floating_point_v
+        <
+            NotOptional<RangeControl>
+        >
     >
 >
 {
@@ -128,8 +151,8 @@ struct FilteredRange_
     RangeControl,
     std::enable_if_t
     <
-        !std::is_same_v<typename RangeControl::Value::Type, int>
-        && std::is_integral_v<typename RangeControl::Value::Type>
+        !std::is_same_v<NotOptional<RangeControl>, int>
+        && std::is_integral_v<NotOptional<RangeControl>>
     >
 >
 {
@@ -145,6 +168,31 @@ struct FilteredRange_
 
 template<typename RangeControl>
 using FilteredRange = typename FilteredRange_<RangeControl>::Type;
+
+
+template<typename RangeControl>
+int GetInitialValue(RangeControl range)
+{
+    using Range = FilteredRange<RangeControl>;
+
+    using Type = typename Range::Type;
+
+    auto value = Range(range).value.Get();
+
+    if constexpr (jive::IsOptional<Type>)
+    {
+        if (!value)
+        {
+            return 0;
+        }
+
+        return *value;
+    }
+    else
+    {
+        return value;
+    }
+}
 
 
 template
@@ -164,6 +212,10 @@ public:
     using Range = FilteredRange<RangeControl>;
 
     using Value = typename Range::Value;
+    using ValueType = typename Value::Type;
+    static_assert(std::is_same_v<int, jive::RemoveOptional<ValueType>>);
+    static constexpr bool isOptional = jive::IsOptional<ValueType>;
+
     using Limit = typename Range::Limit;
 
     Slider(
@@ -174,19 +226,23 @@ public:
         Base(
             parent,
             wxID_ANY,
+
             detail::StyleFilter(
                 style,
                 Range(range).minimum.Get(),
-                Range(range).maximum.Get())(Range(range).value.Get()),
+                Range(range).maximum.Get())(GetInitialValue(range)),
+
             Range(range).minimum.Get(),
             Range(range).maximum.Get(),
             wxDefaultPosition,
             wxDefaultSize,
             SliderStyle(style)),
+
         value_(this, range.value),
         minimum_(this, range.minimum),
         maximum_(this, range.maximum),
-        defaultValue_(this->value_.Get()),
+        defaultValue_(GetInitialValue(range)),
+
         styleFilter_(
             style,
             Range(range).minimum.Get(),
@@ -215,9 +271,19 @@ public:
         PEX_LOG(this);
     }
 
-    void OnValue_(int value)
+    void OnValue_(pex::Argument<ValueType> value)
     {
-        this->SetValue(this->styleFilter_(value));
+        if constexpr (isOptional)
+        {
+            if (value)
+            {
+                this->SetValue(this->styleFilter_(*value));
+            }
+        }
+        else
+        {
+            this->SetValue(this->styleFilter_(value));
+        }
     }
 
     void OnMinimum_(int minimum)
@@ -366,7 +432,7 @@ public:
                 ? wxALIGN_CENTER_VERTICAL
                 : wxALIGN_CENTER);
 
-        this->SetSizerAndFit(sizer.release());
+        this->SetSizer(sizer.release());
 
         this->Bind(
             SliderBegin,
@@ -468,7 +534,7 @@ public:
         sizer->Add(slider, 1, wxRIGHT | wxEXPAND, 3);
         sizer->Add(spin, 0, wxALIGN_CENTER);
 
-        this->SetSizerAndFit(sizer.release());
+        this->SetSizer(sizer.release());
 
         this->Bind(
             SliderDone,
@@ -496,20 +562,38 @@ class FieldSliderConvert: public wxControl
 public:
     using ValueField = Field<ValueControl, Convert>;
 
-    FieldSliderConvert(wxWindow *parent, RangeControl range, ValueControl value)
+    FieldSliderConvert(
+        wxWindow *parent,
+        RangeControl range,
+        ValueControl value,
+        Style style = Style::horizontal)
         :
         wxControl(parent, wxID_ANY)
     {
         auto slider =
-            new Slider<RangeControl>(this, range, Style::horizontal);
+            new Slider<RangeControl>(this, range, style);
 
         auto field = new ValueField(this, value);
 
-        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
-        sizer->Add(slider, 1, wxRIGHT | wxEXPAND, 3);
-        sizer->Add(field, 0, wxALIGN_CENTER);
+        auto sizerStyle = SizerStyle(style);
 
-        this->SetSizerAndFit(sizer.release());
+        auto sizer = std::make_unique<wxBoxSizer>(sizerStyle);
+
+        auto flag = IsHorizontal(style)
+            ? wxRIGHT | wxEXPAND
+            : wxBOTTOM | wxEXPAND;
+
+        auto spacing = 5;
+        sizer->Add(slider, 1, flag, spacing);
+
+        sizer->Add(
+            field,
+            0,
+            IsHorizontal(style)
+                ? wxALIGN_CENTER_VERTICAL
+                : wxALIGN_CENTER);
+
+        this->SetSizer(sizer.release());
 
         this->Bind(
             SliderDone,
@@ -552,9 +636,10 @@ public:
     FieldSlider(
         wxWindow *parent,
         RangeControl range,
-        ValueControl value)
+        ValueControl value,
+        Style style = Style::horizontal)
         :
-        Base(parent, range, value)
+        Base(parent, range, value, style)
     {
 
     }
@@ -565,10 +650,24 @@ template<int precision, typename RangeControl, typename ValueControl>
 auto CreateFieldSlider(
     wxWindow *parent,
     RangeControl range,
-    ValueControl value)
+    ValueControl value,
+    Style style = Style::horizontal)
 {
     using Result = FieldSlider<RangeControl, ValueControl, precision>;
-    return new Result(parent, range, value);
+    return new Result(parent, range, value, style);
+}
+
+
+template<int precision, typename RangeControl>
+auto CreateFieldSlider(
+    wxWindow *parent,
+    RangeControl range,
+    Style style = Style::horizontal)
+{
+    using Result =
+        FieldSlider<RangeControl, decltype(RangeControl::value), precision>;
+
+    return new Result(parent, range, range.value, style);
 }
 
 
@@ -576,10 +675,24 @@ template<int precision, typename RangeControl, typename ValueControl>
 auto CreateValueSlider(
     wxWindow *parent,
     RangeControl range,
-    ValueControl value)
+    ValueControl value,
+    Style style = Style::horizontal)
 {
     using Result = ValueSlider<RangeControl, ValueControl, precision>;
-    return new Result(parent, range, value);
+    return new Result(parent, range, value, style);
+}
+
+
+template<int precision, typename RangeControl>
+auto CreateValueSlider(
+    wxWindow *parent,
+    RangeControl range,
+    Style style = Style::horizontal)
+{
+    using Result =
+        ValueSlider<RangeControl, decltype(RangeControl::value), precision>;
+
+    return new Result(parent, range, range.value, style);
 }
 
 

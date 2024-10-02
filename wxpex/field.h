@@ -15,6 +15,7 @@
 #include <pex/value.h>
 #include <pex/converter.h>
 
+#include "wxpex/converter.h"
 #include "wxpex/wxshim.h"
 #include "wxpex/size.h"
 
@@ -69,7 +70,9 @@ private:
         this->textControl_->Bind(wxEVT_TEXT_ENTER, &Field::OnEnter_, this);
         this->textControl_->Bind(wxEVT_KILL_FOCUS, &Field::OnKillFocus_, this);
 
-        PEX_LOG("Connect");
+        PEX_LOG("Connect Field ", this);
+        REGISTER_PEX_NAME(this, "wxpex::Field");
+        REGISTER_PEX_NAME_WITH_PARENT(&this->value_, this, "value_");
         this->value_.Connect(&Field::OnValueChanged_);
 
         // A sizer is required to allow the text control to be managed by
@@ -222,16 +225,12 @@ private:
 };
 
 
-template<typename Control, typename Traits = pex::DefaultConverterTraits>
-wxWindow * MakeOptionalField(wxWindow *parent, Control control)
+template<int precision, typename Control>
+auto CreateField(wxWindow *parent, Control control)
 {
-    using OptionalType = typename Control::Type;
-    using ValueType = typename OptionalType::value_type;
+    using Result = Field<Control, PrecisionConverter<Control, precision>>;
 
-    using OptionalField =
-        Field<Control, pex::OptionalConverter<ValueType, Traits>>;
-
-    return new OptionalField(parent, control);
+    return new Result(parent, control);
 }
 
 

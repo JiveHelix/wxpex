@@ -22,6 +22,64 @@ namespace wxpex
 CREATE_EXCEPTION(GraphicsError, std::runtime_error);
 
 
+template<typename T>
+struct ShearFields
+{
+    static constexpr auto fields = std::make_tuple(
+        fields::Field(&T::x, "x"),
+        fields::Field(&T::y, "y"));
+};
+
+
+template<typename U>
+struct ShearTemplate
+{
+    using ShearRange = pex::MakeRange<U, pex::Limit<-1>, pex::Limit<1>>;
+
+    template<template<typename> typename T>
+    struct Template
+    {
+        T<ShearRange> x;
+        T<ShearRange> y;
+
+        static constexpr auto fields = ShearFields<Template>::fields;
+        static constexpr auto fieldsTypeName = "Shear";
+    };
+};
+
+
+template<typename U>
+struct Shear: public ShearTemplate<U>::template Template<pex::Identity>
+{
+    using Matrix = Eigen::Matrix<double, 2, 2>;
+
+    Matrix GetMatrix() const
+    {
+        Matrix result = Matrix::Identity();
+        result(0, 1) = this->x;
+        result(1, 0) = this->y;
+
+        return result;
+    }
+};
+
+
+template<typename U>
+using ShearGroup =
+    pex::Group
+    <
+        ShearFields,
+        ShearTemplate<U>::template Template,
+        pex::PlainT<Shear<U>>
+    >;
+
+template<typename U>
+using ShearModel = typename ShearGroup<U>::Model;
+
+template<typename U>
+using ShearControl = typename ShearGroup<U>::Control;
+
+
 enum class AntialiasMode: int
 {
     none = int(wxANTIALIAS_NONE),
@@ -90,7 +148,7 @@ struct GraphicsMatrix
             &this->ty);
     }
 
-    void Convert(wxGraphicsMatrix &outGraphicsMatrix)
+    void ToWxGraphicsMatrix(wxGraphicsMatrix &outGraphicsMatrix)
     {
         outGraphicsMatrix.Set(
             this->a,
@@ -99,6 +157,55 @@ struct GraphicsMatrix
             this->d,
             this->tx,
             this->ty);
+    }
+
+    using Matrix = Eigen::Matrix<double, 3, 3>;
+    using RotationMatrix = Eigen::Matrix<double, 2, 2>;
+
+    Matrix GetMatrix() const
+    {
+        Matrix result = Matrix::Zero();
+        result(0, 0) = this->a;
+        result(0, 1) = this->b;
+        result(0, 2) = this->tx;
+        result(1, 0) = this->c;
+        result(1, 1) = this->d;
+        result(1, 2) = this->ty;
+
+        result(2, 0) = 0.0;
+        result(2, 1) = 0.0;
+        result(2, 2) = 1.0;
+
+        return result;
+    }
+
+    void SetMatrix(const Matrix &matrix)
+    {
+        this->a = matrix(0, 0);
+        this->b = matrix(0, 1);
+        this->c = matrix(1, 0);
+        this->d = matrix(1, 1);
+        this->tx = matrix(0, 2);
+        this->ty = matrix(1, 2);
+    }
+
+    RotationMatrix GetRotationMatrix() const
+    {
+        RotationMatrix result = RotationMatrix::Zero();
+        result(0, 0) = this->a;
+        result(0, 1) = this->b;
+        result(1, 0) = this->c;
+        result(1, 1) = this->d;
+
+        return result;
+    }
+
+    void SetRotationMatrix(const RotationMatrix &matrix)
+    {
+        this->a = matrix(0, 0);
+        this->b = matrix(0, 1);
+        this->c = matrix(1, 0);
+        this->d = matrix(1, 1);
     }
 
     tau::Scale<double> GetScale() const
@@ -122,6 +229,16 @@ struct GraphicsMatrix
     tau::Vector2d<double> GetTranslation() const
     {
         return {this->tx, this->ty};
+    }
+
+    Shear<double> GetShear() const
+    {
+        return {this->b, this->c};
+    }
+
+    void Shear(const Shear<double> &shear)
+    {
+        this->SetRotationMatrix(shear.GetMatrix() * this->GetRotationMatrix());
     }
 
     bool IsIdentity() const
@@ -219,7 +336,17 @@ public:
         return {this->context_->GetTransform()};
     }
 
-private:
+    void Shear(const Shear<double> &shear)
+    {
+        auto matrix = this->GetGraphicsMatrix();
+        matrix.Shear(shear);
+        wxGraphicsMatrix result = this->context_->GetTransform();
+        matrix.ToWxGraphicsMatrix(result);
+
+        this->context_->SetTransform(result);
+    }
+
+protected:
     wxGraphicsContext *context_;
 };
 

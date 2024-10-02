@@ -32,6 +32,7 @@ target_sources(
     converter.h
     cursor.h
     directory_field.h
+    expandable.h
     field.h
     file_field.h
     gauge.h
@@ -57,12 +58,14 @@ target_sources(
     style.h
     tile.h
     view.h
+    widget_names.h
     window.h
     wxshim.h
     wx_ostream.h
     wx_select.h
     border_sizer.cpp
     collapsible.cpp
+    expandable.cpp
     gauge.cpp
     graphics.cpp
     indent_sizer.cpp
@@ -71,7 +74,8 @@ target_sources(
     scrolled.cpp
     shortcut.cpp
     static_box.cpp
-    tile.cpp)
+    tile.cpp
+    widget_names.cpp)
 
 
 install(TARGETS wxpex DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -10,6 +10,7 @@
 **/
 
 #include <pex/range.h>
+#include <pex/endpoint.h>
 #include <pex/converting_filter.h>
 #include <fields/fields.h>
 #include "wxpex/slider.h"
@@ -20,6 +21,7 @@ struct DemoFields
 {
     static constexpr auto fields = std::make_tuple(
         fields::Field(&T::position, "position"),
+        fields::Field(&T::optional, "optional"),
         fields::Field(&T::playbackSpeed, "playbackSpeed"));
 };
 
@@ -30,6 +32,7 @@ template<template<typename> typename T>
 struct DemoTemplate
 {
     T<MakeRange<int, Limit<0>, Limit<1000>>> position;
+    T<MakeRange<std::optional<int>, Limit<0>, Limit<100>>> optional;
     T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
 };
 
@@ -41,7 +44,7 @@ struct Demo: public DemoTemplate<pex::Identity>
 
     static Demo MakeDefault()
     {
-        return {{defaultPosition, defaultPlaybackSpeed}};
+        return {{defaultPosition, defaultPlaybackSpeed, {}}};
     }
 };
 
@@ -49,8 +52,8 @@ using DemoGroup = pex::Group<DemoFields, DemoTemplate, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::Control;
 
-using PositionControl = decltype(DemoControl::position);
-using PositionValue = decltype(PositionControl::value);
+using OptionalControl = decltype(DemoControl::optional);
+using OptionalValue = decltype(OptionalControl::value);
 
 using PlaybackSpeed = decltype(DemoModel::playbackSpeed);
 using PlaybackSpeedControl = decltype(DemoControl::playbackSpeed);
@@ -92,7 +95,8 @@ class ExampleApp : public wxApp
 public:
     ExampleApp()
         :
-        model_(Demo::MakeDefault())
+        model_(Demo::MakeDefault()),
+        position_(this, model_.position, &ExampleApp::OnPosition_)
     {
 
     }
@@ -100,18 +104,29 @@ public:
     bool OnInit() override;
 
 private:
+    void OnPosition_(int position)
+    {
+        if (position > 500)
+        {
+            this->model_.optional.Set({});
+        }
+        else
+        {
+            this->model_.optional.Set(0);
+        }
+    }
+
+private:
     DemoModel model_;
+
+    using PositionEndpoint =
+        pex::Endpoint<ExampleApp, decltype(DemoModel::position)>;
+
+    PositionEndpoint position_;
 };
 
 
 const int precision = 3;
-
-using PositionSlider =
-    wxpex::ValueSlider<PositionControl, PositionValue, precision>;
-
-
-using PositionFieldSlider =
-    wxpex::FieldSlider<PositionControl, PositionValue, 1>;
 
 
 using PlaybackSpeedSlider =
@@ -121,6 +136,11 @@ using PlaybackSpeedSlider =
         PlaybackSpeedValue,
         PlaybackSpeedConverter
     >;
+
+using TestRangeSlider = typename PlaybackSpeedSlider::RangeSlider;
+using SelectedRange = typename TestRangeSlider::Range;
+
+static_assert(std::is_same_v<SelectedRange, FilteredPlaybackSpeed>);
 
 
 class ExampleFrame: public wxFrame
@@ -153,18 +173,18 @@ ExampleFrame::ExampleFrame(DemoControl control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Slider Demo")
 {
-    auto positionSlider =
-        new PositionSlider(this, control.position, control.position.value);
+    auto positionSlider = wxpex::CreateValueSlider<3>(this, control.position);
 
     auto positionFieldSlider =
-        new PositionFieldSlider(this, control.position, control.position.value);
+        wxpex::CreateFieldSlider<1>(this, control.position);
+
+    auto optionalSlider =
+        new wxpex::Slider(this, control.optional);
+
+    auto vertical = wxpex::Style::vertical;
 
     auto verticalSlider =
-        new PositionSlider(
-            this,
-            control.position,
-            control.position.value,
-            wxpex::Style::vertical);
+        CreateValueSlider<precision>(this, control.position, vertical);
 
     auto playbackSpeedSlider =
         new PlaybackSpeedSlider(
@@ -182,6 +202,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
 
     topSizer->Add(positionSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(positionFieldSlider, 0, wxALL | wxEXPAND, 10);
+    topSizer->Add(optionalSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSlider, 1, wxALL | wxEXPAND, 10);
     topSizer->Add(playbackSpeedSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSpeedSlider, 0, wxALL | wxEXPAND, 10);

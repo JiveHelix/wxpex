@@ -56,6 +56,7 @@ public:
     template<typename>
     friend class pex::Reference;
 
+    // Adds GetWorkerControl to pex::control::Value_.
     template<typename ControlFilter, typename ControlAccess>
     struct FilteredControl
         :

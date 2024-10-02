@@ -4,6 +4,7 @@
 #include "wxpex/size.h"
 #include "wxpex/border_sizer.h"
 #include "wxpex/scrolled.h"
+#include "wxpex/static_box.h"
 #include "wxpex/splitter.h"
 #include "wxpex/freezer.h"
 
@@ -24,6 +25,7 @@ Collapsible::Collapsible(
         wxDefaultPosition,
         wxDefaultSize,
         wxTAB_TRAVERSAL | wxCP_NO_TLW_RESIZE),
+    Expandable(),
     borderPane_(nullptr),
     label_(label),
     stateEndpoint_(),
@@ -38,6 +40,12 @@ Collapsible::Collapsible(
             wxDefaultPosition,
             wxDefaultSize,
             borderStyle);
+
+        this->SetExpandableWindow(this->borderPane_);
+    }
+    else
+    {
+        this->SetExpandableWindow(this->m_pPane);
     }
 
     this->Bind(
@@ -83,7 +91,7 @@ void Collapsible::ConfigureBorderPane_(
 
 
     this->borderPane_->SetSizer(borderSizer.get());
-    borderSizer->SetSizeHints(this->borderPane_);
+    // borderSizer->SetSizeHints(this->borderPane_);
     borderSizer.release();
 
     auto paneSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
@@ -184,150 +192,13 @@ wxSize Collapsible::DoGetBestClientSize() const
 #endif
 
 
-void Collapsible::ReportWindowSize_(wxWindow *window, size_t depth)
-{
-    std::cout << std::string(depth * 4, ' ') << depth << std::endl;
-
-    auto bestSize = window->GetBestSize();
-    auto size = window->GetSize();
-
-    std::cout << std::string(depth * 4, ' ')
-        << "best size: " << wxpex::ToSize<int>(bestSize) << std::endl;
-
-    std::cout << std::string(depth * 4, ' ')
-        << "size: " << wxpex::ToSize<int>(size) << std::endl;
-}
-
-
-void Collapsible::FixCollapsibleSize_(wxWindow *window)
-{
-    // Reset the minimum size.
-    window->SetMinSize(wxDefaultSize);
-
-    wxSize bestSize = window->GetBestSize();
-
-    if (window->GetSize() != bestSize)
-    {
-        window->SetSize(bestSize);
-    }
-
-    window->Layout();
-}
-
-
-void Collapsible::FixContainerSize_(wxWindow *window)
-{
-    auto scrolled = dynamic_cast<Scrolled *>(window);
-
-    if (scrolled)
-    {
-        scrolled->FitInside();
-        return;
-    }
-
-    // Reset the minimum size.
-    window->SetMinSize(wxDefaultSize);
-
-    wxSize bestSize = window->GetBestSize();
-    wxSize windowSize = window->GetSize();
-    wxSize updatedSize = windowSize;
-
-    updatedSize.SetWidth(
-        std::max(windowSize.GetWidth(), bestSize.GetWidth()));
-
-    updatedSize.SetHeight(
-        std::max(windowSize.GetHeight(), bestSize.GetHeight()));
-
-    if (windowSize != updatedSize)
-    {
-        window->SetSize(updatedSize);
-    }
-}
-
-
 void Collapsible::HandleStateChange_()
 {
-    Freezer freezer(this);
+    // Freezer freezer(this);
 
     this->UpdateMinimumSize_();
 
-    wxWindow *window;
-
-    if (this->borderPane_)
-    {
-        window = this->borderPane_;
-    }
-    else
-    {
-        window = this->m_pPane;
-    }
-
-    // Invalidate best size of all parents.
-    auto top = wxGetTopLevelParent(window);
-
-    Collapsible *topCollapsible = nullptr;
-
-    std::vector<wxWindow *> allWindows;
-
-    for (; window != top; window = window->GetParent())
-    {
-        Collapsible *maybeTopCollapsible = dynamic_cast<Collapsible *>(window);
-
-        if (maybeTopCollapsible)
-        {
-            topCollapsible = maybeTopCollapsible;
-        }
-
-        window->InvalidateBestSize();
-        allWindows.push_back(window);
-    }
-
-    top->InvalidateBestSize();
-    allWindows.push_back(top);
-
-    // We expect to have encountered at least one pointer to ourselves in our
-    // traversal up the family tree.
-    assert(topCollapsible);
-
-    auto endOfCollapsible = std::find(
-        std::begin(allWindows),
-        std::end(allWindows),
-        topCollapsible);
-
-    // This window must have been added to allWindows.
-    assert(endOfCollapsible != std::end(allWindows));
-
-    ++endOfCollapsible;
-
-    auto topSize = wxpex::ToSize<int>(top->GetSize());
-
-    for (auto i = std::begin(allWindows); i != endOfCollapsible; ++i)
-    {
-        this->FixCollapsibleSize_(*i);
-    }
-
-    for (auto i = endOfCollapsible; i != std::end(allWindows); ++i)
-    {
-        this->FixContainerSize_(*i);
-    }
-
-    (*endOfCollapsible)->SendSizeEvent();
-    top->Layout();
-
-    auto postLayoutSize = wxpex::ToSize<int>(top->GetSize());
-
-    // Do not make the top window smaller
-    topSize.width = std::max(postLayoutSize.width, topSize.width);
-    topSize.height = std::max(postLayoutSize.height, topSize.height);
-
-    if (topSize != postLayoutSize)
-    {
-        top->SetSize(wxpex::ToWxSize(topSize));
-    }
-    else
-    {
-        top->SendSizeEvent();
-    }
+    this->FixLayout();
 
     if (this->ignoreState_)
     {
@@ -339,7 +210,6 @@ void Collapsible::HandleStateChange_()
         jive::ScopeFlag ignoreState(this->ignoreState_);
         this->stateEndpoint_.Set(this->IsExpanded());
     }
-
 }
 
 

@@ -35,6 +35,16 @@ target_link_libraries(
     wxpex)
 
 
+add_executable(splitter_demo splitter_demo.cpp)
+
+target_link_libraries(
+    splitter_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(check_box_demo ${windowed} check_box_demo.cpp)
 
 target_link_libraries(

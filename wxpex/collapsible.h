@@ -12,13 +12,14 @@ WXSHIM_PUSH_IGNORES
 WXSHIM_POP_IGNORES
 
 #include "wxpex/size.h"
+#include "wxpex/expandable.h"
 
 
 namespace wxpex
 {
 
 
-class Collapsible: public wxCollapsiblePane
+class Collapsible: public wxCollapsiblePane, public Expandable
 {
 public:
     using StateModel = pex::model::Value<bool>;
@@ -57,10 +58,6 @@ protected:
     void OnChanged_(wxCollapsiblePaneEvent &);
 
     void UpdateMinimumSize_() const;
-
-    void ReportWindowSize_(wxWindow *window, size_t depth);
-    void FixCollapsibleSize_(wxWindow *window);
-    void FixContainerSize_(wxWindow *window);
 
 private:
     void OnState_(bool isExpanded);
