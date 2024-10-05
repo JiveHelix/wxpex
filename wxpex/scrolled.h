@@ -64,7 +64,7 @@ class Scrolled: public wxScrolled<wxPanel>
 public:
     Scrolled(wxWindow *parent);
 
-    void ConfigureTopSizer(
+    void ConfigureSizer(
         const ScrolledSettings &scrolledSettings,
         std::unique_ptr<wxSizer> &&sizer);
 };

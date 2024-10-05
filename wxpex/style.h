@@ -49,4 +49,4 @@ inline bool IsHorizontal(Style style)
 }
 
 
-} // end namespace style
+} // end namespace wxpex

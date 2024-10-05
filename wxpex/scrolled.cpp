@@ -13,7 +13,7 @@ Scrolled::Scrolled(wxWindow *parent)
 }
 
 
-void Scrolled::ConfigureTopSizer(
+void Scrolled::ConfigureSizer(
     const ScrolledSettings &scrolledSettings,
     std::unique_ptr<wxSizer> &&sizer)
 {

@@ -170,7 +170,7 @@ public:
             secondFruit,
             notFruit);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -224,7 +224,7 @@ public:
             longitude,
             elevation);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -264,7 +264,7 @@ public:
         wxpex::RegisterWidgetName(gpsView, "gpsView");
         wxpex::RegisterWidgetName(gpsEntry, "gpsEntry");
 
-        this->ConfigureTopSizer(
+        this->ConfigureSizer(
             wxpex::LayoutItems(wxpex::verticalItems, gpsView, gpsEntry));
     }
 };
@@ -306,7 +306,7 @@ public:
             weaponsView,
             weaponsEntry);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -367,7 +367,7 @@ public:
             thing1,
             thing2);
 
-        this->ConfigureTopSizer(
+        this->ConfigureSizer(
             wxpex::verticalScrolled,
             std::move(sizer));
     }

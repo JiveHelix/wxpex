@@ -50,10 +50,10 @@ public:
         pex::control::LinearRange<ValueControl, 256>;
 
     using HueKnob =
-        wxpex::ValueKnob<HueRange, typename HueControl::Value, 5, 1>;
+        wxpex::ViewKnob<HueRange, typename HueControl::Value, 5, 1>;
 
     using SaturationKnob =
-        wxpex::ValueKnob
+        wxpex::ViewKnob
         <
             SaturationRange,
             typename SaturationControl::Value,
@@ -62,7 +62,7 @@ public:
         >;
 
     using ValueKnob =
-        ::wxpex::ValueKnob<ValueRange, typename ValueControl::Value, 4, 2>;
+        ::wxpex::ViewKnob<ValueRange, typename ValueControl::Value, 4, 2>;
 
     using Color = typename Control::Type;
 
@@ -150,7 +150,7 @@ public:
     using AlphaControl = decltype(HsvaControl::alpha);
 
     using AlphaKnob =
-        ::wxpex::ValueKnob<AlphaRange, typename AlphaControl::Value, 4, 2>;
+        ::wxpex::ViewKnob<AlphaRange, typename AlphaControl::Value, 4, 2>;
 
     HsvaKnobs(
         wxWindow *parent,

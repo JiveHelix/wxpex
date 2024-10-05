@@ -71,6 +71,10 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
+    this->hsvColor_.hue.SetDefault(0.0);
+    this->hsvColor_.saturation.SetDefault(1.0);
+    this->hsvColor_.value.SetDefault(0.5);
+
     this->hsvControl_ = wxpex::HsvControl(this->hsvColor_);
 
     this->hsvConnect_ = std::make_unique<HsvConnect>(

@@ -39,15 +39,20 @@ std::string InterpolationQualityConverter::ToString(
         default:
             throw std::logic_error("Unknown InterpolationQuality");
     }
-
 }
 
 
-std::vector<CompositionMode> GetCompositionModes()
+std::ostream & operator<<(std::ostream &output, InterpolationQuality value)
+{
+    return output << InterpolationQualityConverter::ToString(value);
+}
+
+
+std::vector<CompositionMode> CompositionModeChoices::GetChoices()
 {
     return {
-        CompositionMode::invalid,
-        CompositionMode::clear,
+        // CompositionMode::invalid,
+        // CompositionMode::clear,
         CompositionMode::source,
         CompositionMode::over,
         CompositionMode::in,
@@ -116,6 +121,12 @@ std::string CompositionModeConverter::ToString(CompositionMode compositionMode)
         default:
             throw std::logic_error("Unknown CompositionMode");
     }
+}
+
+
+std::ostream & operator<<(std::ostream &output, CompositionMode value)
+{
+    return output << CompositionModeConverter::ToString(value);
 }
 
 

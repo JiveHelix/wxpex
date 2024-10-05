@@ -106,6 +106,9 @@ struct InterpolationQualityConverter
 };
 
 
+std::ostream & operator<<(std::ostream &, InterpolationQuality);
+
+
 enum class CompositionMode
 {
     invalid = wxCOMPOSITION_INVALID,
@@ -126,13 +129,26 @@ enum class CompositionMode
 };
 
 
-std::vector<CompositionMode> GetCompositionModes();
+struct CompositionModeChoices
+{
+    static std::vector<CompositionMode> GetChoices();
+};
+
+
+using CompositionModeSelect =
+    pex::MakeSelect<CompositionMode, CompositionModeChoices>;
+
+using CompositionModeModel = pex::ModelSelector<CompositionModeSelect>;
+using CompositionModeControl = pex::ControlSelector<CompositionModeSelect>;
 
 
 struct CompositionModeConverter
 {
     static std::string ToString(CompositionMode compositionMode);
 };
+
+
+std::ostream & operator<<(std::ostream &, CompositionMode);
 
 
 struct GraphicsMatrix
@@ -344,6 +360,30 @@ public:
         matrix.ToWxGraphicsMatrix(result);
 
         this->context_->SetTransform(result);
+    }
+
+    void SetCompositionMode(CompositionMode value)
+    {
+        this->context_->SetCompositionMode(
+            static_cast<wxCompositionMode>(value));
+    }
+
+    void SetInterpolationQuality(InterpolationQuality value)
+    {
+        this->context_->SetInterpolationQuality(
+            static_cast<wxInterpolationQuality>(value));
+    }
+
+    CompositionMode GetCompositionMode() const
+    {
+        return static_cast<CompositionMode>(
+            this->context_->GetCompositionMode());
+    }
+
+    InterpolationQuality GetInterpolationQuality() const
+    {
+        return static_cast<InterpolationQuality>(
+            this->context_->GetInterpolationQuality());
     }
 
 protected:

@@ -40,6 +40,7 @@ target_sources(
     ignores.h
     indent_sizer.h
     knob.h
+    knob.cpp
     labeled_widget.h
     layout_top_level.h
     modifier.h

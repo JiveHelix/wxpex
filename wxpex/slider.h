@@ -241,7 +241,7 @@ public:
         value_(this, range.value),
         minimum_(this, range.minimum),
         maximum_(this, range.maximum),
-        defaultValue_(GetInitialValue(range)),
+        reset_(range.reset),
 
         styleFilter_(
             style,
@@ -288,22 +288,12 @@ public:
 
     void OnMinimum_(int minimum)
     {
-        if (this->defaultValue_ < minimum)
-        {
-            this->defaultValue_ = minimum;
-        }
-
         this->SetMin(minimum);
         this->styleFilter_.SetMinimum(minimum);
     }
 
     void OnMaximum_(int maximum)
     {
-        if (this->defaultValue_ > maximum)
-        {
-            this->defaultValue_ = maximum;
-        }
-
         this->SetMax(maximum);
         this->styleFilter_.SetMaximum(maximum);
     }
@@ -325,7 +315,7 @@ public:
         if (event.AltDown())
         {
             // Restore the default.
-            this->value_.Set(this->defaultValue_);
+            this->reset_.Trigger();
         }
         else
         {
@@ -371,7 +361,7 @@ private:
     pex::Terminus<Slider, Value> value_;
     pex::Terminus<Slider, Limit> minimum_;
     pex::Terminus<Slider, Limit> maximum_;
-    int defaultValue_;
+    pex::control::Signal<> reset_;
     detail::StyleFilter styleFilter_;
 };
 

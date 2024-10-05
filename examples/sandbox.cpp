@@ -106,7 +106,7 @@ using VelocityValueControl = decltype(VelocityControl::value);
 
 using VelocityRange = pex::control::LinearRange<VelocityControl, 1>;
 
-using VelocityKnob = wxpex::ValueKnob
+using VelocityKnob = wxpex::ViewKnob
 <
     VelocityControl,
     VelocityValueControl,

@@ -45,7 +45,7 @@ struct Demo: public DemoTemplate<pex::Identity>
     }
 };
 
-using DemoGroup = pex::Group<DemoFields, DemoTemplate, Demo>;
+using DemoGroup = pex::Group<DemoFields, DemoTemplate, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::Control;
 
@@ -108,7 +108,7 @@ private:
 const int precision = 3;
 
 using HueKnob =
-    wxpex::ValueKnob<HueControl, HueValue, precision>;
+    wxpex::ViewKnob<HueControl, HueValue, -1, precision>;
 
 
 using HueFieldKnob =
@@ -116,7 +116,7 @@ using HueFieldKnob =
 
 
 using PlaybackSpeedKnob =
-    wxpex::ValueKnobConvert
+    wxpex::ViewKnobConvert
     <
         FilteredPlaybackSpeed,
         PlaybackSpeedValue,
@@ -155,10 +155,10 @@ ExampleFrame::ExampleFrame(DemoControl control)
     wxFrame(nullptr, wxID_ANY, "wxpex::Knob Demo")
 {
     auto hueKnob =
-        new HueKnob(this, control.hue, control.hue.value);
+        wxpex::CreateViewKnob<precision>(this, control.hue);
 
     auto hueFieldKnob =
-        new HueFieldKnob(this, control.hue, control.hue.value);
+        wxpex::CreateFieldKnob<4>(this, control.hue);
 
     auto playbackSpeedKnob =
         new PlaybackSpeedKnob(
@@ -170,7 +170,9 @@ ExampleFrame::ExampleFrame(DemoControl control)
         this,
         FilteredPlaybackSpeed(control.playbackSpeed),
         control.playbackSpeed.value,
-        wxpex::Style::vertical);
+        wxpex::KnobSettings()
+            .Layout(wxpex::Style::vertical)
+            .Spacing(10));
 
     auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
 

@@ -26,7 +26,7 @@ public:
         auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
         sizer->Add(coloredSquare, 0, wxALL, 3);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -94,7 +94,7 @@ public:
             yellow,
             red);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -116,7 +116,7 @@ public:
             set2,
             set3);
 
-        this->ConfigureTopSizer(
+        this->ConfigureSizer(
             wxpex::verticalScrolled,
             std::move(sizer));
     }

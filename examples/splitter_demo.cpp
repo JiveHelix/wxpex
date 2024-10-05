@@ -116,7 +116,7 @@ public:
         wxpex::RegisterWidgetName(countSlider, "countSlider");
 
         auto sizer = wxpex::LayoutItems(wxpex::verticalItems, countSlider);
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -149,7 +149,7 @@ public:
             taxRate,
             shipping);
 
-        this->ConfigureTopSizer(std::move(sizer));
+        this->ConfigureSizer(std::move(sizer));
     }
 };
 
@@ -490,7 +490,7 @@ public:
 
         wxpex::RegisterWidgetName(bookList, "bookListView");
 
-        this->ConfigureTopSizer(
+        this->ConfigureSizer(
             wxpex::verticalScrolled,
             wxpex::LayoutItems(
                 wxpex::verticalItems,

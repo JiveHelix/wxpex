@@ -118,7 +118,7 @@ void Collapsible::ConfigureBorderPane_(
 }
 
 
-void Collapsible::ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer)
+void Collapsible::ConfigureSizer(std::unique_ptr<wxSizer> &&sizer)
 {
     if (this->borderPane_)
     {

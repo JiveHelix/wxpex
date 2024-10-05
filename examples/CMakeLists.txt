@@ -15,6 +15,16 @@ target_link_libraries(
     wxpex)
 
 
+add_executable(knob_demo knob_demo.cpp)
+
+target_link_libraries(
+    knob_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(view_demo ${windowed} view_demo.cpp)
 
 target_link_libraries(

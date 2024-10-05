@@ -38,6 +38,8 @@ private:
         this->hsvaColor_.Set(tau::RgbToHsv<double>(rgb));
     }
 
+    static_assert(pex::HasSetInitial<wxpex::HsvaModel>);
+
     wxpex::HsvaModel hsvaColor_ = wxpex::HsvaModel{{{0, 1, 0.5, 1.0}}};
 
     wxpex::RgbaModel rgbaColor_ =

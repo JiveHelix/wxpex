@@ -15,6 +15,8 @@
 #include "wxpex/style.h"
 #include "wxpex/color.h"
 #include "wxpex/graphics.h"
+#include "wxpex/style.h"
+
 
 #ifdef __WXMSW__
 WXSHIM_PUSH_IGNORES
@@ -60,7 +62,9 @@ public:
         steps(defaultSteps),
         fineStep(defaultFineStep),
         color{{128, 128, 128}},
-        continuous(false)
+        continuous(false),
+        layout(Style::horizontal),
+        spacing(5)
     {
 
     }
@@ -109,6 +113,18 @@ public:
     KnobSettings & Continuous(bool value)
     {
         this->continuous = value;
+        return *this;
+    }
+
+    KnobSettings & Layout(Style value)
+    {
+        this->layout = value;
+        return *this;
+    }
+
+    KnobSettings & Spacing(int value)
+    {
+        this->spacing = value;
         return *this;
     }
 
@@ -162,14 +178,9 @@ public:
     double fineStep;
     Rgb color;
     bool continuous;
+    Style layout;
+    int spacing;
 };
-
-
-template<typename Terminus>
-auto Get(const Terminus &terminus)
-{
-    return terminus.Get();
-}
 
 
 template<typename Range>
@@ -198,12 +209,13 @@ public:
         :
         Base(parent, wxID_ANY),
         value_(this, control.value, &Knob::OnValue_),
-        localValue_(static_cast<double>(Get(this->value_))),
+        reset_(control.reset),
+        localValue_(static_cast<double>(this->value_.Get())),
         minimum_(this, control.minimum, &Knob::OnMinimum_),
         maximum_(this, control.maximum, &Knob::OnMaximum_),
         settings_(settings),
         stepSize_(
-            this->GetStepSize_(Get(this->minimum_), Get(this->maximum_))),
+            this->GetStepSize_(this->minimum_.Get(), this->maximum_.Get())),
         fineStepSize_(this->GetFineStepSize_(this->stepSize_)),
         radius_(settings.radius),
         startAngle_(settings.startAngle),
@@ -211,8 +223,8 @@ public:
         continuous_(settings.continuous),
         angleRange_(settings.GetAngleRange()),
         valueRange_(
-            static_cast<double>(Get(this->maximum_) - Get(this->minimum_))),
-        valueOffset_(-static_cast<double>(Get(this->minimum_))),
+            static_cast<double>(this->maximum_.Get() - this->minimum_.Get())),
+        valueOffset_(-static_cast<double>(this->minimum_.Get())),
         hasCapturedMouse_(false),
         mousePosition_(),
         color_(settings.GetBaseColor()),
@@ -278,18 +290,23 @@ private:
         return stepSize * this->settings_.fineStep;
     }
 
-    void OnValue_(Type)
+    void OnValue_(Type value)
     {
+        if (!this->hasCapturedMouse_)
+        {
+            this->localValue_ = value;
+        }
+
         this->Refresh();
     }
 
     void OnMinimum_(Type minimum)
     {
-        this->stepSize_ = this->GetStepSize_(minimum, Get(this->maximum_));
+        this->stepSize_ = this->GetStepSize_(minimum, this->maximum_.Get());
         this->fineStepSize_ = this->GetFineStepSize_(this->stepSize_);
 
         this->valueRange_ =
-            static_cast<double>(Get(this->maximum_) - minimum);
+            static_cast<double>(this->maximum_.Get() - minimum);
 
         this->valueOffset_ = -minimum;
 
@@ -298,11 +315,11 @@ private:
 
     void OnMaximum_(Type maximum)
     {
-        this->stepSize_ = this->GetStepSize_(Get(this->minimum_), maximum);
+        this->stepSize_ = this->GetStepSize_(this->minimum_.Get(), maximum);
         this->fineStepSize_ = this->GetFineStepSize_(this->stepSize_);
 
         this->valueRange_ =
-            static_cast<double>(maximum - Get(this->minimum_));
+            static_cast<double>(maximum - this->minimum_.Get());
 
         this->Refresh();
     }
@@ -312,8 +329,8 @@ private:
         // scaled ranges from 0 to 1, and is a measure of how far we have
         // progressed through the possible range of values.
         double scaled =
-            (Get(this->value_)
-                - static_cast<double>(Get(this->minimum_)))
+            (this->value_.Get()
+                - static_cast<double>(this->minimum_.Get()))
             / this->valueRange_;
 
         // 0 degrees is straight up, with positive angles clockwise.
@@ -401,6 +418,11 @@ private:
                 return;
             }
 
+            if (mouseEvent.AltDown())
+            {
+                this->reset_.Trigger();
+            }
+
             this->CaptureMouse();
             this->hasCapturedMouse_ = true;
             this->mousePosition_ = ToPoint<int>(mouseEvent.GetPosition());
@@ -411,7 +433,7 @@ private:
             {
                 this->UpdateMousePosition_(
                     ToPoint<int>(mouseEvent.GetPosition()),
-                    mouseEvent.AltDown(),
+                    mouseEvent.ShiftDown(),
                     mouseEvent.ControlDown());
             }
         }
@@ -425,7 +447,7 @@ private:
                 // On mouse up, the value has finished adjusting. Update
                 // localValue_ to the final value.
                 this->localValue_ = static_cast<double>(
-                    Get(this->value_));
+                    this->value_.Get());
 
                 this->AddPendingEvent(wxCommandEvent(KnobDone));
             }
@@ -499,6 +521,9 @@ private:
 
 private:
     ValueTerminus value_;
+
+    pex::control::Signal<> reset_;
+
     double localValue_;
     LimitTerminus minimum_;
     LimitTerminus maximum_;
@@ -520,25 +545,30 @@ private:
 };
 
 
+std::unique_ptr<wxBoxSizer> MakeSizer(
+    const KnobSettings &knobSettings,
+    wxWindow *knob,
+    wxWindow *value);
+
+
 template
 <
     typename RangeControl,
     typename ValueControl,
     typename Convert
 >
-class ValueKnobConvert : public wxControl
+class ViewKnobConvert : public wxControl
 {
 public:
     using Base = wxControl;
 
     // range may be filtered to a type other than value.
     // value is the value from the model for display in the view.
-    ValueKnobConvert(
+    ViewKnobConvert(
         wxWindow *parent,
         RangeControl range,
         ValueControl value,
-        const KnobSettings &knobSettings,
-        Style style)
+        const KnobSettings &knobSettings)
         :
         Base(parent, wxID_ANY)
     {
@@ -549,76 +579,26 @@ public:
         // remains constant as the value changes.
         view->SetFont(wxFont(wxFontInfo().Family(wxFONTFAMILY_MODERN)));
 
-        auto sizerStyle = SizerStyle(style);
-
-        auto sizer = std::make_unique<wxBoxSizer>(sizerStyle);
-
-        auto flag = IsHorizontal(style)
-            ? wxRIGHT | wxEXPAND
-            : wxBOTTOM | wxEXPAND;
-
-        auto spacing = 5;
-        sizer->Add(this->knob_, 1, flag, spacing);
-
-        sizer->Add(
-            view,
-            0,
-            IsHorizontal(style)
-                ? wxALIGN_CENTER_VERTICAL
-                : wxALIGN_CENTER);
-
-        this->SetSizerAndFit(sizer.release());
+        this->SetSizerAndFit(
+            MakeSizer(knobSettings, this->knob_, view).release());
 
         this->Bind(
             KnobDone,
-            &ValueKnobConvert::OnKnobDone_,
+            &ViewKnobConvert::OnKnobDone_,
             this);
     }
 
     // Constructors offering default options
-    ValueKnobConvert(
+    ViewKnobConvert(
         wxWindow *parent,
         RangeControl range,
         ValueControl value)
         :
-        ValueKnobConvert(
+        ViewKnobConvert(
             parent,
             range,
             value,
-            KnobSettings(),
-            Style::horizontal)
-    {
-
-    }
-
-    ValueKnobConvert(
-        wxWindow *parent,
-        RangeControl range,
-        ValueControl value,
-        const KnobSettings &knobSettings)
-        :
-        ValueKnobConvert(
-            parent,
-            range,
-            value,
-            knobSettings,
-            Style::horizontal)
-    {
-
-    }
-
-    ValueKnobConvert(
-        wxWindow *parent,
-        RangeControl range,
-        ValueControl value,
-        Style style)
-        :
-        ValueKnobConvert(
-            parent,
-            range,
-            value,
-            KnobSettings(),
-            style)
+            KnobSettings())
     {
 
     }
@@ -641,7 +621,7 @@ private:
 
 
 template<typename RangeControl, typename ValueControl, int width, int precision>
-using ValueKnobBase = ValueKnobConvert
+using ViewKnobBase = ViewKnobConvert
     <
         RangeControl,
         ValueControl,
@@ -656,38 +636,15 @@ template
     int width,
     int precision
 >
-class ValueKnob
+class ViewKnob
     :
-    public ValueKnobBase<RangeControl, ValueControl, width, precision>
+    public ViewKnobBase<RangeControl, ValueControl, width, precision>
 {
     using Base =
-        ValueKnobBase<RangeControl, ValueControl, width, precision>;
+        ViewKnobBase<RangeControl, ValueControl, width, precision>;
 
 public:
-    ValueKnob(
-        wxWindow *parent,
-        RangeControl range,
-        ValueControl value,
-        const KnobSettings &knobSettings,
-        Style style)
-        :
-        Base(parent, range, value, style, knobSettings, style)
-    {
-
-    }
-
-    // Constructors offering default options
-    ValueKnob(
-        wxWindow *parent,
-        RangeControl range,
-        ValueControl value)
-        :
-        Base(parent, range, value)
-    {
-
-    }
-
-    ValueKnob(
+    ViewKnob(
         wxWindow *parent,
         RangeControl range,
         ValueControl value,
@@ -698,13 +655,12 @@ public:
 
     }
 
-    ValueKnob(
+    ViewKnob(
         wxWindow *parent,
         RangeControl range,
-        ValueControl value,
-        Style style)
+        ValueControl value)
         :
-        Base(parent, range, value, style)
+        Base(parent, range, value)
     {
 
     }
@@ -727,11 +683,8 @@ public:
         auto spin =
             new SpinControl(this, range, 1, 0);
 
-        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
-        sizer->Add(this->knob_, 1, wxRIGHT | wxEXPAND, 3);
-        sizer->Add(spin, 0, wxALIGN_CENTER);
-
-        this->SetSizerAndFit(sizer.release());
+        this->SetSizerAndFit(
+            MakeSizer(knobSettings, this->knob_, spin).release());
 
         this->Bind(
             KnobDone,
@@ -777,11 +730,8 @@ public:
         this->knob_ = new Knob<RangeControl>(this, range, knobSettings);
         auto field = new ValueField(this, value);
 
-        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
-        sizer->Add(this->knob_, 1, wxRIGHT | wxEXPAND, 3);
-        sizer->Add(field, 0, wxALIGN_CENTER);
-
-        this->SetSizerAndFit(sizer.release());
+        this->SetSizerAndFit(
+            MakeSizer(knobSettings, this->knob_, field).release());
 
         this->Bind(
             KnobDone,
@@ -842,14 +792,26 @@ public:
 
 
 template<int precision, typename RangeControl, typename ValueControl>
-auto CreateValueKnob(
+auto CreateViewKnob(
     wxWindow *parent,
     RangeControl range,
     ValueControl value,
     const KnobSettings &knobSettings = KnobSettings())
 {
-    using Result = ValueKnob<RangeControl, ValueControl, -1, precision>;
+    using Result = ViewKnob<RangeControl, ValueControl, -1, precision>;
     return new Result(parent, range, value, knobSettings);
+}
+
+
+template<int precision, typename RangeControl>
+auto CreateViewKnob(
+    wxWindow *parent,
+    RangeControl range,
+    const KnobSettings &knobSettings = KnobSettings())
+{
+    using Result =
+        ViewKnob<RangeControl, decltype(RangeControl::value), -1, precision>;
+    return new Result(parent, range, range.value, knobSettings);
 }
 
 
@@ -862,6 +824,19 @@ auto CreateFieldKnob(
 {
     using Result = FieldKnob<RangeControl, ValueControl, precision>;
     return new Result(parent, range, value, knobSettings);
+}
+
+
+template<int precision, typename RangeControl>
+auto CreateFieldKnob(
+    wxWindow *parent,
+    RangeControl range,
+    const KnobSettings &knobSettings = KnobSettings())
+{
+    using Result =
+        FieldKnob<RangeControl, decltype(RangeControl::value), precision>;
+
+    return new Result(parent, range, range.value, knobSettings);
 }
 
 

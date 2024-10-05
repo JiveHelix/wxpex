@@ -38,7 +38,7 @@ public:
         const std::string &label,
         long borderStyle = wxBORDER_NONE);
 
-    void ConfigureTopSizer(std::unique_ptr<wxSizer> &&sizer);
+    void ConfigureSizer(std::unique_ptr<wxSizer> &&sizer);
 
 #if defined(__WXGTK__)
     // WXGTK uses DoGetBestSize, and WXMAC/WXMSW ignore it.
