@@ -75,6 +75,36 @@ struct LayoutOptions
     int widgetFlags = wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxEXPAND;
     int verticalGap = 3;
     int horizontalGap = 3;
+
+    LayoutOptions & Orient(int value)
+    {
+        this->orient = value;
+        return *this;
+    }
+
+    LayoutOptions & LabelFlags(int value)
+    {
+        this->labelFlags = value;
+        return *this;
+    }
+
+    LayoutOptions & WidgetFlags(int value)
+    {
+        this->widgetFlags = value;
+        return *this;
+    }
+
+    LayoutOptions & VerticalGap(int value)
+    {
+        this->verticalGap = value;
+        return *this;
+    }
+
+    LayoutOptions & HorizontalGap(int value)
+    {
+        this->horizontalGap = value;
+        return *this;
+    }
 };
 
 
@@ -238,25 +268,25 @@ struct ItemOptions
     int spacing;
     int proportion;
 
-    ItemOptions & SetOrient(int orient_)
+    ItemOptions & Orient(int orient_)
     {
         this->orient = orient_;
         return *this;
     }
 
-    ItemOptions & SetFlags(int flags_)
+    ItemOptions & Flags(int flags_)
     {
         this->flags = flags_;
         return *this;
     }
 
-    ItemOptions & SetSpacing(int spacing_)
+    ItemOptions & Spacing(int spacing_)
     {
         this->spacing = spacing_;
         return *this;
     }
 
-    ItemOptions & SetProportion(int proportion_)
+    ItemOptions & Proportion(int proportion_)
     {
         this->proportion = proportion_;
         return *this;

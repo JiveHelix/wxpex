@@ -131,13 +131,12 @@ enum class CompositionMode
 
 struct CompositionModeChoices
 {
+    using Type = CompositionMode;
     static std::vector<CompositionMode> GetChoices();
 };
 
 
-using CompositionModeSelect =
-    pex::MakeSelect<CompositionMode, CompositionModeChoices>;
-
+using CompositionModeSelect = pex::MakeSelect<CompositionModeChoices>;
 using CompositionModeModel = pex::ModelSelector<CompositionModeSelect>;
 using CompositionModeControl = pex::ControlSelector<CompositionModeSelect>;
 
@@ -312,6 +311,14 @@ public:
     GraphicsContext & operator=(const GraphicsContext &) = delete;
 
     wxGraphicsContext * operator->() { return this->context_; }
+
+    wxGraphicsContext * Release()
+    {
+        wxGraphicsContext *result = this->context_;
+        this->context_ = nullptr;
+
+        return result;
+    }
 
     operator bool () const
     {

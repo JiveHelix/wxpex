@@ -662,7 +662,7 @@ auto CreateFieldSlider(
 
 
 template<int precision, typename RangeControl, typename ValueControl>
-auto CreateValueSlider(
+auto CreateViewSlider(
     wxWindow *parent,
     RangeControl range,
     ValueControl value,
@@ -674,7 +674,7 @@ auto CreateValueSlider(
 
 
 template<int precision, typename RangeControl>
-auto CreateValueSlider(
+auto CreateViewSlider(
     wxWindow *parent,
     RangeControl range,
     Style style = Style::horizontal)

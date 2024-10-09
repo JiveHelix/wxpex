@@ -173,7 +173,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Slider Demo")
 {
-    auto positionSlider = wxpex::CreateValueSlider<3>(this, control.position);
+    auto positionSlider = wxpex::CreateViewSlider<3>(this, control.position);
 
     auto positionFieldSlider =
         wxpex::CreateFieldSlider<1>(this, control.position);
@@ -184,7 +184,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
     auto vertical = wxpex::Style::vertical;
 
     auto verticalSlider =
-        CreateValueSlider<precision>(this, control.position, vertical);
+        CreateViewSlider<precision>(this, control.position, vertical);
 
     auto playbackSpeedSlider =
         new PlaybackSpeedSlider(

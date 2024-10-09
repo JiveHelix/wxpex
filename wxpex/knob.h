@@ -183,73 +183,25 @@ public:
 };
 
 
-template<typename Range>
-class Knob: public wxWindow
+class KnobBase: public wxWindow
 {
-
 public:
-    static constexpr auto observerName = "wxpex::Knob";
-
-    using Base = wxWindow;
-    using This = Knob<Range>;
     using Rgb = typename KnobSettings::Rgb;
 
-    // Value and Limit are observed by This
-    using ValueTerminus = pex::Terminus<This, typename Range::Value>;
-
-    using LimitTerminus =
-        pex::Terminus<This, typename Range::Limit>;
-
-    using Type = typename Range::Value::Type;
-
-    Knob(
-        wxWindow *parent,
-        Range control,
-        const KnobSettings &settings = KnobSettings())
+    KnobBase(wxWindow *parent, const KnobSettings &settings)
         :
-        Base(parent, wxID_ANY),
-        value_(this, control.value, &Knob::OnValue_),
-        reset_(control.reset),
-        localValue_(static_cast<double>(this->value_.Get())),
-        minimum_(this, control.minimum, &Knob::OnMinimum_),
-        maximum_(this, control.maximum, &Knob::OnMaximum_),
+        wxWindow(parent, wxID_ANY),
         settings_(settings),
-        stepSize_(
-            this->GetStepSize_(this->minimum_.Get(), this->maximum_.Get())),
-        fineStepSize_(this->GetFineStepSize_(this->stepSize_)),
-        radius_(settings.radius),
-        startAngle_(settings.startAngle),
-        endAngle_(settings.endAngle),
-        continuous_(settings.continuous),
-        angleRange_(settings.GetAngleRange()),
-        valueRange_(
-            static_cast<double>(this->maximum_.Get() - this->minimum_.Get())),
-        valueOffset_(-static_cast<double>(this->minimum_.Get())),
-        hasCapturedMouse_(false),
-        mousePosition_(),
         color_(settings.GetBaseColor()),
         highlight_(settings.GetHighlightColor()),
         outline_(settings.GetOutlineColor())
     {
-#ifdef __WXMSW__
-        this->SetBackgroundStyle(wxBG_STYLE_PAINT);
-#else
-        this->SetBackgroundStyle(wxBG_STYLE_SYSTEM);
-#endif
-        this->Bind(wxEVT_PAINT, &Knob::OnPaint_, this);
-        this->Bind(wxEVT_LEFT_DOWN, &Knob::OnMouseEvents_, this);
-        this->Bind(wxEVT_MOTION, &Knob::OnMouseEvents_, this);
-        this->Bind(wxEVT_LEFT_UP, &Knob::OnMouseEvents_, this);
 
-#ifdef _WIN32
-        this->Bind(wxEVT_MOUSE_CAPTURE_LOST, &Knob::OnMouseCaptureLost_, this);
-#endif
     }
 
-    wxSize DoGetBestClientSize() const override
+    Rgb GetColor() const
     {
-        auto side = static_cast<int>(this->radius_ * 2 + 2);
-        return wxSize(side, side);
+        return this->settings_.color;
     }
 
     void SetColor(const Rgb &rgb)
@@ -277,6 +229,81 @@ public:
         auto hsv = tau::RgbToHsv<double>(this->settings_.color);
         hsv.hue = std::min(360.0, std::max(0.0, hue));
         this->SetColor(hsv);
+    }
+
+
+protected:
+    KnobSettings settings_;
+
+    wxColour color_;
+    wxColour highlight_;
+    wxColour outline_;
+};
+
+
+template<typename Range>
+class Knob: public KnobBase
+{
+
+public:
+    static constexpr auto observerName = "wxpex::Knob";
+
+    using Base = KnobBase;
+    using This = Knob<Range>;
+    using Rgb = typename KnobSettings::Rgb;
+
+    // Value and Limit are observed by This
+    using ValueTerminus = pex::Terminus<This, typename Range::Value>;
+
+    using LimitTerminus =
+        pex::Terminus<This, typename Range::Limit>;
+
+    using Type = typename Range::Value::Type;
+
+    Knob(
+        wxWindow *parent,
+        Range control,
+        const KnobSettings &settings = KnobSettings())
+        :
+        Base(parent, settings),
+        value_(this, control.value, &Knob::OnValue_),
+        reset_(control.reset),
+        localValue_(static_cast<double>(this->value_.Get())),
+        minimum_(this, control.minimum, &Knob::OnMinimum_),
+        maximum_(this, control.maximum, &Knob::OnMaximum_),
+        stepSize_(
+            this->GetStepSize_(this->minimum_.Get(), this->maximum_.Get())),
+        fineStepSize_(this->GetFineStepSize_(this->stepSize_)),
+        radius_(settings.radius),
+        startAngle_(settings.startAngle),
+        endAngle_(settings.endAngle),
+        continuous_(settings.continuous),
+        angleRange_(settings.GetAngleRange()),
+        valueRange_(
+            static_cast<double>(this->maximum_.Get() - this->minimum_.Get())),
+        valueOffset_(-static_cast<double>(this->minimum_.Get())),
+        hasCapturedMouse_(false),
+        mousePosition_()
+    {
+#ifdef __WXMSW__
+        this->SetBackgroundStyle(wxBG_STYLE_PAINT);
+#else
+        this->SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+#endif
+        this->Bind(wxEVT_PAINT, &Knob::OnPaint_, this);
+        this->Bind(wxEVT_LEFT_DOWN, &Knob::OnMouseEvents_, this);
+        this->Bind(wxEVT_MOTION, &Knob::OnMouseEvents_, this);
+        this->Bind(wxEVT_LEFT_UP, &Knob::OnMouseEvents_, this);
+
+#ifdef _WIN32
+        this->Bind(wxEVT_MOUSE_CAPTURE_LOST, &Knob::OnMouseCaptureLost_, this);
+#endif
+    }
+
+    wxSize DoGetBestClientSize() const override
+    {
+        auto side = static_cast<int>(this->radius_ * 2 + 2);
+        return wxSize(side, side);
     }
 
 private:
@@ -527,7 +554,6 @@ private:
     double localValue_;
     LimitTerminus minimum_;
     LimitTerminus maximum_;
-    KnobSettings settings_;
     double stepSize_;
     double fineStepSize_;
     double radius_;
@@ -539,9 +565,6 @@ private:
     double valueOffset_;
     bool hasCapturedMouse_;
     tau::Point2d<int> mousePosition_;
-    wxColour color_;
-    wxColour highlight_;
-    wxColour outline_;
 };
 
 
