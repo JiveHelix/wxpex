@@ -89,19 +89,16 @@ void Expandable::FixLayout()
             topCollapsible = window;
         }
 
-#if 0
         if (dynamic_cast<Splitter *>(window))
         {
             // Do not fix anything higher than a Splitter
             break;
         }
-#endif
 
         window->InvalidateBestSize();
         allWindows.push_back(window);
     }
 
-#if 1
     if (topCollapsible)
     {
         LOG_WIDGET_NAME("topCollapsible: ", topCollapsible)
@@ -135,7 +132,6 @@ void Expandable::FixLayout()
             }
         }
     }
-#endif
 
     auto topSize = wxpex::ToSize<int>(top->GetSize());
 
@@ -163,7 +159,6 @@ void Expandable::FixLayout()
         this->FixContainerSize_(*it);
     }
 
-#if 1
     top->Layout();
     auto postLayoutSize = wxpex::ToSize<int>(top->GetSize());
 
@@ -179,7 +174,6 @@ void Expandable::FixLayout()
     {
         top->SendSizeEvent();
     }
-#endif
 }
 
 
@@ -218,9 +212,8 @@ void Expandable::FixContainerSize_(wxWindow *window)
         return;
     }
 
-    // assert(!dynamic_cast<Splitter *>(window));
+    assert(!dynamic_cast<Splitter *>(window));
 
-#if 0
     LOG_WIDGET_NAME("FixContainerSize_: ", window)
 
     auto sizer = window->GetSizer();
@@ -230,7 +223,6 @@ void Expandable::FixContainerSize_(wxWindow *window)
         auto newSize = sizer->ComputeFittingWindowSize(window);
         window->SetMinSize(newSize);
     }
-#endif
 
     wxSize bestSize = window->GetBestSize();
     wxSize windowSize = window->GetSize();
