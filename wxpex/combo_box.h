@@ -1,7 +1,7 @@
 /**
   * @file combo_box.h
   *
-  * @brief A read-only wxComboBox backed by pex::Choices.
+  * @brief A read-only wxComboBox backed by pex::Select.
   *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 12 Aug 2020

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include <fields/fields.h>
 #include <jive/equal.h>
 #include <jive/create_exception.h>
@@ -13,6 +14,10 @@ WXSHIM_PUSH_IGNORES
 #include <wx/graphics.h>
 #include <wx/dcgraph.h>
 WXSHIM_POP_IGNORES
+
+
+#include "wxpex/combo_box.h"
+#include "wxpex/labeled_widget.h"
 
 
 namespace wxpex
@@ -87,7 +92,161 @@ enum class AntialiasMode: int
 };
 
 
-enum class InterpolationQuality: int
+enum class PenCap: int
+{
+    invalid = wxCAP_INVALID,
+    round = wxCAP_ROUND,
+    projecting = wxCAP_PROJECTING,
+    butt = wxCAP_BUTT
+};
+
+
+struct PenCapChoices
+{
+    using Type = PenCap;
+    static std::vector<PenCap> GetChoices();
+};
+
+
+using PenCapSelect = pex::MakeSelect<PenCapChoices>;
+using PenCapModel = pex::ModelSelector<PenCapSelect>;
+using PenCapControl = pex::ControlSelector<PenCapSelect>;
+
+
+struct PenCapConverter
+{
+    static std::string ToString(PenCap compositionMode);
+};
+
+
+std::ostream & operator<<(std::ostream &, PenCap);
+
+
+using PenCapComboBox = wxpex::ComboBox<PenCapControl, PenCapConverter>;
+
+
+enum class PenStyle: int
+{
+    invalid = wxPENSTYLE_INVALID,
+    solid = wxPENSTYLE_SOLID,
+    dot = wxPENSTYLE_DOT,
+    longDash = wxPENSTYLE_LONG_DASH,
+    shortDash = wxPENSTYLE_SHORT_DASH,
+    dotDash = wxPENSTYLE_DOT_DASH,
+    userDash = wxPENSTYLE_USER_DASH,
+    transparent = wxPENSTYLE_TRANSPARENT,
+    stippleMaskOpaque = wxPENSTYLE_STIPPLE_MASK_OPAQUE,
+    stippleMask = wxPENSTYLE_STIPPLE_MASK,
+    stipple = wxPENSTYLE_STIPPLE,
+    backwardDiagonalHatch = wxPENSTYLE_BDIAGONAL_HATCH,
+    crossDiagonalHatch = wxPENSTYLE_CROSSDIAG_HATCH,
+    forwardDiagonalHatch = wxPENSTYLE_FDIAGONAL_HATCH,
+    crossHatch = wxPENSTYLE_CROSS_HATCH,
+    horizontalHatch = wxPENSTYLE_HORIZONTAL_HATCH,
+    verticalHatch = wxPENSTYLE_VERTICAL_HATCH
+};
+
+
+struct PenStyleChoices
+{
+    using Type = PenStyle;
+    static std::vector<PenStyle> GetChoices();
+};
+
+
+using PenStyleSelect = pex::MakeSelect<PenStyleChoices>;
+using PenStyleModel = pex::ModelSelector<PenStyleSelect>;
+using PenStyleControl = pex::ControlSelector<PenStyleSelect>;
+
+
+struct PenStyleConverter
+{
+    static std::string ToString(PenStyle compositionMode);
+};
+
+
+std::ostream & operator<<(std::ostream &, PenStyle);
+
+
+using PenStyleComboBox = wxpex::ComboBox<PenStyleControl, PenStyleConverter>;
+
+
+enum class PenJoin: int
+{
+    invalid = wxJOIN_INVALID,
+    bevel = wxJOIN_BEVEL,
+    miter = wxJOIN_MITER,
+    round = wxJOIN_ROUND
+};
+
+
+struct PenJoinChoices
+{
+    using Type = PenJoin;
+    static std::vector<PenJoin> GetChoices();
+};
+
+
+using PenJoinSelect = pex::MakeSelect<PenJoinChoices>;
+using PenJoinModel = pex::ModelSelector<PenJoinSelect>;
+using PenJoinControl = pex::ControlSelector<PenJoinSelect>;
+
+
+struct PenJoinConverter
+{
+    static std::string ToString(PenJoin compositionMode);
+};
+
+
+std::ostream & operator<<(std::ostream &, PenJoin);
+
+
+using PenJoinComboBox = wxpex::ComboBox<PenJoinControl, PenJoinConverter>;
+
+
+enum class BrushStyle: int
+{
+    invalid = wxBRUSHSTYLE_INVALID,
+    solid = wxBRUSHSTYLE_SOLID,
+    transparent = wxBRUSHSTYLE_TRANSPARENT,
+    stippleMaskOpaque = wxBRUSHSTYLE_STIPPLE_MASK_OPAQUE,
+    stippleMask = wxBRUSHSTYLE_STIPPLE_MASK,
+    stipple = wxBRUSHSTYLE_STIPPLE,
+    backwardDiagonalHatch = wxBRUSHSTYLE_BDIAGONAL_HATCH,
+    crossDiagonalHatch = wxBRUSHSTYLE_CROSSDIAG_HATCH,
+    forwardDiagonalHatch = wxBRUSHSTYLE_FDIAGONAL_HATCH,
+    crossHatch = wxBRUSHSTYLE_CROSS_HATCH,
+    horizontalHatch = wxBRUSHSTYLE_HORIZONTAL_HATCH,
+    verticalHatch = wxBRUSHSTYLE_VERTICAL_HATCH
+};
+
+
+struct BrushStyleChoices
+{
+    using Type = BrushStyle;
+    static std::vector<BrushStyle> GetChoices();
+};
+
+
+using BrushStyleSelect = pex::MakeSelect<BrushStyleChoices>;
+using BrushStyleModel = pex::ModelSelector<BrushStyleSelect>;
+using BrushStyleControl = pex::ControlSelector<BrushStyleSelect>;
+
+
+struct BrushStyleConverter
+{
+    static std::string ToString(BrushStyle compositionMode);
+};
+
+
+std::ostream & operator<<(std::ostream &, BrushStyle);
+
+
+using BrushStyleComboBox =
+    wxpex::ComboBox<BrushStyleControl, BrushStyleConverter>;
+
+
+enum class Interpolation: int
 {
     DEFAULT = wxINTERPOLATION_DEFAULT,
     none = wxINTERPOLATION_NONE,
@@ -97,19 +256,29 @@ enum class InterpolationQuality: int
 };
 
 
-std::vector<InterpolationQuality> GetInterpolationQualities();
-
-
-struct InterpolationQualityConverter
+struct InterpolationChoices
 {
-    static std::string ToString(InterpolationQuality interpolationQuality);
+    using Type = Interpolation;
+    static std::vector<Interpolation> GetChoices();
 };
 
 
-std::ostream & operator<<(std::ostream &, InterpolationQuality);
+using InterpolationSelect = pex::MakeSelect<InterpolationChoices>;
+using InterpolationModel = pex::ModelSelector<InterpolationSelect>;
+using InterpolationControl = pex::ControlSelector<InterpolationSelect>;
 
 
-enum class CompositionMode
+struct InterpolationConverter
+{
+    static std::string ToString(Interpolation compositionMode);
+};
+
+
+std::ostream & operator<<(std::ostream &, Interpolation);
+
+
+
+enum class Composition
 {
     invalid = wxCOMPOSITION_INVALID,
     clear = wxCOMPOSITION_CLEAR,
@@ -129,25 +298,91 @@ enum class CompositionMode
 };
 
 
-struct CompositionModeChoices
+struct CompositionChoices
 {
-    using Type = CompositionMode;
-    static std::vector<CompositionMode> GetChoices();
+    using Type = Composition;
+    static std::vector<Composition> GetChoices();
 };
 
 
-using CompositionModeSelect = pex::MakeSelect<CompositionModeChoices>;
-using CompositionModeModel = pex::ModelSelector<CompositionModeSelect>;
-using CompositionModeControl = pex::ControlSelector<CompositionModeSelect>;
+using CompositionSelect = pex::MakeSelect<CompositionChoices>;
+using CompositionModel = pex::ModelSelector<CompositionSelect>;
+using CompositionControl = pex::ControlSelector<CompositionSelect>;
 
 
-struct CompositionModeConverter
+struct CompositionConverter
 {
-    static std::string ToString(CompositionMode compositionMode);
+    static std::string ToString(Composition compositionMode);
 };
 
 
-std::ostream & operator<<(std::ostream &, CompositionMode);
+std::ostream & operator<<(std::ostream &, Composition);
+
+
+using CompositionComboBox =
+    wxpex::ComboBox<CompositionControl, CompositionConverter>;
+
+
+template<typename U, typename ...Ts>
+concept IsOneOf = std::disjunction_v<std::is_same<U, Ts>...>;
+
+
+template<typename Control>
+auto CreateGraphicsControl(wxWindow *parent, Control control)
+{
+    static_assert(
+        IsOneOf
+        <
+            Control,
+            PenStyleControl,
+            PenCapControl,
+            PenJoinControl,
+            BrushStyleControl,
+            CompositionControl
+        >,
+        "Unsupported control type");
+
+    if constexpr (std::is_same_v<Control, PenStyleControl>)
+    {
+        return wxpex::LabeledWidget(
+            parent,
+            "Pen Style",
+            new wxpex::PenStyleComboBox(parent, control));
+    }
+    else if constexpr (std::is_same_v<Control, PenCapControl>)
+    {
+        return wxpex::LabeledWidget(
+            parent,
+            "Pen Cap",
+            new wxpex::PenCapComboBox(parent, control));
+    }
+    else if constexpr (std::is_same_v<Control, PenJoinControl>)
+    {
+        return wxpex::LabeledWidget(
+            parent,
+            "Pen Join",
+            new wxpex::PenJoinComboBox(parent, control));
+
+    }
+    else if constexpr (std::is_same_v<Control, BrushStyleControl>)
+    {
+        return wxpex::LabeledWidget(
+            parent,
+            "Brush Style",
+            new wxpex::BrushStyleComboBox(parent, control));
+    }
+    else if constexpr (std::is_same_v<Control, CompositionControl>)
+    {
+        return wxpex::LabeledWidget(
+            parent,
+            "Composition",
+            new wxpex::CompositionComboBox(parent, control));
+    }
+    else
+    {
+        throw std::logic_error("static_asert failed to detect anomaly");
+    }
+}
 
 
 struct GraphicsMatrix
@@ -251,7 +486,7 @@ struct GraphicsMatrix
         return {this->b, this->c};
     }
 
-    void Shear(const Shear<double> &shear)
+    void SetShear(const Shear<double> &shear)
     {
         this->SetRotationMatrix(shear.GetMatrix() * this->GetRotationMatrix());
     }
@@ -298,27 +533,12 @@ public:
 
     }
 
-    ~GraphicsContext()
-    {
-        if (this->context_)
-        {
-            this->context_->Flush();
-            delete this->context_;
-        }
-    }
+    ~GraphicsContext();
 
     GraphicsContext(const GraphicsContext &) = delete;
     GraphicsContext & operator=(const GraphicsContext &) = delete;
 
     wxGraphicsContext * operator->() { return this->context_; }
-
-    wxGraphicsContext * Release()
-    {
-        wxGraphicsContext *result = this->context_;
-        this->context_ = nullptr;
-
-        return result;
-    }
 
     operator bool () const
     {
@@ -330,71 +550,35 @@ public:
         return this->context_;
     }
 
-    tau::Size<double> GetSize() const
-    {
-        double width;
-        double height;
-        this->context_->GetSize(&width, &height);
+    wxGCDC * GetGCDC();
 
-        return {width, height};
-    }
+    tau::Size<double> GetSize() const;
 
-    tau::Vector2d<double> GetTranslation() const
-    {
-        return this->GetGraphicsMatrix().GetTranslation();
-    }
+    tau::Vector2d<double> GetTranslation() const;
 
-    tau::Scale<double> GetScale() const
-    {
-        return this->GetGraphicsMatrix().GetScale();
-    }
+    tau::Scale<double> GetScale() const;
 
-    double GetRotation() const
-    {
-        return this->GetGraphicsMatrix().GetRotation();
-    }
+    double GetRotation() const;
 
-    GraphicsMatrix GetGraphicsMatrix() const
-    {
-        return {this->context_->GetTransform()};
-    }
+    GraphicsMatrix GetGraphicsMatrix() const;
 
-    void Shear(const Shear<double> &shear)
-    {
-        auto matrix = this->GetGraphicsMatrix();
-        matrix.Shear(shear);
-        wxGraphicsMatrix result = this->context_->GetTransform();
-        matrix.ToWxGraphicsMatrix(result);
+    void SetShear(const Shear<double> &shear);
 
-        this->context_->SetTransform(result);
-    }
+    void SetComposition(Composition value);
 
-    void SetCompositionMode(CompositionMode value)
-    {
-        this->context_->SetCompositionMode(
-            static_cast<wxCompositionMode>(value));
-    }
+    void SetInterpolation(Interpolation value);
 
-    void SetInterpolationQuality(InterpolationQuality value)
-    {
-        this->context_->SetInterpolationQuality(
-            static_cast<wxInterpolationQuality>(value));
-    }
+    void SetAntialias(bool value);
 
-    CompositionMode GetCompositionMode() const
-    {
-        return static_cast<CompositionMode>(
-            this->context_->GetCompositionMode());
-    }
+    Composition GetComposition() const;
 
-    InterpolationQuality GetInterpolationQuality() const
-    {
-        return static_cast<InterpolationQuality>(
-            this->context_->GetInterpolationQuality());
-    }
+    Interpolation GetInterpolation() const;
+
+    bool GetAntialias() const;
 
 protected:
     wxGraphicsContext *context_;
+    std::optional<wxGCDC> gcdc_;
 };
 
 
