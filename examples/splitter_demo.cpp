@@ -53,11 +53,6 @@ struct Pricing: public PricingTemplate<pex::Identity>
 
     }
 
-    static Pricing Default()
-    {
-        return {};
-    }
-
     double GetSalePrice(double cost) const
     {
         return (cost * (1.0 + this->markup) * (1.0 + this->taxRate))

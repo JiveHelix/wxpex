@@ -36,13 +36,13 @@ struct RecipeTemplate
 
 struct Recipe: public RecipeTemplate<pex::Identity>
 {
-    static Recipe Default()
-    {
-        return {{
+    Recipe()
+        :
+        RecipeTemplate<pex::Identity>{
             3,
             100,
-            {{0, 0}},
-            0}};
+            {},
+            {}};
     }
 
     double GetWedgeAngle_rad()
