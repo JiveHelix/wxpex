@@ -4,6 +4,7 @@
 #include <optional>
 #include <fields/fields.h>
 #include <jive/equal.h>
+#include <jive/type_traits.h>
 #include <jive/create_exception.h>
 #include <tau/size.h>
 #include <tau/scale.h>
@@ -323,15 +324,11 @@ using CompositionComboBox =
     wxpex::ComboBox<CompositionControl, CompositionConverter>;
 
 
-template<typename U, typename ...Ts>
-concept IsOneOf = std::disjunction_v<std::is_same<U, Ts>...>;
-
-
 template<typename Control>
 auto CreateGraphicsControl(wxWindow *parent, Control control)
 {
     static_assert(
-        IsOneOf
+        jive::IsOneOf
         <
             Control,
             PenStyleControl,

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <jive/type_traits.h>
 #include <tau/vector2d.h>
 
 #include "wxpex/wxshim.h"
+#include <wx/geometry.h>
 
 
 namespace wxpex
@@ -25,10 +27,34 @@ wxPoint ToWxPoint(const tau::Point2d<T> &point)
 
 
 template<typename T>
-tau::Point2d<T> ToPoint(const wxPoint &point)
+wxPoint2DDouble ToWxPoint2DDouble(const tau::Point2d<T> &point)
 {
-    // Convert a wxPoint to the desired tau::Point2d type.
-    return tau::Point2d<T>(tau::Point2d<int>(point.x, point.y));
+    if constexpr (std::is_same_v<double, T>)
+    {
+        // No conversion necessary
+        return wxPoint2DDouble(point.x, point.y);
+    }
+    else
+    {
+        return ToWxPoint2DDouble(point.template Cast<double>());
+    }
+}
+
+
+template<typename T, typename wxType>
+tau::Point2d<T> ToPoint(const wxType &point)
+{
+    if constexpr (std::is_convertible_v<wxType, wxPoint>)
+    {
+        static_assert(!std::is_same_v<wxType, wxPoint2DDouble>);
+
+        // Convert a wxPoint to the desired tau::Point2d type.
+        return tau::Point2d<T>(tau::Point2d<int>(point.x, point.y));
+    }
+    else
+    {
+        return tau::Point2d<T>(point.m_x, point.m_y);
+    }
 }
 
 
