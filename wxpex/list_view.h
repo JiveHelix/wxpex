@@ -12,7 +12,6 @@
 #include <wxpex/freezer.h>
 #include <wxpex/scrolled.h>
 #include <wxpex/border_sizer.h>
-#include <future>
 
 
 namespace wxpex
