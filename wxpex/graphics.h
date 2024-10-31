@@ -59,6 +59,20 @@ struct Shear: public ShearTemplate<U>::template Template<pex::Identity>
 {
     using Matrix = Eigen::Matrix<double, 2, 2>;
 
+    Shear()
+        :
+        ShearTemplate<U>::template Template<pex::Identity>{}
+    {
+
+    }
+
+    Shear(U x, U y)
+        :
+        ShearTemplate<U>::template Template<pex::Identity>{x, y}
+    {
+
+    }
+
     Matrix GetMatrix() const
     {
         Matrix result = Matrix::Identity();
