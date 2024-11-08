@@ -103,6 +103,7 @@ public:
             &ListView::OnCount_),
 
         isDestroyed_(false),
+        pendingCreate_(false),
         mutex_(),
         condition_(),
         viewCount_(0),
@@ -145,22 +146,33 @@ public:
 protected:
     virtual wxWindow * CreateView_(ListItem &itemControl, size_t index) = 0;
 
-#if 1
     void Initialize_()
     {
-        this->createInterface_();
-    }
-#endif
+        assert(this->sizer_->IsEmpty());
+        std::lock_guard lock(this->mutex_);
 
-    void DestroyAndCreateInterface_()
-    {
-        // OnCountWillChange waits until destroy is complete.
-        this->OnCountWillChange_();
+        if (this->pendingCreate_)
+        {
+            return;
+        }
+
+        this->pendingCreate_ = true;
         this->createInterface_();
     }
 
     void OnReorder_()
     {
+        {
+            std::lock_guard lock(this->mutex_);
+
+            if (this->pendingCreate_)
+            {
+                return;
+            }
+
+            this->pendingCreate_ = true;
+        }
+
         if (!wxIsMainThread())
         {
             throw std::logic_error(
@@ -187,6 +199,8 @@ protected:
 
             size_t count = this->listControl_.count.Get();
 
+            assert(this->sizer_->IsEmpty());
+
             for (size_t i = 0; i < count; ++i)
             {
                 auto &it = this->listControl_[i];
@@ -200,6 +214,8 @@ protected:
             }
 
             this->Layout();
+
+            this->pendingCreate_ = false;
         }
     }
 
@@ -239,6 +255,8 @@ protected:
 
         size_t count = this->listControl_.count.Get();
 
+        assert(this->sizer_->IsEmpty());
+
         for (size_t i = 0; i < count; ++i)
         {
             auto &it = this->listControl_[i];
@@ -261,6 +279,9 @@ protected:
         // wxpex::Freezer freeze(this);
         this->CreateViews_();
         this->FixLayout();
+
+        std::lock_guard lock(this->mutex_);
+        this->pendingCreate_ = false;
     }
 
     void OnCountWillChange_()
@@ -296,6 +317,14 @@ protected:
 
         {
             std::lock_guard lock(this->mutex_);
+
+            if (this->pendingCreate_)
+            {
+                return;
+            }
+
+            this->pendingCreate_ = true;
+
             viewCount = this->viewCount_;
         }
 
@@ -314,6 +343,8 @@ protected:
 
         if (viewCount != count)
         {
+            assert(this->sizer_->IsEmpty());
+
             if (wxIsMainThread())
             {
                 // Call CreateInterface_ synchronously.
@@ -326,16 +357,27 @@ protected:
         }
     }
 
+private:
+    void DestroyAndCreateInterface_()
+    {
+        // OnCountWillChange waits until destroy is complete.
+        this->OnCountWillChange_();
+        assert(this->sizer_->IsEmpty());
+        this->createInterface_();
+    }
+
 protected:
     ListControl listControl_;
     ListObserver listObserver_;
     bool isDestroyed_;
+    bool pendingCreate_;
     std::mutex mutex_;
     std::condition_variable condition_;
     size_t viewCount_;
     std::map<ssize_t, wxWindow *> viewsById_;
     wxBoxSizer *sizer_;
 
+private:
     using ReorderEndpoint = pex::Endpoint<ListView, Reorder>;
 
     ReorderEndpoint onReorder_;
