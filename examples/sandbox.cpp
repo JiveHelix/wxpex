@@ -104,7 +104,7 @@ bool ExampleApp::OnInit()
 using VelocityControl = decltype(DemoControl::velocity);
 using VelocityValueControl = decltype(VelocityControl::value);
 
-using VelocityRange = pex::control::LinearRange<VelocityControl, 1>;
+using VelocityRange = pex::control::LinearRange<VelocityControl>;
 
 using VelocityKnob = wxpex::ViewKnob
 <

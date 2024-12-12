@@ -14,8 +14,10 @@
 #include <limits>
 #include <stdexcept>
 #include <cstdint>
+#include <concepts>
 
 #include <jive/optional.h>
+#include <jive/scope_flag.h>
 #include <pex/range.h>
 
 #include "wxpex/wxshim.h"
@@ -25,6 +27,7 @@
 #include "wxpex/layout_top_level.h"
 #include "wxpex/converter.h"
 #include "wxpex/style.h"
+#include "wxpex/async.h"
 
 
 namespace wxpex
@@ -67,6 +70,13 @@ public:
 
     void SetMaximum(int maximum)
     {
+        this->maximum_ = maximum;
+        this->offset_ = this->maximum_ + this->minimum_;
+    }
+
+    void SetRange(int minimum, int maximum)
+    {
+        this->minimum_ = minimum;
         this->maximum_ = maximum;
         this->offset_ = this->maximum_ + this->minimum_;
     }
@@ -139,7 +149,6 @@ struct FilteredRange_
     using Type = pex::control::LinearRange
         <
             typename RangeControl::Upstream,
-            1000,
             typename RangeControl::Access
         >;
 };
@@ -171,28 +180,32 @@ using FilteredRange = typename FilteredRange_<RangeControl>::Type;
 
 
 template<typename RangeControl>
-int GetInitialValue(RangeControl range)
+std::unique_ptr<FilteredRange<RangeControl>> GetDefaultFilteredRange(
+    const RangeControl &range)
 {
-    using Range = FilteredRange<RangeControl>;
+    using Result = FilteredRange<RangeControl>;
 
-    using Type = typename Range::Type;
-
-    auto value = Range(range).value.Get();
-
-    if constexpr (jive::IsOptional<Type>)
+    if constexpr (std::is_floating_point_v<NotOptional<RangeControl>>)
     {
-        if (!value)
-        {
-            return 0;
-        }
-
-        return *value;
+        return std::make_unique<FilteredRange<RangeControl>>(
+            range,
+            typename Result::Filter(1000));
     }
     else
     {
-        return value;
+        return std::make_unique<FilteredRange<RangeControl>>(range);
     }
 }
+
+
+template<typename Filter>
+concept HasGetSlope = requires(Filter f)
+{
+    {f.GetSlope()} -> std::floating_point;
+};
+
+
+static_assert(HasGetSlope<pex::control::LinearFilter<double>>);
 
 
 template
@@ -210,13 +223,15 @@ public:
     // FilteredRange automatically scales floating point types to int as
     // required by wxSlider.
     using Range = FilteredRange<RangeControl>;
+    using Unfiltered = typename Range::Unfiltered;
+    static constexpr bool hasGetSlope = HasGetSlope<typename Range::Filter>;
 
-    using Value = typename Range::Value;
+    using Value = pex::control::Value<typename Range::Value>;
     using ValueType = typename Value::Type;
     static_assert(std::is_same_v<int, jive::RemoveOptional<ValueType>>);
     static constexpr bool isOptional = jive::IsOptional<ValueType>;
 
-    using Limit = typename Range::Limit;
+    using Limit = pex::control::Value<typename Range::Limit>;
 
     Slider(
         wxWindow *parent,
@@ -226,28 +241,45 @@ public:
         Base(
             parent,
             wxID_ANY,
-
-            detail::StyleFilter(
-                style,
-                Range(range).minimum.Get(),
-                Range(range).maximum.Get())(GetInitialValue(range)),
-
-            Range(range).minimum.Get(),
-            Range(range).maximum.Get(),
+            0,
+            -100,
+            100,
             wxDefaultPosition,
             wxDefaultSize,
             SliderStyle(style)),
 
-        value_(this, range.value),
-        minimum_(this, range.minimum),
-        maximum_(this, range.maximum),
+        ignoreRange_(false),
+        range_(GetDefaultFilteredRange(range)),
+        value_(this, this->range_->value),
+        minimum_(this, this->range_->minimum),
+        maximum_(this, this->range_->maximum),
         reset_(range.reset),
 
         styleFilter_(
             style,
-            Range(range).minimum.Get(),
-            Range(range).maximum.Get())
+            this->range_->minimum.Get(),
+            this->range_->maximum.Get()),
+
+        adjustRange_(std::bind(&Slider::AdjustRange_, this))
     {
+        this->SetRange(
+            this->range_->minimum.Get(),
+            this->range_->maximum.Get());
+
+        auto value = this->range_->value.Get();
+
+        if constexpr (isOptional)
+        {
+            if (value)
+            {
+                this->SetValue(*value);
+            }
+        }
+        else
+        {
+            this->SetValue(value);
+        }
+
         this->value_.Connect(&Slider::OnValue_);
         this->minimum_.Connect(&Slider::OnMinimum_);
         this->maximum_.Connect(&Slider::OnMaximum_);
@@ -286,16 +318,65 @@ public:
         }
     }
 
+    void AdjustRange_()
+    {
+        if constexpr (hasGetSlope)
+        {
+            jive::ScopeFlag ignoreRange(this->ignoreRange_);
+
+            int valueCount = this->maximum_.Get() - this->minimum_.Get();
+            Unfiltered currentSlope = this->range_->GetFilter().GetSlope();
+
+            if (valueCount != 1000)
+            {
+                currentSlope *= Unfiltered(1000) / Unfiltered(valueCount);
+            }
+
+            this->range_->SetFilter({currentSlope});
+
+            int minimum = this->minimum_.Get();
+            int maximum = this->maximum_.Get();
+
+            this->styleFilter_.SetRange(minimum, maximum);
+            this->SetRange(minimum, maximum);
+            this->OnValue_(this->value_.Get());
+        }
+    }
+
     void OnMinimum_(int minimum)
     {
-        this->SetMin(minimum);
-        this->styleFilter_.SetMinimum(minimum);
+        if (this->ignoreRange_)
+        {
+            return;
+        }
+
+        if constexpr (hasGetSlope)
+        {
+            this->adjustRange_();
+        }
+        else
+        {
+            this->SetMin(minimum);
+            this->styleFilter_.SetMinimum(minimum);
+        }
     }
 
     void OnMaximum_(int maximum)
     {
-        this->SetMax(maximum);
-        this->styleFilter_.SetMaximum(maximum);
+        if (this->ignoreRange_)
+        {
+            return;
+        }
+
+        if constexpr (hasGetSlope)
+        {
+            this->adjustRange_();
+        }
+        else
+        {
+            this->SetMax(maximum);
+            this->styleFilter_.SetMaximum(maximum);
+        }
     }
 
     void OnSlider_(wxCommandEvent &event)
@@ -358,11 +439,14 @@ public:
     }
 
 private:
+    bool ignoreRange_;
+    std::unique_ptr<Range> range_;
     pex::Terminus<Slider, Value> value_;
     pex::Terminus<Slider, Limit> minimum_;
     pex::Terminus<Slider, Limit> maximum_;
     pex::control::Signal<> reset_;
     detail::StyleFilter styleFilter_;
+    wxpex::CallAfter adjustRange_;
 };
 
 
@@ -392,7 +476,7 @@ public:
         :
         Base(parent, wxID_ANY),
         sliderIsActive_(false),
-        value_(this, SliderRange(range).value)
+        value_(this, value)
 
     {
         // Create slider and view as children of this wxWindow.
@@ -451,7 +535,7 @@ private:
         this->sliderIsActive_ = false;
     }
 
-    void OnValue_(int)
+    void OnValue_(typename ValueControl::Type)
     {
         if (!this->sliderIsActive_)
         {
@@ -465,7 +549,7 @@ private:
 
 private:
     bool sliderIsActive_;
-    pex::Terminus<ValueSliderConvert, SliderValue> value_;
+    pex::Terminus<ValueSliderConvert, ValueControl> value_;
 };
 
 

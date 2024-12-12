@@ -75,7 +75,7 @@ public:
                 return;
             }
 
-            this->value_.Set(openFolder.GetPath());
+            this->value_.Set(openFolder.GetPath().utf8_string());
         }
         else
         {
@@ -94,7 +94,7 @@ public:
                 return;
             }
 
-            this->value_.Set(openFile.GetPath());
+            this->value_.Set(openFile.GetPath().utf8_string());
         }
     }
 

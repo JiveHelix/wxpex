@@ -14,6 +14,7 @@
 #include <pex/converting_filter.h>
 #include <fields/fields.h>
 #include "wxpex/slider.h"
+#include "wxpex/check_box.h"
 
 
 template<typename T>
@@ -21,6 +22,7 @@ struct DemoFields
 {
     static constexpr auto fields = std::make_tuple(
         fields::Field(&T::position, "position"),
+        fields::Field(&T::changeRange, "changeRange"),
         fields::Field(&T::optional, "optional"),
         fields::Field(&T::playbackSpeed, "playbackSpeed"));
 };
@@ -31,7 +33,8 @@ using pex::MakeRange;
 template<template<typename> typename T>
 struct DemoTemplate
 {
-    T<MakeRange<int, Limit<0>, Limit<1000>>> position;
+    T<MakeRange<double, Limit<0>, Limit<1>>> position;
+    T<bool> changeRange;
     T<MakeRange<std::optional<int>, Limit<0>, Limit<100>>> optional;
     T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
 };
@@ -44,7 +47,7 @@ struct Demo: public DemoTemplate<pex::Identity>
 
     static Demo MakeDefault()
     {
-        return {{defaultPosition, defaultPlaybackSpeed, {}}};
+        return {{defaultPosition, false, defaultPlaybackSpeed, {}}};
     }
 };
 
@@ -96,7 +99,12 @@ public:
     ExampleApp()
         :
         model_(Demo::MakeDefault()),
-        position_(this, model_.position, &ExampleApp::OnPosition_)
+        position_(this, this->model_.position, &ExampleApp::OnPosition_),
+
+        changeRange_(
+            this,
+            this->model_.changeRange,
+            &ExampleApp::OnChangeRange_)
     {
 
     }
@@ -104,15 +112,27 @@ public:
     bool OnInit() override;
 
 private:
-    void OnPosition_(int position)
+    void OnPosition_(double position)
     {
-        if (position > 500)
+        if (position > 0.5)
         {
             this->model_.optional.Set({});
         }
         else
         {
             this->model_.optional.Set(0);
+        }
+    }
+
+    void OnChangeRange_(bool shortRange)
+    {
+        if (shortRange)
+        {
+            this->model_.position.SetMaximum(0.005);
+        }
+        else
+        {
+            this->model_.position.SetMaximum(1.0);
         }
     }
 
@@ -123,6 +143,11 @@ private:
         pex::Endpoint<ExampleApp, decltype(DemoModel::position)>;
 
     PositionEndpoint position_;
+
+    using ChangeRangeEndpoint =
+        pex::Endpoint<ExampleApp, decltype(DemoModel::changeRange)>;
+
+    ChangeRangeEndpoint changeRange_;
 };
 
 
@@ -186,6 +211,9 @@ ExampleFrame::ExampleFrame(DemoControl control)
     auto verticalSlider =
         CreateViewSlider<precision>(this, control.position, vertical);
 
+    auto checkBox =
+        new wxpex::CheckBox(this, "Change range", control.changeRange);
+
     auto playbackSpeedSlider =
         new PlaybackSpeedSlider(
             this,
@@ -204,6 +232,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
     topSizer->Add(positionFieldSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(optionalSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSlider, 1, wxALL | wxEXPAND, 10);
+    topSizer->Add(checkBox, 1, wxALL | wxEXPAND, 10);
     topSizer->Add(playbackSpeedSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSpeedSlider, 0, wxALL | wxEXPAND, 10);
 

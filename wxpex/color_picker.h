@@ -41,13 +41,13 @@ public:
     using ValueControl = decltype(Control::value);
 
     using HueRange =
-        pex::control::LinearRange<HueControl, 100>;
+        pex::control::StaticLinearRange<HueControl, 100>;
 
     using SaturationRange =
-        pex::control::LinearRange<SaturationControl, 256>;
+        pex::control::StaticLinearRange<SaturationControl, 256>;
 
     using ValueRange =
-        pex::control::LinearRange<ValueControl, 256>;
+        pex::control::StaticLinearRange<ValueControl, 256>;
 
     using HueKnob =
         wxpex::ViewKnob<HueRange, typename HueControl::Value, 5, 1>;
@@ -145,7 +145,7 @@ class HsvaKnobs: public HsvKnobs_<HsvaControl, HsvaKnobs>
 {
 public:
     using AlphaRange =
-        pex::control::LinearRange<decltype(HsvaControl::alpha), 100>;
+        pex::control::StaticLinearRange<decltype(HsvaControl::alpha), 100>;
 
     using AlphaControl = decltype(HsvaControl::alpha);
 
