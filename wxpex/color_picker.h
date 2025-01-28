@@ -159,7 +159,7 @@ public:
         HsvKnobs_<HsvaControl, HsvaKnobs>(parent, control),
         alpha(
             new AlphaKnob(
-                parent,
+                this->parent_,
                 AlphaRange(control.alpha),
                 control.alpha.value))
     {
@@ -187,9 +187,9 @@ public:
         Control control)
         :
         StaticBox(parent, name),
-        knobs_(this, control)
+        knobs_(this->GetPanel(), control)
     {
-        auto colorPreview = new ColorPreview(this, control);
+        auto colorPreview = new ColorPreview(this->GetPanel(), control);
         auto knobLayout = this->knobs_.MakeKnobs();
         auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
         sizer->Add(knobLayout.release(), 1, wxRight, 5);
@@ -316,7 +316,7 @@ public:
         RgbSliders_<RgbaControl, RgbaSliders>(parent, control),
         alpha(
             new AlphaSlider(
-                parent,
+                this->parent_,
                 control.alpha,
                 control.alpha.value))
     {
@@ -344,9 +344,9 @@ public:
         Control control)
         :
         StaticBox(parent, name),
-        sliders_(this, control)
+        sliders_(this->GetPanel(), control)
     {
-        auto colorPreview = new ColorPreview(this, control);
+        auto colorPreview = new ColorPreview(this->GetPanel(), control);
         auto sliderLayout = this->sliders_.MakeSliders();
         auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
         sizer->Add(sliderLayout.release(), 1, wxRight, 5);
