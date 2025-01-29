@@ -66,9 +66,9 @@ struct Shear: public ShearTemplate<U>::template Template<pex::Identity>
 
     }
 
-    Shear(U x, U y)
+    Shear(U x_, U y_)
         :
-        ShearTemplate<U>::template Template<pex::Identity>{x, y}
+        ShearTemplate<U>::template Template<pex::Identity>{x_, y_}
     {
 
     }
