@@ -8,6 +8,7 @@ WXSHIM_PUSH_IGNORES
 #include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/statbox.h>
+#include <wx/collpane.h>
 WXSHIM_POP_IGNORES
 
 
@@ -37,7 +38,10 @@ public:
     void ConfigureSizer(std::unique_ptr<wxSizer> &&sizer);
 
 private:
+    void OnCollapsibleChild_(wxCollapsiblePaneEvent &event);
+
     detail::StaticBoxInternal *staticBoxInternal_;
+
 };
 
 

@@ -60,6 +60,19 @@ private:
     void OnValueChanged_(pex::Argument<Type> value)
     {
         this->SetLabel(Convert::ToString(value));
+        this->UpdateMinimumSize_();
+    }
+
+    void UpdateMinimumSize_()
+    {
+        // Text entry field should resize to fit whatever text is displayed.
+        auto fittingSize =
+            this->GetSizeFromTextSize(
+                this->GetTextExtent(
+                    Convert::ToString(this->value_.Get())));
+
+        this->SetMinClientSize(fittingSize);
+        this->InvalidateBestSize();
     }
 
     using Value_ = pex::Terminus<View, Control>;

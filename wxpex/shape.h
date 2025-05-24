@@ -182,7 +182,7 @@ template<template<typename> typename T>
 struct ColorTemplate
 {
     T<tau::Rgba<uint8_t>> color;
-    T<pex::MakeSelect<CompositionMode>> compositionMode;
+    T<pex::MakeSelect<CompositionSelect>> compositionMode;
 };
 
 

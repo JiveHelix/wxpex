@@ -35,3 +35,11 @@ wxWindow * MakeWidget(
 
 
 } // end namespace wxpex
+
+
+#ifndef NDEBUG
+#define REGISTER_WIDGET_NAME(window, name) \
+    wxpex::RegisterWidgetName(window, name);
+#else
+#define REGISTER_WIDGET_NAME(window, name)
+#endif

@@ -12,6 +12,7 @@
 #include <wxpex/freezer.h>
 #include <wxpex/scrolled.h>
 #include <wxpex/border_sizer.h>
+#include <wxpex/widget_names.h>
 
 
 namespace wxpex
@@ -120,6 +121,8 @@ public:
         flags_(wxEXPAND | wxBOTTOM),
         spacing_(3)
     {
+        REGISTER_WIDGET_NAME(this, "ListView");
+
         auto sizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
         this->sizer_ = sizer.get();
         this->SetSizer(sizer.release());

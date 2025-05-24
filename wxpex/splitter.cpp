@@ -20,7 +20,7 @@ Splitter::Splitter(
     secondPriority_(nullptr),
     userSashPosition_(-1)
 {
-    // this->SetAutoLayout(true);
+
 }
 
 

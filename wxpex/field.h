@@ -208,8 +208,6 @@ private:
     void UpdateMinimumSize_()
     {
         // Text entry field should resize to fit whatever text is displayed.
-        // TODO: Create a version that allows fixed size text entry fields.
-
         auto fitting = this->GetFittingSize();
         this->SetMinClientSize(ToWxSize(fitting));
         this->InvalidateBestSize();

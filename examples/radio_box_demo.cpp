@@ -14,7 +14,6 @@
 
 #include "wxpex/view.h"
 #include "wxpex/radio_box.h"
-#include "wxpex/view.h"
 
 #include "units.h"
 

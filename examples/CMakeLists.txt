@@ -64,6 +64,15 @@ target_link_libraries(
     project_options
     wxpex)
 
+add_executable(converter_demo converter_demo.cpp)
+
+target_link_libraries(
+    converter_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
 
 add_executable(field_demo field_demo.cpp)
 

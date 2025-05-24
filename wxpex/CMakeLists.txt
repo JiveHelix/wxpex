@@ -4,18 +4,38 @@ if (${fPIC})
     set_property(TARGET wxpex PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif ()
 
+
+find_package(Jive REQUIRED)
+find_package(Fields REQUIRED)
+find_package(Pex REQUIRED)
+find_package(Tau REQUIRED)
+
+set(wxWidgets_USE_STATIC ON)
+
+find_package(
+    wxWidgets REQUIRED
+    COMPONENTS
+        base
+        core
+        adv
+        aui
+        html
+        gl
+        richtext
+        webview)
+
+
 # Projects that include this project must #include "wxpex/<header-name>"
 target_include_directories(wxpex PUBLIC ${PROJECT_SOURCE_DIR})
 
 target_link_libraries(
     wxpex
     PUBLIC
-    CONAN_PKG::jive
-    CONAN_PKG::fields
-    CONAN_PKG::tau
-    CONAN_PKG::pex
-    CONAN_PKG::wxwidgets)
-
+    tau::tau
+    pex::pex
+    fields::fields
+    jive::jive
+    wxWidgets::wxWidgets)
 
 target_sources(
     wxpex

@@ -89,16 +89,21 @@ void Expandable::FixLayout()
             topCollapsible = window;
         }
 
+#if 0
         if (dynamic_cast<Splitter *>(window))
         {
             // Do not fix anything higher than a Splitter
             break;
         }
+#endif
 
-        window->InvalidateBestSize();
+        // window->InvalidateBestSize();
         allWindows.push_back(window);
+
+        LOG_WIDGET_NAME("Found window: ", window)
     }
 
+#if 0
     if (topCollapsible)
     {
         LOG_WIDGET_NAME("topCollapsible: ", topCollapsible)
@@ -111,7 +116,7 @@ void Expandable::FixLayout()
 
         if (sizer)
         {
-            auto newSize = sizer->ComputeFittingWindowSize(parent);
+            auto newSize = sizer->ComputeFittingClientSize(parent);
             parent->SetMinSize(newSize);
         }
 
@@ -127,11 +132,12 @@ void Expandable::FixLayout()
             
             if (sizer)
             {
-                auto newSize = sizer->ComputeFittingWindowSize(grandParent);
+                auto newSize = sizer->ComputeFittingClientSize(grandParent);
                 grandParent->SetMinSize(newSize);
             }
         }
     }
+#endif
 
     auto topSize = wxpex::ToSize<int>(top->GetSize());
 
@@ -160,6 +166,7 @@ void Expandable::FixLayout()
     }
 
     top->Layout();
+#if 0
     auto postLayoutSize = wxpex::ToSize<int>(top->GetSize());
 
     // Do not make the top window smaller
@@ -174,78 +181,75 @@ void Expandable::FixLayout()
     {
         top->SendSizeEvent();
     }
+#endif
 }
 
 
 void Expandable::FixExpandableSize_(wxWindow *window)
 {
-    // Reset the minimum size.
-    auto sizer = window->GetSizer();
+    LOG_WIDGET_NAME("FixExpandableSize_: ", window)
 
-    if (sizer)
-    {
-        auto newSize = sizer->ComputeFittingWindowSize(window);
-        window->SetMinSize(newSize);
-    }
-
-    // Check the best size.
-    wxSize bestSize = window->GetBestSize();
-
-    if (window->GetSize() != bestSize)
-    {
-        window->SetSize(bestSize);
-    }
-    else
+    if (auto *scrolled = dynamic_cast<Scrolled *>(window))
     {
         window->Layout();
+        scrolled->FitInside();
+
+        return;
     }
+
+    if (auto *splitter = dynamic_cast<Splitter *>(window))
+    {
+        if (auto *window1 = splitter->GetWindow1())
+        {
+            window1->Layout();
+        }
+
+        if (auto *window2 = splitter->GetWindow2())
+        {
+            window2->Layout();
+        }
+
+        // splitter->UpdateSize();
+        return;
+    }
+
+    window->Layout();
 }
 
 
 void Expandable::FixContainerSize_(wxWindow *window)
 {
-    auto scrolled = dynamic_cast<Scrolled *>(window);
+    LOG_WIDGET_NAME("FixContainerSize_: ", window)
 
-    if (scrolled)
+    if (auto *scrolled = dynamic_cast<Scrolled *>(window))
     {
+        window->Layout();
         scrolled->FitInside();
+
         return;
     }
 
-    assert(!dynamic_cast<Splitter *>(window));
-
-    LOG_WIDGET_NAME("FixContainerSize_: ", window)
-
-    auto sizer = window->GetSizer();
-
-    if (sizer)
+    if (auto *splitter = dynamic_cast<Splitter *>(window))
     {
-        auto newSize = sizer->ComputeFittingWindowSize(window);
-        window->SetMinSize(newSize);
+        if (auto *window1 = splitter->GetWindow1())
+        {
+            window1->Layout();
+        }
+
+        if (auto *window2 = splitter->GetWindow2())
+        {
+            window2->Layout();
+        }
+
+        // splitter->UpdateSize();
+        return;
     }
 
-    wxSize bestSize = window->GetBestSize();
-    wxSize windowSize = window->GetSize();
-    wxSize updatedSize = windowSize;
-
-    updatedSize.SetWidth(
-        std::max(windowSize.GetWidth(), bestSize.GetWidth()));
-
-    updatedSize.SetHeight(
-        std::max(windowSize.GetHeight(), bestSize.GetHeight()));
-
-    if (window->GetSize() != updatedSize)
-    {
-        window->SetSize(updatedSize);
-    }
-    else
-    {
-        window->Layout();
-    }
+    window->Layout();
 }
 
 
-void Expandable::ReportWindowSize_(wxWindow *window, size_t depth)
+void Expandable::ReportWindowSize(wxWindow *window, size_t depth)
 {
     std::cout << std::string(depth * 4, ' ') << depth << std::endl;
 

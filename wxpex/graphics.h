@@ -130,7 +130,7 @@ using PenCapControl = pex::ControlSelector<PenCapSelect>;
 
 struct PenCapConverter
 {
-    static std::string ToString(PenCap compositionMode);
+    static std::string ToString(PenCap penCap);
 };
 
 

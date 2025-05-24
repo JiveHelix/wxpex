@@ -1,5 +1,6 @@
 #include "wxpex/static_box.h"
 #include "wxpex/size.h"
+#include "wxpex/scrolled.h"
 
 WXSHIM_PUSH_IGNORES
 #include <wx/sizer.h>
@@ -15,7 +16,47 @@ StaticBox::StaticBox(wxWindow *parent, const std::string &label)
     wxPanel(parent, wxID_ANY),
     staticBoxInternal_(new detail::StaticBoxInternal(this, wxID_ANY, label))
 {
+    this->Bind(
+        wxEVT_COLLAPSIBLEPANE_CHANGED,
+        &StaticBox::OnCollapsibleChild_,
+        this);
+
     this->SetSizer(new wxStaticBoxSizer(this->staticBoxInternal_, wxVERTICAL));
+}
+
+void StaticBox::OnCollapsibleChild_(wxCollapsiblePaneEvent &event)
+{
+    event.Skip();
+
+    auto FixSize = [](auto window)
+    {
+        auto sizer = window->GetSizer();
+
+        if (sizer)
+        {
+            window->InvalidateBestSize();
+            auto fittingSize = sizer->ComputeFittingClientSize(window);
+            window->SetMinSize(fittingSize);
+            window->Layout();
+
+            if (auto *scrolled = dynamic_cast<Scrolled *>(window))
+            {
+                scrolled->FitInside();
+            }
+        }
+    };
+
+    wxWindow *window = this->staticBoxInternal_;
+    auto top = wxGetTopLevelParent(window);
+
+    while (window != top)
+    {
+        FixSize(window);
+        window = window->GetParent();
+    }
+
+    top->Layout();
+    top->SendSizeEvent();
 }
 
 

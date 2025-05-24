@@ -5,6 +5,7 @@
 #include <wxpex/splitter.h>
 #include <wxpex/collapsible.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/widget_names.h>
 #include <wx/colour.h>
 
 
@@ -19,6 +20,7 @@ public:
         :
         wxpex::Collapsible(parent, name, stateControl, wxBORDER_SIMPLE)
     {
+        wxpex::RegisterWidgetName(this, name);
         auto coloredSquare = new wxPanel(this->GetPanel());
         coloredSquare->SetBackgroundColour(color);
         coloredSquare->SetMinSize(wxSize(400, 400));
@@ -71,6 +73,8 @@ public:
         :
         wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
     {
+        RegisterWidgetName(this, "Colors");
+
         auto blue =
             new Widget(this->GetPanel(), "Blue", *wxBLUE, state.blue);
 
@@ -106,6 +110,8 @@ public:
         :
         wxpex::Scrolled(parent)
     {
+        wxpex::RegisterWidgetName(this, "ColorSets");
+
         auto set1 = new Colors(this, "Set 1", state);
         auto set2 = new Colors(this, "Set 2", state);
         auto set3 = new Colors(this, "Set 3", state);
@@ -131,6 +137,8 @@ public:
         :
         wxPanel(parent)
     {
+        wxpex::RegisterWidgetName(this, "LeftControls");
+
         auto topPanel = new wxPanel(this);
         topPanel->SetMinSize(wxSize(400, 100));
 
@@ -160,7 +168,11 @@ public:
         :
         wxFrame(nullptr, wxID_ANY, "Scroll Demo")
     {
+        wxpex::RegisterWidgetName(this, "Scroll Demo");
+
         auto splitter = new wxpex::Splitter(this);
+
+        wxpex::RegisterWidgetName(splitter, "splitter");
 
         auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
         topSizer->Add(splitter, 1, wxEXPAND);
@@ -170,7 +182,7 @@ public:
         auto controls = new LeftControls(splitter, state);
 
         auto rightPanel = new wxPanel(splitter);
-        rightPanel->SetMinSize(wxSize(600, 600));
+        rightPanel->SetMinSize(wxSize(300, 300));
 
         splitter->SplitVerticallyLeft(
             controls,

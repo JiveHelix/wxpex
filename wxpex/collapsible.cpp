@@ -7,6 +7,7 @@
 #include "wxpex/static_box.h"
 #include "wxpex/splitter.h"
 #include "wxpex/freezer.h"
+#include "wxpex/widget_names.h"
 
 
 namespace wxpex
@@ -32,6 +33,9 @@ Collapsible::Collapsible(
     hasStateEndpoint_(false),
     ignoreState_(false)
 {
+    REGISTER_WIDGET_NAME(this, label);
+    REGISTER_WIDGET_NAME(this->m_pPane, "Collapsible m_pPane")
+
     if (borderStyle != wxBORDER_NONE)
     {
         this->borderPane_ = new wxPanel(
@@ -42,6 +46,8 @@ Collapsible::Collapsible(
             borderStyle);
 
         this->SetExpandableWindow(this->borderPane_);
+
+        REGISTER_WIDGET_NAME(this->borderPane_, "Collapsible panel")
     }
     else
     {
@@ -149,16 +155,17 @@ void Collapsible::UpdateMinimumSize_() const
         // If the borderPane_ has changed size, the sizer on its parent
         // (m_pPane) stubbornly refuses to acknowledge it, and continues to
         // report the initial minimum size.
-        auto borderBestSize = this->borderPane_->GetBestSize();
+        auto borderMinSize = this->borderPane_->GetBestSize();
         wxSizer *paneSizer = this->m_pPane->GetSizer();
 
         if (paneSizer)
         {
-            paneSizer->SetMinSize(borderBestSize);
+            paneSizer->SetMinSize(borderMinSize);
         }
     }
 }
 
+#if 1
 #if defined(__WXGTK__)
 
 wxSize Collapsible::DoGetBestSize() const
@@ -190,14 +197,11 @@ wxSize Collapsible::DoGetBestClientSize() const
 }
 
 #endif
+#endif
 
 
 void Collapsible::HandleStateChange_()
 {
-    // Freezer freezer(this);
-
-    this->UpdateMinimumSize_();
-
     this->FixLayout();
 
     if (this->ignoreState_)

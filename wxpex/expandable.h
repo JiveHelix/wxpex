@@ -19,7 +19,9 @@ public:
 
     void FixLayout();
 
-    static void ReportWindowSize_(wxWindow *window, size_t depth);
+    static void ReportWindowSize(wxWindow *window, size_t depth);
+
+private:
     static void FixExpandableSize_(wxWindow *window);
     static void FixContainerSize_(wxWindow *window);
 

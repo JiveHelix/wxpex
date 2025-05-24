@@ -40,15 +40,16 @@ public:
 
     void ConfigureSizer(std::unique_ptr<wxSizer> &&sizer);
 
+#if 1
 #if defined(__WXGTK__)
     // WXGTK uses DoGetBestSize, and WXMAC/WXMSW ignore it.
     wxSize DoGetBestSize() const override;
 #else
     wxSize DoGetBestClientSize() const override;
 #endif
+#endif
 
     wxWindow * GetPanel();
-
 
 protected:
     void ConfigureBorderPane_(
