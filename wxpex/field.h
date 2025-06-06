@@ -24,6 +24,7 @@ namespace wxpex
 {
 
 
+template<size_t width = 20>
 struct FixedFieldTag {};
 
 
@@ -85,15 +86,16 @@ private:
     }
 
 public:
+    template<size_t fixedWidth>
     Field(
         wxWindow *parent,
         Control value,
-        const FixedFieldTag &,
+        const FixedFieldTag<fixedWidth> &,
         long style = 0)
         :
         Field(parent, value, true, style)
     {
-
+        this->minimumWidth_ = fixedWidth;
     }
 
     Field(
@@ -229,6 +231,14 @@ auto CreateField(wxWindow *parent, Control control)
     using Result = Field<Control, PrecisionConverter<Control, precision>>;
 
     return new Result(parent, control);
+}
+
+template<int precision, size_t fixedWidth, typename Control>
+auto CreateField(wxWindow *parent, Control control)
+{
+    using Result = Field<Control, PrecisionConverter<Control, precision>>;
+
+    return new Result(parent, control, FixedFieldTag<fixedWidth>{});
 }
 
 

@@ -166,7 +166,6 @@ void AddRow(
 }
 
 
-
 template<typename ...Labeled>
 std::unique_ptr<wxFlexGridSizer> LayoutLabeled(
     LayoutOptions options,
@@ -211,14 +210,6 @@ std::unique_ptr<wxFlexGridSizer> LayoutLabeled(
         // Layout in a stack with labels on the left.
         assert(options.orient == wxVERTICAL);
 
-#if 0
-        for (size_t i = 0; i < sizeof...(Labeled); ++i)
-        {
-            groupSizer->AddGrowableRow(i);
-        }
-#endif
-
-        // groupSizer->AddGrowableCol(0, 0);
         groupSizer->AddGrowableCol(1, 1);
 
         AddVertical(
@@ -231,106 +222,6 @@ std::unique_ptr<wxFlexGridSizer> LayoutLabeled(
 
     return groupSizer;
 }
-
-
-namespace detail
-{
-
-
-template<typename Tuple, size_t... I>
-void DoLayoutItems(
-    wxBoxSizer *sizer,
-    int proportion,
-    int flags,
-    int spacingFlag,
-    int spacing,
-    Tuple items,
-    std::index_sequence<I...>)
-{
-    static constexpr size_t count = sizeof...(I);
-    static_assert(count >= 1);
-
-    (sizer->Add(
-        std::get<I>(items),
-        proportion,
-        I < (count - 1) ? (flags | spacingFlag) : flags,
-        I < (count - 1) ? spacing : 0), ...);
-}
-
-
-} // end namespace detail
-
-
-struct ItemOptions
-{
-    int orient;
-    int flags;
-    int spacing;
-    int proportion;
-
-    ItemOptions & Orient(int orient_)
-    {
-        this->orient = orient_;
-        return *this;
-    }
-
-    ItemOptions & Flags(int flags_)
-    {
-        this->flags = flags_;
-        return *this;
-    }
-
-    ItemOptions & Spacing(int spacing_)
-    {
-        this->spacing = spacing_;
-        return *this;
-    }
-
-    ItemOptions & Proportion(int proportion_)
-    {
-        this->proportion = proportion_;
-        return *this;
-    }
-};
-
-
-inline constexpr auto horizontalItems =
-    ItemOptions{wxHORIZONTAL, wxEXPAND, 5, 0};
-
-inline constexpr auto verticalItems =
-    ItemOptions{wxVERTICAL, wxEXPAND, 5, 0};
-
-
-template<typename ...Items>
-std::unique_ptr<wxSizer> LayoutItems(
-    const ItemOptions &options,
-    Items &&...items)
-{
-    auto sizer = std::make_unique<wxBoxSizer>(options.orient);
-    int spacingFlag;
-
-    if (options.orient == wxHORIZONTAL)
-    {
-        spacingFlag = wxRIGHT;
-    }
-    else
-    {
-        spacingFlag = wxBOTTOM;
-    }
-
-    detail::DoLayoutItems(
-        sizer.get(),
-        options.proportion,
-        options.flags,
-        spacingFlag,
-        options.spacing,
-        std::make_tuple(std::forward<Items>(items)...),
-        std::make_index_sequence<sizeof...(Items)>());
-
-    return sizer;
-}
-
-
 
 
 } // end namespace wxpex
