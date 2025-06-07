@@ -7,6 +7,7 @@
 #include <wxpex/field.h>
 #include <wxpex/view.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/layout_items.h>
 #include <wxpex/collapsible.h>
 #include <wxpex/static_box.h>
 #include <wxpex/scrolled.h>

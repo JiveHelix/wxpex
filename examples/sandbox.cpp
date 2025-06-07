@@ -21,6 +21,7 @@
 #include <wxpex/view.h>
 #include <wxpex/knob.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/layout_items.h>
 #include <wxpex/slider.h>
 
 
@@ -151,8 +152,8 @@ ExampleFrame::ExampleFrame([[maybe_unused]] DemoControl control)
     auto sizer = wxpex::LayoutItems(
         wxpex::verticalItems,
         velocityKnob,
-        azimuthSizer.release(),
-        elevationSizer.release());
+        azimuthSizer,
+        elevationSizer);
 
     topSizer->Add(sizer.release(), 1, wxALL, 5);
 

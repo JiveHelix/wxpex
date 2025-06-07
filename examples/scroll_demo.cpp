@@ -5,6 +5,7 @@
 #include <wxpex/splitter.h>
 #include <wxpex/collapsible.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/layout_items.h>
 #include <wxpex/widget_names.h>
 #include <wx/colour.h>
 

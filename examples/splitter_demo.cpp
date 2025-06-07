@@ -6,6 +6,7 @@
 #include <wxpex/list_view.h>
 #include <wxpex/spin_control.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/layout_items.h>
 #include <wxpex/widget_names.h>
 #include <pex/group.h>
 #include <pex/list.h>

@@ -7,6 +7,7 @@
 #include <wxpex/field.h>
 #include <wxpex/view.h>
 #include <wxpex/labeled_widget.h>
+#include <wxpex/layout_items.h>
 #include <wxpex/collapsible.h>
 #include <wxpex/static_box.h>
 #include <wxpex/scrolled.h>
@@ -178,7 +179,7 @@ public:
     }
 };
 
-#if 1
+
 class StuffView: public wxPanel
 {
 public:
@@ -219,32 +220,6 @@ public:
         this->ConfigureSizer(wxpex::verticalScrolled, std::move(sizer));
     }
 };
-
-#else
-
-class StuffFrame: public wxpex::Scrolled
-{
-public:
-    StuffFrame(wxWindow *parent, StuffControl control)
-        :
-        wxpex::Scrolled(parent)
-    {
-        auto weapons1 =
-            new WeaponsViews(
-                this,
-                control.thing1.weapons,
-                wxpex::LayoutOptions{});
-
-        auto sizer = wxpex::LayoutItems(
-            wxpex::verticalItems,
-            weapons1);
-
-        this->ConfigureSizer(wxpex::verticalScrolled, std::move(sizer));
-    }
-};
-
-
-#endif
 
 
 class ExampleFrame: public wxFrame
