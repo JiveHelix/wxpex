@@ -65,6 +65,7 @@ struct GaugeTemplate
     T<wxpex::MakeAsync<size_t>> maximum;
 
     static constexpr auto fields = GaugeFields<GaugeTemplate>::fields;
+    static constexpr auto fieldsTypeName = "Gauge";
 };
 
 
@@ -150,6 +151,8 @@ private:
 class ValueGauge: public wxControl
 {
 public:
+    static constexpr auto observerName = "wxpex::ValueGauge";
+
     using ValueControl = decltype(GaugeControl::value);
 
     ValueGauge(
