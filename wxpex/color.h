@@ -22,7 +22,7 @@ wxColour ToWxColour(const tau::Rgb<uint8_t> &color)
 template<typename T>
 wxColour ToWxColour(const tau::Hsv<T> &color)
 {
-    auto rgb = tau::HsvToRgb<uint8_t>(color);
+    auto rgb = tau::HsvToRgb<uint8_t, T>(color);
     return ToWxColour(rgb);
 }
 
@@ -37,7 +37,7 @@ wxColour ToWxColour(const tau::Rgba<uint8_t> &color)
 template<typename T>
 wxColour ToWxColour(const tau::Hsva<T> &color)
 {
-    auto rgba = tau::HsvToRgb<uint8_t>(color);
+    auto rgba = tau::HsvToRgb<uint8_t, T>(color);
     return ToWxColour(rgba);
 }
 

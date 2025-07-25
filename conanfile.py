@@ -1,9 +1,12 @@
-from cmake_includes.conan import LibraryConanFile
+from conan import ConanFile
 
 
-class WxpexConan(LibraryConanFile):
+class WxpexConan(ConanFile):
     name = "wxpex"
     version = "1.0.0"
+
+    python_requires = "boiler/0.1"
+    python_requires_extend = "boiler.LibraryConanFile"
 
     license = "MIT"
     author = "Jive Helix (jivehelix@gmail.com)"
@@ -11,7 +14,20 @@ class WxpexConan(LibraryConanFile):
     description = "A simplified API to combine wxWidgets with pex nodes."
     topics = ("GUI", "C++", "wxWidgets")
 
-    LibraryConanFile.default_options["wxwidgets/*:stc"] = False
+    def init(self):
+        # Call the base method _only_ if it exists
+        base_init = getattr(super(), "init", None)
+
+        if callable(base_init):
+            base_init()
+
+        # Extend (not replace) the inherited defaults
+
+        # self.default_options.update({
+        #     "wxwidgets/*:stc": False
+        # })
+
+        self.default_options["wxwidgets/*:stc"] = False
 
     def build_requirements(self):
         self.test_requires("catch2/2.13.8")

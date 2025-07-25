@@ -35,8 +35,8 @@ struct PricingTemplate
     T<double> taxRate;
     T<double> shipping;
 
-    static constexpr auto fieldsTypeName =
-        PricingFields<PricingTemplate>::fields;
+    static constexpr auto fields = PricingFields<PricingTemplate>::fields;
+    static constexpr auto fieldsTypeName = "Pricing";
 };
 
 
@@ -86,8 +86,10 @@ struct SettingsTemplate
     T<PricingGroup> pricing;
     T<CountRangeMaker> count;
 
-    static constexpr auto fieldsTypeName =
+    static constexpr auto fields =
         SettingsFields<SettingsTemplate>::fields;
+
+    static constexpr auto fieldsTypeName = "Settings";
 };
 
 
@@ -202,8 +204,8 @@ struct BookTemplate
     T<double> cost;
     T<double> sale;
 
-    static constexpr auto fieldsTypeName =
-        BookFields<BookTemplate>::fields;
+    static constexpr auto fields = BookFields<BookTemplate>::fields;
+    static constexpr auto fieldsTypeName = "Book";
 };
 
 
@@ -278,8 +280,10 @@ struct BookStoreTemplate
     T<SettingsGroup> settings;
     T<BookListMaker> books;
 
-    static constexpr auto fieldsTypeName =
+    static constexpr auto fields =
         BookStoreFields<BookStoreTemplate>::fields;
+
+    static constexpr auto fieldsTypeName = "BookStore";
 };
 
 

@@ -33,6 +33,8 @@ private:
         bool leftOrTop,
         int newSashPosition);
 
+    void OnDoubleClick_(wxMouseEvent &);
+
 private:
     wxWindow *firstPriority_;
     wxWindow *secondPriority_;

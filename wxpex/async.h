@@ -145,7 +145,11 @@ public:
         mutex_(),
         ignoredValue_(),
         model_(value),
-        endpoint_(this, Control(this->model_, this)),
+
+        endpoint_(
+            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
+            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+
         workerQueuedValues_(),
         workerModel_(value),
         workerEndpoint_(this, Control(this->workerModel_, this))
@@ -158,7 +162,11 @@ public:
         mutex_(),
         ignoredValue_(),
         model_(value, filter),
-        endpoint_(this, Control(this->model_, this)),
+
+        endpoint_(
+            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
+            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+
         workerQueuedValues_(),
         workerModel_(value, filter),
         workerEndpoint_(this, Control(this->workerModel_, this))
@@ -171,7 +179,11 @@ public:
         mutex_(),
         ignoredValue_(),
         model_(filter),
-        endpoint_(this, Control(this->model_, this)),
+
+        endpoint_(
+            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
+            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+
         workerQueuedValues_(),
         workerModel_(filter),
         workerEndpoint_(this, Control(this->workerModel_, this))
@@ -185,6 +197,8 @@ public:
 protected:
     void Initialize_()
     {
+        REGISTER_PEX_PARENT(workerModel_);
+
         this->Bind(wxEVT_THREAD, &Async::OnWxEventLoop_, this);
         this->endpoint_.Connect(&Async::OnWxChanged_);
         this->workerEndpoint_.Connect(&Async::OnWorkerChanged_);
@@ -428,7 +442,7 @@ public:
         mutex_(),
         ignoreTrigger_(),
         model_(),
-        endpoint_(this, Control(this->model_, this)),
+        endpoint_(USE_REGISTER_PEX_NAME(this, "wxpex::AsyncSignal"), Control(this->model_, this)),
         workerModel_(),
         workerEndpoint_(this, Control(this->workerModel_, this))
     {

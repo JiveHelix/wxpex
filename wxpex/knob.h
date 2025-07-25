@@ -142,7 +142,7 @@ public:
     {
         auto hsv = tau::RgbToHsv<double>(this->color);
         hsv.value = std::min(hsv.value, 0.8);
-        return ToWxColour(tau::HsvToRgb<uint8_t>(hsv));
+        return ToWxColour(tau::HsvToRgb<uint8_t, double>(hsv));
     }
 
     wxColour GetHighlightColor() const
@@ -150,7 +150,7 @@ public:
         auto hsv = tau::RgbToHsv<double>(this->color);
         hsv.value += 0.5;
         hsv.value = std::min(hsv.value, 1.0);
-        return ToWxColour(tau::HsvToRgb<uint8_t>(hsv));
+        return ToWxColour(tau::HsvToRgb<uint8_t, double>(hsv));
     }
 
     wxColour GetOutlineColor() const
@@ -168,7 +168,7 @@ public:
 
         hsv.value = std::max(0.0, std::min(hsv.value, 1.0));
 
-        return ToWxColour(tau::HsvToRgb<uint8_t>(hsv));
+        return ToWxColour(tau::HsvToRgb<uint8_t, double>(hsv));
     }
 
     unsigned radius;
@@ -215,7 +215,7 @@ public:
 
     void SetColor(const tau::Hsv<double> &hsv)
     {
-        this->SetColor(tau::HsvToRgb<uint8_t>(hsv));
+        this->SetColor(tau::HsvToRgb<uint8_t, double>(hsv));
     }
 
     void SetColor(const tau::Hsva<double> &hsva)
@@ -266,7 +266,11 @@ public:
         const KnobSettings &settings = KnobSettings())
         :
         Base(parent, settings),
-        value_(this, control.value, &Knob::OnValue_),
+
+        value_(
+            USE_REGISTER_PEX_NAME(this, "Knob"),
+            control.value, &Knob::OnValue_),
+
         reset_(control.reset),
         localValue_(static_cast<double>(this->value_.Get())),
         minimum_(this, control.minimum, &Knob::OnMinimum_),

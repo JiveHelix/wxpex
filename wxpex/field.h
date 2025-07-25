@@ -56,7 +56,7 @@ private:
         Base(parent, wxID_ANY),
         fixedWidth_(fixedWidth),
         minimumWidth_{},
-        value_{this, value},
+        value_{USE_REGISTER_PEX_NAME(this, "wxpex::Field"), value},
         displayedString_{Convert::ToString(this->value_.Get())},
         textControl_(
             new wxTextCtrl(
@@ -71,9 +71,7 @@ private:
         this->textControl_->Bind(wxEVT_TEXT_ENTER, &Field::OnEnter_, this);
         this->textControl_->Bind(wxEVT_KILL_FOCUS, &Field::OnKillFocus_, this);
 
-        PEX_LOG("Connect Field ", this);
-        REGISTER_PEX_NAME(this, "wxpex::Field");
-        REGISTER_PEX_NAME_WITH_PARENT(&this->value_, this, "value_");
+        REGISTER_PEX_PARENT(value_);
         this->value_.Connect(&Field::OnValueChanged_);
 
         // A sizer is required to allow the text control to be managed by

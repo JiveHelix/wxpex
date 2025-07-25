@@ -20,7 +20,16 @@ Splitter::Splitter(
     secondPriority_(nullptr),
     userSashPosition_(-1)
 {
+    this->Bind(wxEVT_LEFT_DCLICK, &Splitter::OnDoubleClick_, this);
+}
 
+
+void Splitter::OnDoubleClick_(wxMouseEvent &)
+{
+    // Interrupt the nonsensical default behavior.
+    // Reset the default sash position instead.
+    this->userSashPosition_ = -1;
+    this->Layout();
 }
 
 
@@ -134,7 +143,6 @@ void Splitter::SplitVerticallyLeft(wxWindow *left, wxWindow *right)
     this->SplitVertically(left, right, 0);
     this->firstPriority_ = left;
     this->secondPriority_ = nullptr;
-
     this->Layout();
 }
 

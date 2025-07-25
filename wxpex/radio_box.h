@@ -59,14 +59,16 @@ public:
             WxAdapter::GetChoicesAsStrings(select.choices.Get()),
             0,
             style),
-        selection_(this, select.selection)
+
+        selection_(
+            USE_REGISTER_PEX_NAME(this, "wxpex::RadioBox"),
+            select.selection)
     {
         assert(
             this->selection_.Get() <= std::numeric_limits<int>::max());
 
         this->SetSelection(static_cast<int>(this->selection_.Get()));
 
-        PEX_LOG("Connect");
         this->selection_.Connect(&RadioBox::OnSelection_);
 
         this->Bind(wxEVT_RADIOBOX, &RadioBox::OnRadioBox_, this);

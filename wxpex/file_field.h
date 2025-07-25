@@ -11,6 +11,7 @@ WXSHIM_PUSH_IGNORES
 WXSHIM_POP_IGNORES
 
 #include "wxpex/field.h"
+#include "wxpex/labeled_widget.h"
 
 
 namespace wxpex
@@ -23,7 +24,40 @@ struct FileDialogOptions
     std::string message = "";
     std::string wildcard = "";
     bool isFolder = false;
+
+    FileDialogOptions & Style(long value_)
+    {
+        this->style = value_;
+
+        return *this;
+    }
+
+    FileDialogOptions & Message(const std::string &message_)
+    {
+        this->message = message_;
+
+        return *this;
+    }
+
+    FileDialogOptions & Wildcard(const std::string &wildcard_)
+    {
+        this->wildcard = wildcard_;
+
+        return *this;
+    }
+
+    FileDialogOptions & IsFolder(bool isFolder_)
+    {
+        this->isFolder = isFolder_;
+
+        return *this;
+    }
 };
+
+
+std::optional<std::string> ChoosePath(
+    const std::string &currentValue,
+    const FileDialogOptions &options);
 
 
 template<typename Control>
@@ -60,41 +94,11 @@ public:
 
     void OnChoose_(wxCommandEvent &)
     {
-        if (this->options_.isFolder)
+        auto chosenPath = ChoosePath(this->value_.Get(), this->options_);
+
+        if (chosenPath)
         {
-            wxDirDialog openFolder(
-                nullptr,
-                wxString(this->options_.message),
-                wxString(this->value_.Get()),
-                (this->options_.style & wxFD_FILE_MUST_EXIST)
-                    ? wxDD_DIR_MUST_EXIST | wxDD_DEFAULT_STYLE
-                    : wxDD_DEFAULT_STYLE);
-
-            if (openFolder.ShowModal() == wxID_CANCEL)
-            {
-                return;
-            }
-
-            this->value_.Set(openFolder.GetPath().utf8_string());
-        }
-        else
-        {
-            auto [directory, file] = jive::path::Split(this->value_.Get());
-
-            wxFileDialog openFile(
-                nullptr,
-                wxString(this->options_.message),
-                wxString(directory),
-                wxString(file),
-                wxString(this->options_.wildcard),
-                this->options_.style);
-
-            if (openFile.ShowModal() == wxID_CANCEL)
-            {
-                return;
-            }
-
-            this->value_.Set(openFile.GetPath().utf8_string());
+            this->value_.Set(*chosenPath);
         }
     }
 
@@ -103,6 +107,30 @@ private:
     FileDialogOptions options_;
 };
 
+
+template<typename Control>
+struct LabeledFileField
+    :
+    public LabeledWidget<FileField<Control>>
+{
+public:
+    using Base = LabeledWidget<FileField<Control>>;
+
+    LabeledFileField(
+        wxWindow *parent,
+        const std::string &label,
+        const Control &control,
+        const FileDialogOptions &options = FileDialogOptions{})
+        :
+        Base(
+            parent,
+            label,
+            new FileField<Control>(parent, control, options))
+    {
+
+    }
+
+};
 
 
 } // end namespace wxpex

@@ -22,6 +22,7 @@ public:
 
     bool OnInit() override
     {
+        REGISTER_PEX_NAME(this, "App");
         this->brain_ = std::make_unique<Brain>();
         auto userControls = this->brain_->GetUserControls();
         this->quit_.Assign(this, Quit(this, userControls.quit));

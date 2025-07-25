@@ -88,6 +88,7 @@ target_sources(
     border_sizer.cpp
     collapsible.cpp
     expandable.cpp
+    file_field.cpp
     gauge.cpp
     graphics.cpp
     indent_sizer.cpp

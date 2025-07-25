@@ -217,7 +217,7 @@ class DrawControl
 public:
     DrawControl(const SettingsControl &settings)
         :
-        recipe_(this, settings.recipe),
+        recipe_(USE_REGISTER_PEX_NAME(this, "DrawControl"), settings.recipe),
         color_(settings.color),
         polygon_(this->recipe_.Get())
     {

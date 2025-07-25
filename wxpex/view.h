@@ -50,9 +50,8 @@ public:
             wxDefaultPosition,
             wxDefaultSize,
             style),
-        value_(this, value)
+        value_(USE_REGISTER_PEX_NAME(this, "wxpex::View"), value)
     {
-        PEX_LOG("Connect");
         this->value_.Connect(&View::OnValueChanged_);
     }
 

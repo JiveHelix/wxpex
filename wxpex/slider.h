@@ -250,7 +250,11 @@ public:
 
         ignoreRange_(false),
         range_(GetDefaultFilteredRange(range)),
-        value_(this, this->range_->value),
+
+        value_(
+            USE_REGISTER_PEX_NAME(this, "wxpex::Slider"),
+            this->range_->value),
+
         minimum_(this, this->range_->minimum),
         maximum_(this, this->range_->maximum),
         reset_(range.reset),
@@ -476,8 +480,7 @@ public:
         :
         Base(parent, wxID_ANY),
         sliderIsActive_(false),
-        value_(this, value)
-
+        value_(USE_REGISTER_PEX_NAME(this, "wxpex::ValueSliderConvert"), value)
     {
         // Create slider and view as children of this wxWindow.
         // They are memory managed by the the wxWindow.

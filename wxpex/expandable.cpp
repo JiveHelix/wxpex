@@ -97,7 +97,7 @@ void Expandable::FixLayout()
         }
 #endif
 
-        // window->InvalidateBestSize();
+        window->InvalidateBestSize();
         allWindows.push_back(window);
 
         LOG_WIDGET_NAME("Found window: ", window)

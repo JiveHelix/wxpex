@@ -19,7 +19,7 @@ Gauge::Gauge(
         wxDefaultPosition,
         wxDefaultSize,
         GaugeStyle(style)),
-    endpoints_(this, control)
+    endpoints_(USE_REGISTER_PEX_NAME(this, "wxpex::Gauge"), control)
 {
     this->endpoints_.value.Connect(&Gauge::OnValue_);
     this->endpoints_.maximum.Connect(&Gauge::OnMaximum_);
@@ -58,7 +58,7 @@ ValueGauge::ValueGauge(
     Style style)
     :
     wxControl(parent, wxID_ANY),
-    value_(this, control.value)
+    value_(USE_REGISTER_PEX_NAME(this, "wxpex::ValueGauge"), control.value)
 {
     using ValueControl = decltype(control.value);
     using IntConverter = Converter<ValueControl, -1, -1>;

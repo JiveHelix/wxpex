@@ -20,62 +20,80 @@ namespace wxpex
 
 
 template<typename T>
-concept IsId =
-    std::is_convertible_v<ssize_t, decltype(std::declval<T>().Get())>;
+concept IsIndex = std::is_same_v<T, size_t>;
 
 
 template<typename T>
-concept HasVirtualGetId = requires(T t)
+concept HasGetStorageIndex = requires(T t)
 {
-    { t.GetVirtual()->GetId() } -> IsId;
+    { t.GetStorageIndex(std::declval<size_t>()) } -> IsIndex;
 };
 
 
 template<typename T>
-concept HasIdMember = requires (T t)
+concept HasGetOrderedIndex = requires(T t)
 {
-    { t.id } -> IsId;
+    { t.GetOrderedIndex(std::declval<size_t>()) } -> IsIndex;
 };
-
-
-template<typename T>
-concept HasId =
-    HasIdMember<T> || HasVirtualGetId<T>;
-
-
-#if 0
-template<typename ListMaker>
-concept ListHasIdMember =
-    HasIdMember<pex::ListControlItem<ListMaker>>
-    && HasIdMember<pex::ListModelItem<ListMaker>>;
-
-
-template<typename ListMaker>
-concept ListHasVirtualGetId =
-    HasVirtualGetId<pex::ListControlItem<ListMaker>>
-    && HasVirtualGetId<pex::ListModelItem<ListMaker>>;
-
-
-template<typename ListMaker>
-concept ListHasId =
-    ListHasIdMember<ListMaker> || ListHasVirtualGetId<ListMaker>;
-#endif
 
 
 template<typename Control>
-ssize_t GetId(const Control &control)
+size_t GetStorageIndex(const Control &control, size_t orderedIndex)
 {
-    static_assert(HasId<Control>);
-
-    if constexpr (HasVirtualGetId<Control>)
+    if constexpr (HasGetStorageIndex<Control>)
     {
-        return control.GetVirtual()->GetId();
+        // This list provides a mapping between the ordering index and the
+        // storage index.
+        return control.GetStorageIndex(orderedIndex);
     }
     else
     {
-        return control.id.Get();
+        // The ordering index is the same as the storage index.
+        return orderedIndex;
     }
 }
+
+
+template<typename Control>
+size_t GetOrderedIndex(const Control &control, size_t storageIndex)
+{
+    if constexpr (HasGetOrderedIndex<Control>)
+    {
+        // This list provides a mapping between the ordering index and the
+        // storage index.
+        return control.GetOrderedIndex(storageIndex);
+    }
+    else
+    {
+        // The ordering index is the same as the storage index.
+        return storageIndex;
+    }
+}
+
+
+class ModificationGuard
+{
+public:
+    ModificationGuard(
+        std::condition_variable &condition,
+        bool &flag)
+        :
+        condition_(condition),
+        flag_(flag)
+    {
+        assert(this->flag_);
+    }
+
+    ~ModificationGuard()
+    {
+        this->flag_ = false;
+        this->condition_.notify_one();
+    }
+
+private:
+    std::condition_variable & condition_;
+    bool & flag_;
+};
 
 
 template<typename ListControl>
@@ -98,25 +116,27 @@ public:
         listControl_(control),
 
         listObserver_(
-            this,
+            USE_REGISTER_PEX_NAME(this, "ListView"),
             control,
-            &ListView::OnCountWillChange_,
-            &ListView::OnCount_),
+            &ListView::OnMemberAdded_,
+            &ListView::OnMemberWillRemove_,
+            &ListView::OnMemberRemoved_),
 
-        isDestroyed_(false),
-        pendingCreate_(false),
         mutex_(),
+        pendingModification_(false),
+        pendingRemoval_(false),
         condition_(),
+        removalCondition_(),
+        creationIndex_(),
+        removalIndex_(),
         viewCount_(0),
-        viewsById_(),
+        views_(),
         sizer_(),
         onReorder_(),
 
-        destroyInterface_(std::bind(&ListView::DestroyInterface_, this)),
         createInterface_(std::bind(&ListView::CreateInterface_, this)),
-
-        destroyAndCreateInterface_(
-            std::bind(&ListView::DestroyAndCreateInterface_, this)),
+        createSingleView_(std::bind(&ListView::CreateSingleView_, this)),
+        destroySingleView_(std::bind(&ListView::DestroySingleView_, this)),
 
         flags_(wxEXPAND | wxBOTTOM),
         spacing_(3)
@@ -152,109 +172,45 @@ protected:
     void Initialize_()
     {
         assert(this->sizer_->IsEmpty());
-        std::lock_guard lock(this->mutex_);
+        std::unique_lock lock(this->mutex_);
 
-        if (this->pendingCreate_)
-        {
-            return;
-        }
+        this->condition_.wait(
+            lock,
+            [this]() -> bool
+            {
+                return !this->pendingModification_;
+            });
 
-        this->pendingCreate_ = true;
-        this->createInterface_();
+        this->pendingModification_ = true;
+        lock.unlock();
+
+        this->CreateInterface_();
     }
 
     void OnReorder_()
     {
-        {
-            std::lock_guard lock(this->mutex_);
-
-            if (this->pendingCreate_)
-            {
-                return;
-            }
-
-            this->pendingCreate_ = true;
-        }
-
         if (!wxIsMainThread())
         {
             throw std::logic_error(
                 "Changes to the GUI must be made on the main thread.");
         }
 
-        if constexpr (!HasId<ListItem>)
-        {
-            // Destroy and recreate the interface later.
-            // This could destroy the notifier that called this function.
-            // By doing it later on the wx event loop we ensure that we are no
-            // longer operating within the pex notification loop.
-            this->destroyAndCreateInterface_();
-        }
-        else
-        {
-            // Nothing is destroyed, only reordered.
-            std::lock_guard lock(this->mutex_);
+        std::unique_lock lock(this->mutex_);
 
-            for (auto it: this->viewsById_)
+        this->condition_.wait(
+            lock,
+            [this]() -> bool
             {
-                this->sizer_->Detach(it.second);
-            }
+                return !this->pendingModification_;
+            });
 
-            size_t count = this->listControl_.count.Get();
+        this->pendingModification_ = true;
 
-            assert(this->sizer_->IsEmpty());
-
-            for (size_t i = 0; i < count; ++i)
-            {
-                auto &it = this->listControl_[i];
-                auto id = ::wxpex::GetId(it);
-
-                this->sizer_->Add(
-                    this->viewsById_.at(id),
-                    0,
-                    this->flags_,
-                    this->spacing_);
-            }
-
-            this->Layout();
-
-            this->pendingCreate_ = false;
-        }
-    }
-
-    void DestroyInterface_()
-    {
-        std::lock_guard lock(this->mutex_);
-
-        if (this->IsBeingDeleted())
+        // Nothing is destroyed, only reordered.
+        for (auto it: this->views_)
         {
-            return;
+            this->sizer_->Detach(it);
         }
-
-        if constexpr (HasId<ListItem>)
-        {
-            for (auto it: this->viewsById_)
-            {
-                this->sizer_->Detach(it.second);
-            }
-
-            this->viewsById_.clear();
-
-            this->DestroyChildren();
-        }
-        else
-        {
-            this->sizer_->Clear(true);
-        }
-
-        this->viewCount_ = 0;
-        this->isDestroyed_ = true;
-        this->condition_.notify_one();
-    }
-
-    void CreateViews_()
-    {
-        std::lock_guard lock(this->mutex_);
 
         size_t count = this->listControl_.count.Get();
 
@@ -262,132 +218,223 @@ protected:
 
         for (size_t i = 0; i < count; ++i)
         {
-            auto &it = this->listControl_[i];
-            auto view = this->CreateView_(it, i);
+            auto storageIndex = ::wxpex::GetStorageIndex(this->listControl_, i);
 
-            if constexpr (HasId<ListItem>)
-            {
-                auto id = ::wxpex::GetId(it);
-                this->viewsById_[id] = view;
-            }
-
-            this->sizer_->Add(view, 0, this->flags_, this->spacing_);
+            this->sizer_->Add(
+                this->views_.at(storageIndex),
+                0,
+                this->flags_,
+                this->spacing_);
         }
 
-        this->viewCount_ = count;
+        this->Layout();
+
+        this->pendingModification_ = false;
+        this->condition_.notify_one();
+    }
+
+    void DestroySingleView_()
+    {
+        std::lock_guard lock(this->mutex_);
+
+        ModificationGuard guardModification(
+            this->condition_,
+            this->pendingModification_);
+
+        ModificationGuard guardRemoval(
+            this->removalCondition_,
+            this->pendingRemoval_);
+
+        if (this->IsBeingDeleted())
+        {
+            return;
+        }
+
+        if (!this->removalIndex_.has_value())
+        {
+            return;
+        }
+
+        // Consume the next removal index.
+        size_t removalIndex = *this->removalIndex_;
+
+        auto view = this->views_.at(removalIndex);
+        jive::SafeErase(this->views_, removalIndex);
+
+        this->sizer_->Detach(view);
+        view->Destroy();
+
+        assert(this->viewCount_ > 0);
+        this->viewCount_ = this->viewCount_ - 1;
+        this->removalIndex_ = std::nullopt;;
+    }
+
+    void CreateSingleView_()
+    {
+        std::lock_guard lock(this->mutex_);
+
+        ModificationGuard guard(this->condition_, this->pendingModification_);
+
+        if (!this->creationIndex_.has_value())
+        {
+            return;
+        }
+
+        // Get the next view creation index.
+        size_t nextIndex = *this->creationIndex_;
+
+        auto orderedIndex = GetOrderedIndex(this->listControl_, nextIndex);
+        auto &it = this->listControl_.at(orderedIndex);
+        auto view = this->CreateView_(it, orderedIndex);
+
+        REGISTER_PEX_NAME(view, "List view");
+
+        this->views_.insert(
+            jive::SafeInsertIterator(this->views_, nextIndex),
+            view);
+
+        this->sizer_->Insert(
+            orderedIndex,
+            view,
+            0,
+            this->flags_,
+            this->spacing_);
+
+        this->FixLayout();
+
+        this->viewCount_ += 1;
+        this->creationIndex_ = std::nullopt;
     }
 
     void CreateInterface_()
     {
-        // wxpex::Freezer freeze(this);
-        this->CreateViews_();
-        this->FixLayout();
-
         std::lock_guard lock(this->mutex_);
-        this->pendingCreate_ = false;
+
+        ModificationGuard guard(this->condition_, this->pendingModification_);
+
+        size_t count = this->listControl_.count.Get();
+
+        assert(this->sizer_->IsEmpty());
+
+        this->views_.resize(count);
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            auto &it = this->listControl_[i];
+            auto view = this->CreateView_(it, i);
+            auto storageIndex = ::wxpex::GetStorageIndex(this->listControl_, i);
+            this->views_[storageIndex] = view;
+            this->sizer_->Add(view, 0, this->flags_, this->spacing_);
+        }
+
+        this->viewCount_ = count;
+
+        this->FixLayout();
     }
 
-    void OnCountWillChange_()
+    void OnMemberAdded_(const std::optional<size_t> &index)
     {
-        if (wxIsMainThread())
+        if (!index)
         {
-            // Process the destroyInterface request now.
-            this->DestroyInterface_();
-
             return;
         }
 
-        // else this is not the main application thread.
-        // Queue the deletion for later and wait until it has completed.
-
-        std::unique_lock lock(this->mutex_);
-        this->isDestroyed_ = false;
-
-        this->destroyInterface_();
-
-        // Wait for the views to be destroyed.
-        this->condition_.wait(
-            lock,
-            [this]() -> bool
-            {
-                return this->isDestroyed_;
-            });
-    }
-
-    void OnCount_(size_t count)
-    {
-        size_t viewCount;
-
         {
-            std::lock_guard lock(this->mutex_);
+            std::unique_lock lock(this->mutex_);
 
-            if (this->pendingCreate_)
-            {
-                return;
-            }
+            this->condition_.wait(
+                lock,
+                [this]() -> bool
+                {
+                    return !this->pendingModification_;
+                });
 
-            this->pendingCreate_ = true;
-
-            viewCount = this->viewCount_;
+            this->pendingModification_ = true;
+            this->creationIndex_ = index;
         }
 
-        if ((viewCount > 0) && (viewCount != count))
+        if (wxIsMainThread())
         {
-            std::cerr << "Warning: ListView did not receive countWillChange."
-                << std::endl;
-
-            this->OnCountWillChange_();
+            // Call CreateSingleView_ synchronously.
+            this->CreateSingleView_();
         }
-
+        else
         {
-            std::lock_guard lock(this->mutex_);
-            viewCount = this->viewCount_;
-        }
-
-        if (viewCount != count)
-        {
-            assert(this->sizer_->IsEmpty());
-
-            if (wxIsMainThread())
-            {
-                // Call CreateInterface_ synchronously.
-                this->CreateInterface_();
-            }
-            else
-            {
-                this->createInterface_();
-            }
+            // Allow the view to be created on the main thread.
+            this->createSingleView_();
         }
     }
 
-private:
-    void DestroyAndCreateInterface_()
+    void OnMemberWillRemove_(const std::optional<size_t> &index)
     {
-        // OnCountWillChange waits until destroy is complete.
-        this->OnCountWillChange_();
-        assert(this->sizer_->IsEmpty());
-        this->createInterface_();
+        if (!index)
+        {
+            return;
+        }
+
+        {
+            std::unique_lock lock(this->mutex_);
+
+            this->condition_.wait(
+                lock,
+                [this]() -> bool
+                {
+                    return !this->pendingModification_;
+                });
+
+            this->pendingModification_ = true;
+            this->pendingRemoval_ = true;
+            this->removalIndex_ = index;
+        }
+
+        if (wxIsMainThread())
+        {
+            // Call DestroySingleView_ synchronously.
+            this->DestroySingleView_();
+        }
+        else
+        {
+            std::unique_lock lock(this->mutex_);
+
+            // All the view to be destroyed on the main thread.
+            this->destroySingleView_();
+
+            // Wait for the view to be destroyed.
+            this->removalCondition_.wait(
+                lock,
+                [this]() -> bool
+                {
+                    return !this->pendingRemoval_;
+                });
+        }
+    }
+
+    void OnMemberRemoved_(const std::optional<size_t> &)
+    {
+        this->Layout();
     }
 
 protected:
     ListControl listControl_;
     ListObserver listObserver_;
-    bool isDestroyed_;
-    bool pendingCreate_;
     std::mutex mutex_;
+    bool pendingModification_;
+    bool pendingRemoval_;
     std::condition_variable condition_;
+    std::condition_variable removalCondition_;
+    std::optional<size_t> creationIndex_;
+    std::optional<size_t> removalIndex_;
     size_t viewCount_;
-    std::map<ssize_t, wxWindow *> viewsById_;
+    std::vector<wxWindow *> views_;
     wxBoxSizer *sizer_;
 
 private:
     using ReorderEndpoint = pex::Endpoint<ListView, Reorder>;
 
     ReorderEndpoint onReorder_;
-
-    wxpex::CallAfter destroyInterface_;
     wxpex::CallAfter createInterface_;
-    wxpex::CallAfter destroyAndCreateInterface_;
+    wxpex::CallAfter createSingleView_;
+    wxpex::CallAfter destroySingleView_;
 
     int flags_;
     int spacing_;

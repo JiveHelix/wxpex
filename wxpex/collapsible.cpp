@@ -33,6 +33,7 @@ Collapsible::Collapsible(
     hasStateEndpoint_(false),
     ignoreState_(false)
 {
+    REGISTER_PEX_NAME(this, "wxpex::Collapsible");
     REGISTER_WIDGET_NAME(this, label);
     REGISTER_WIDGET_NAME(this->m_pPane, "Collapsible m_pPane")
 
@@ -69,6 +70,8 @@ Collapsible::Collapsible(
     :
     Collapsible(parent, label, borderStyle)
 {
+    REGISTER_PEX_NAME(this, "wxpex::Collapsible");
+
     this->stateEndpoint_ =
         StateEndpoint(this, stateControl, &Collapsible::OnState_);
     
