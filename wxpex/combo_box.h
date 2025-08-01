@@ -56,7 +56,7 @@ public:
             WxAdapter::GetChoicesAsStrings(control.choices.Get()),
             style | wxCB_READONLY),
         selection_(
-            USE_REGISTER_PEX_NAME(this, "wxpex::ComboBox"),
+            PEX_THIS("wxpex::ComboBox"),
             control.selection),
         choices_(this, control.choices)
     {

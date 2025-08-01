@@ -147,8 +147,8 @@ public:
         model_(value),
 
         endpoint_(
-            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
-            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+            PEX_THIS("wxpex::Async"),
+            Control(PEX_MEMBER_PASS(model_), this)),
 
         workerQueuedValues_(),
         workerModel_(value),
@@ -164,8 +164,8 @@ public:
         model_(value, filter),
 
         endpoint_(
-            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
-            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+            PEX_THIS("wxpex::Async"),
+            Control(PEX_MEMBER_PASS(model_), this)),
 
         workerQueuedValues_(),
         workerModel_(value, filter),
@@ -181,8 +181,8 @@ public:
         model_(filter),
 
         endpoint_(
-            USE_REGISTER_PEX_NAME(this, "wxpex::Async"),
-            Control(*USE_REGISTER_PEX_PARENT(model_), this)),
+            PEX_THIS("wxpex::Async"),
+            Control(PEX_MEMBER_PASS(model_), this)),
 
         workerQueuedValues_(),
         workerModel_(filter),
@@ -197,7 +197,7 @@ public:
 protected:
     void Initialize_()
     {
-        REGISTER_PEX_PARENT(workerModel_);
+        PEX_MEMBER(workerModel_);
 
         this->Bind(wxEVT_THREAD, &Async::OnWxEventLoop_, this);
         this->endpoint_.Connect(&Async::OnWxChanged_);
@@ -442,7 +442,12 @@ public:
         mutex_(),
         ignoreTrigger_(),
         model_(),
-        endpoint_(USE_REGISTER_PEX_NAME(this, "wxpex::AsyncSignal"), Control(this->model_, this)),
+
+        endpoint_(
+            PEX_THIS("wxpex::AsyncSignal"),
+            Control(this->model_,
+            this)),
+
         workerModel_(),
         workerEndpoint_(this, Control(this->workerModel_, this))
     {
@@ -553,7 +558,12 @@ public:
         isWaiting_(false),
         control_(control),
         async_(control.Get()),
-        endpoint_(this, this->async_.GetWxControl(), &SetWait::OnMainThread_),
+
+        endpoint_(
+            PEX_THIS("SetWait"),
+            this->async_.GetWxControl(),
+            &SetWait::OnMainThread_),
+
         workerControl_(this->async_.GetWorkerControl())
     {
 
@@ -629,7 +639,7 @@ public:
         asyncSignal_(),
 
         endpoint_(
-            this,
+            PEX_THIS("TriggerWait"),
             this->asyncSignal_.GetWxControl(),
             &TriggerWait::OnMainThread_),
 

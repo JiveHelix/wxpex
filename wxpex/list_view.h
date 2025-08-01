@@ -116,7 +116,7 @@ public:
         listControl_(control),
 
         listObserver_(
-            USE_REGISTER_PEX_NAME(this, "ListView"),
+            PEX_THIS("ListView"),
             control,
             &ListView::OnMemberAdded_,
             &ListView::OnMemberWillRemove_,
@@ -287,7 +287,7 @@ protected:
         auto &it = this->listControl_.at(orderedIndex);
         auto view = this->CreateView_(it, orderedIndex);
 
-        REGISTER_PEX_NAME(view, "List view");
+        PEX_NAME("List view");
 
         this->views_.insert(
             jive::SafeInsertIterator(this->views_, nextIndex),

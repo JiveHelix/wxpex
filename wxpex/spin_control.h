@@ -57,7 +57,7 @@ public:
             static_cast<double>(range.maximum.Get()),
             static_cast<double>(range.value.Get()),
             static_cast<double>(increment)),
-        value_(USE_REGISTER_PEX_NAME(this, "wxpex::SpinControl"), range.value),
+        value_(PEX_THIS("wxpex::SpinControl"), range.value),
         minimum_(this, range.minimum),
         maximum_(this, range.maximum)
 

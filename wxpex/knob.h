@@ -268,7 +268,7 @@ public:
         Base(parent, settings),
 
         value_(
-            USE_REGISTER_PEX_NAME(this, "Knob"),
+            PEX_THIS("Knob"),
             control.value, &Knob::OnValue_),
 
         reset_(control.reset),

@@ -61,7 +61,7 @@ public:
             style),
 
         selection_(
-            USE_REGISTER_PEX_NAME(this, "wxpex::RadioBox"),
+            PEX_THIS("wxpex::RadioBox"),
             select.selection)
     {
         assert(
