@@ -163,6 +163,14 @@ public:
     void SetSpacing(int spacing)
     {
         this->spacing_ = spacing;
+
+        if (this->views_.empty())
+        {
+            // The list has not been initialized, or it is empty.
+            // Either way, there is nothing for OnReorder_ to do.
+            return;
+        }
+
         this->OnReorder_();
     }
 
