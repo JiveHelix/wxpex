@@ -533,7 +533,7 @@ public:
         :
         bookStore_{}
     {
-
+        PEX_NAME("ExampleApp");
     }
 
     bool OnInit() override

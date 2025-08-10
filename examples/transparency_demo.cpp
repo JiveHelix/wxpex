@@ -74,6 +74,8 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
+    PEX_NAME("ExampleApp");
+
     this->hsvaControl_ = wxpex::HsvaControl(this->hsvaColor_);
 
     this->hsvaConnect_ = std::make_unique<HsvaConnect>(

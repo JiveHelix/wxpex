@@ -250,13 +250,9 @@ public:
 
         ignoreRange_(false),
         range_(GetDefaultFilteredRange(range)),
-
-        value_(
-            PEX_THIS("wxpex::Slider"),
-            this->range_->value),
-
-        minimum_(this, this->range_->minimum),
-        maximum_(this, this->range_->maximum),
+        value_(this->range_->value),
+        minimum_(this->range_->minimum),
+        maximum_(this->range_->maximum),
         reset_(range.reset),
 
         styleFilter_(
@@ -266,6 +262,8 @@ public:
 
         adjustRange_(std::bind(&Slider::AdjustRange_, this))
     {
+        PEX_NAME("Slider");
+
         this->SetRange(
             this->range_->minimum.Get(),
             this->range_->maximum.Get());
@@ -284,9 +282,9 @@ public:
             this->SetValue(value);
         }
 
-        this->value_.Connect(&Slider::OnValue_);
-        this->minimum_.Connect(&Slider::OnMinimum_);
-        this->maximum_.Connect(&Slider::OnMaximum_);
+        this->value_.Connect(this, &Slider::OnValue_);
+        this->minimum_.Connect(this, &Slider::OnMinimum_);
+        this->maximum_.Connect(this, &Slider::OnMaximum_);
 
         this->Bind(wxEVT_SLIDER, &Slider::OnSlider_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Slider::OnSliderLeftDown_, this);
@@ -480,7 +478,11 @@ public:
         :
         Base(parent, wxID_ANY),
         sliderIsActive_(false),
-        value_(PEX_THIS("wxpex::ValueSliderConvert"), value)
+
+        value_(
+            PEX_THIS("wxpex::ValueSliderConvert"),
+            value,
+            &ValueSliderConvert::OnValue_)
     {
         // Create slider and view as children of this wxWindow.
         // They are memory managed by the the wxWindow.
@@ -520,8 +522,6 @@ public:
             SliderDone,
             &ValueSliderConvert::OnSliderDone_,
             this);
-
-        this->value_.Connect(&ValueSliderConvert::OnValue_);
     }
 
 private:

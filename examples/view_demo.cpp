@@ -61,9 +61,13 @@ public:
         :
         angle_{42.0},
         signal_{},
-        signalTerminus_{this, this->signal_, &ExampleApp::OnSignal_}
-    {
 
+        signalTerminus_(
+            PEX_THIS("ExampleApp"),
+            PEX_MEMBER_PASS(signal_),
+            &ExampleApp::OnSignal_)
+    {
+        PEX_MEMBER(angle_);
     }
 
     bool OnInit() override;

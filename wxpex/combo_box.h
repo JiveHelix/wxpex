@@ -55,13 +55,17 @@ public:
             wxDefaultSize,
             WxAdapter::GetChoicesAsStrings(control.choices.Get()),
             style | wxCB_READONLY),
+
         selection_(
             PEX_THIS("wxpex::ComboBox"),
-            control.selection),
-        choices_(this, control.choices)
+            control.selection,
+            &ComboBox::OnSelectionChanged_),
+
+        choices_(
+            this,
+            control.choices,
+            &ComboBox::OnChoicesChanged_)
     {
-        this->selection_.Connect(&ComboBox::OnSelectionChanged_);
-        this->choices_.Connect(&ComboBox::OnChoicesChanged_);
         this->Bind(wxEVT_COMBOBOX, &ComboBox::OnComboBox_, this);
     }
 

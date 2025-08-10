@@ -50,9 +50,9 @@ public:
             wxDefaultPosition,
             wxDefaultSize,
             style),
-        value_(PEX_THIS("wxpex::View"), value)
+        value_(PEX_THIS("wxpex::View"), value, &View::OnValueChanged_)
     {
-        this->value_.Connect(&View::OnValueChanged_);
+
     }
 
 private:

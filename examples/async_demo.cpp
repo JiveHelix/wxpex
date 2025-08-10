@@ -161,7 +161,7 @@ public:
         model_{},
         control_(this->model_),
         currentAngleSetWait_(this->control_.currentAngle.value),
-        endpoints_(this, this->control_),
+        endpoints_(PEX_THIS("ExampleApp"), this->control_),
         isRunning_{},
         reset_{},
         worker_{}

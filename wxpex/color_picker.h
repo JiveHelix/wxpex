@@ -88,7 +88,7 @@ public:
                 ValueRange(control.value),
                 control.value.value)),
         parent_(parent),
-        connect_(this, control, &HsvKnobs_::OnColorChanged_)
+        connect_(PEX_THIS("HsvKnobs_"), control, &HsvKnobs_::OnColorChanged_)
     {
         this->hue->GetKnob().SetColor(control.Get());
     }

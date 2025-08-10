@@ -61,7 +61,7 @@ public:
         model_{},
         control_(this->model_)
     {
-
+        PEX_ROOT(model_);
     }
 
     bool OnInit() override;

@@ -134,9 +134,13 @@ public:
     ExampleApp()
         :
         applicationModel_{},
-        quit_(this, this->applicationModel_.quit)
+
+        quit_(
+            PEX_THIS("ExampleApp"),
+            this->applicationModel_.quit,
+            &ExampleApp::OnQuit_)
     {
-        this->quit_.Connect(&ExampleApp::OnQuit_);
+
     }
 
     bool OnInit() override;
@@ -207,7 +211,7 @@ public:
         auto topSizer = std::make_unique<wxBoxSizer>(wxVERTICAL);
         topSizer->Add(message, 0, wxALL, 10);
         topSizer->Add(view, 0, wxALL, 10);
-        this->SetSizer(topSizer.release());
+        this->SetSizerAndFit(topSizer.release());
     }
 
 private:

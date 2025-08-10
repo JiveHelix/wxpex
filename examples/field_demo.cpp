@@ -90,7 +90,7 @@ public:
     ExampleApp()
         :
         model_{},
-        angle_(this, this->model_.angle),
+        angle_(PEX_THIS("ExampleApp"), this->model_.angle),
         theAnswer_(this, this->model_.theAnswer)
     {
         this->angle_.Connect(&ExampleApp::OnUpdate_);

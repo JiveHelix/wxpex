@@ -55,6 +55,10 @@ public:
         select_{},
         enableFirkins_(true)
     {
+        PEX_NAME("ExampleApp");
+        PEX_MEMBER(select_);
+        PEX_MEMBER(enableFirkins_);
+
         this->enableFirkins_.Connect(this, &ExampleApp::OnFirkins_);
     }
 

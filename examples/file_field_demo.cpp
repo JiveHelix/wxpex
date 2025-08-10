@@ -59,11 +59,18 @@ public:
     ExampleApp()
         :
         model_{},
-        message_(this, this->model_.message),
-        copy_(this, this->model_.copy)
+
+        message_(
+            PEX_THIS("ExampleApp"),
+            this->model_.message,
+            &ExampleApp::OnMessage_),
+
+        copy_(
+            this,
+            this->model_.copy,
+            &ExampleApp::OnCopy_)
     {
-        this->message_.Connect(&ExampleApp::OnMessage_);
-        this->copy_.Connect(&ExampleApp::OnCopy_);
+
     }
 
     bool OnInit() override;

@@ -120,6 +120,8 @@ public:
             control,
             &ListView::OnMemberAdded_,
             &ListView::OnMemberWillRemove_,
+            &ListView::OnMemberRemoved_,
+            &ListView::OnMemberWillRemove_,
             &ListView::OnMemberRemoved_),
 
         mutex_(),

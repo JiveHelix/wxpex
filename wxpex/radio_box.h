@@ -60,16 +60,16 @@ public:
             0,
             style),
 
-        selection_(
-            PEX_THIS("wxpex::RadioBox"),
-            select.selection)
+        selection_(select.selection)
     {
         assert(
             this->selection_.Get() <= std::numeric_limits<int>::max());
 
+        PEX_NAME("wxpex::RadioBox");
+
         this->SetSelection(static_cast<int>(this->selection_.Get()));
 
-        this->selection_.Connect(&RadioBox::OnSelection_);
+        this->selection_.Connect(this, &RadioBox::OnSelection_);
 
         this->Bind(wxEVT_RADIOBOX, &RadioBox::OnRadioBox_, this);
     }

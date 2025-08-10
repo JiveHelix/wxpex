@@ -52,9 +52,13 @@ public:
     ExampleApp()
         :
         model_{{false, "Not checked"}},
-        isChecked{this, this->model_.isChecked}
+
+        isChecked(
+            PEX_THIS("ExampleApp"),
+            this->model_.isChecked,
+            &ExampleApp::OnIsChecked_)
     {
-        this->isChecked.Connect(&ExampleApp::OnIsChecked_);
+
     }
 
     bool OnInit() override;

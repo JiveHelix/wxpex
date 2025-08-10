@@ -71,6 +71,8 @@ wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
+    PEX_NAME("ExampleApp");
+
     this->hsvColor_.hue.SetDefault(0.0);
     this->hsvColor_.saturation.SetDefault(1.0);
     this->hsvColor_.value.SetDefault(0.5);

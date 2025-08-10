@@ -43,7 +43,7 @@ public:
     ExampleApp()
         :
         model_{},
-        endpoints_(this, this->model_),
+        endpoints_(PEX_THIS("ExampleApp"), this->model_),
         observedValues_(),
         isRunning_{false},
         worker1_{},
@@ -58,12 +58,7 @@ public:
 
     ~ExampleApp()
     {
-        if (this->isRunning_)
-        {
-            this->isRunning_ = false;
-            this->worker1_.join();
-            this->worker2_.join();
-        }
+        this->OnStop_();
     }
 
     bool OnInit() override;

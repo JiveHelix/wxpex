@@ -56,7 +56,7 @@ private:
         Base(parent, wxID_ANY),
         fixedWidth_(fixedWidth),
         minimumWidth_{},
-        value_{PEX_THIS("wxpex::Field"), value},
+        value_(PEX_THIS("wxpex::Field"), value, &Field::OnValueChanged_),
         displayedString_{Convert::ToString(this->value_.Get())},
         textControl_(
             new wxTextCtrl(
@@ -68,11 +68,10 @@ private:
                 style | wxTE_PROCESS_ENTER,
                 wxDefaultValidator))
     {
+        PEX_MEMBER(value_);
+
         this->textControl_->Bind(wxEVT_TEXT_ENTER, &Field::OnEnter_, this);
         this->textControl_->Bind(wxEVT_KILL_FOCUS, &Field::OnKillFocus_, this);
-
-        PEX_MEMBER(value_);
-        this->value_.Connect(&Field::OnValueChanged_);
 
         // A sizer is required to allow the text control to be managed by
         // a hierarchy of sizers.

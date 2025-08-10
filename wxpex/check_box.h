@@ -41,10 +41,11 @@ public:
             wxDefaultPosition,
             wxDefaultSize,
             style),
-        value_(PEX_THIS("wxpex::CheckBox"), value)
+        value_(value)
     {
+        PEX_NAME("wxpex::CheckBox");
         this->SetValue(this->value_.Get());
-        this->value_.Connect(&CheckBox::OnValueChanged_);
+        this->value_.Connect(this, &CheckBox::OnValueChanged_);
         this->Bind(wxEVT_CHECKBOX, &CheckBox::OnCheckBox_, this);
     }
 

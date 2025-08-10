@@ -63,7 +63,11 @@ public:
     ExampleApp()
         :
         model_{},
-        endpoint_(this, DemoControl(this->model_), &ExampleApp::OnSettings_)
+
+        endpoint_(
+            PEX_THIS("ExampleApp"),
+            DemoControl(this->model_),
+            &ExampleApp::OnSettings_)
     {
 
     }

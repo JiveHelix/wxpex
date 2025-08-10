@@ -69,7 +69,7 @@ public:
         wxSize size = wxSize(65, 65))
         :
         wxPanel(parent, wxID_ANY, wxDefaultPosition, size),
-        connect_(this, control, &ColorPreview::SetColor)
+        connect_(PEX_THIS("ColorPreview"), control, &ColorPreview::SetColor)
     {
         this->SetColor(control.Get());
     }

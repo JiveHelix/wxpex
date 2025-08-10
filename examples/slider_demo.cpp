@@ -99,7 +99,11 @@ public:
     ExampleApp()
         :
         model_(Demo::MakeDefault()),
-        position_(this, this->model_.position, &ExampleApp::OnPosition_),
+
+        position_(
+            PEX_THIS("ExampleApp"),
+            this->model_.position,
+            &ExampleApp::OnPosition_),
 
         changeRange_(
             this,

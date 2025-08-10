@@ -58,8 +58,10 @@ ValueGauge::ValueGauge(
     Style style)
     :
     wxControl(parent, wxID_ANY),
-    value_(PEX_THIS("wxpex::ValueGauge"), control.value)
+    value_(control.value)
 {
+    PEX_NAME("wxpex::ValueGauge");
+
     using ValueControl = decltype(control.value);
     using IntConverter = Converter<ValueControl, -1, -1>;
     auto gauge = new Gauge(this, control, style);
@@ -88,7 +90,7 @@ ValueGauge::ValueGauge(
             : wxALIGN_CENTER);
 
     this->SetSizerAndFit(sizer.release());
-    this->value_.Connect(&ValueGauge::OnValue_);
+    this->value_.Connect(this, &ValueGauge::OnValue_);
 }
 
 

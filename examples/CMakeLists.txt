@@ -25,7 +25,8 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(view_demo ${windowed} view_demo.cpp)
+# add_executable(view_demo ${windowed} view_demo.cpp)
+add_executable(view_demo view_demo.cpp)
 
 target_link_libraries(
     view_demo
@@ -55,7 +56,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(check_box_demo ${windowed} check_box_demo.cpp)
+add_executable(check_box_demo check_box_demo.cpp)
 
 target_link_libraries(
     check_box_demo
@@ -94,7 +95,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(async_demo ${windowed} async_demo.cpp)
+add_executable(async_demo async_demo.cpp)
 
 target_link_libraries(
     async_demo
@@ -104,7 +105,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(gauge_demo ${windowed} gauge_demo.cpp)
+add_executable(gauge_demo gauge_demo.cpp)
 
 target_link_libraries(
     gauge_demo
@@ -114,7 +115,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(bitset_demo ${windowed} bitset_demo.cpp)
+add_executable(bitset_demo bitset_demo.cpp)
 
 target_link_libraries(
     bitset_demo
@@ -124,7 +125,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(radio_box_demo ${windowed} radio_box_demo.cpp)
+add_executable(radio_box_demo radio_box_demo.cpp)
 
 target_link_libraries(
     radio_box_demo
@@ -134,7 +135,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(combo_box_demo ${windowed} combo_box_demo.cpp)
+add_executable(combo_box_demo combo_box_demo.cpp)
 
 target_link_libraries(
     combo_box_demo
@@ -144,7 +145,7 @@ target_link_libraries(
     wxpex)
 
 
-add_executable(slider_demo ${windowed} slider_demo.cpp)
+add_executable(slider_demo slider_demo.cpp)
 
 target_link_libraries(
     slider_demo

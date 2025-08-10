@@ -57,16 +57,23 @@ public:
             static_cast<double>(range.maximum.Get()),
             static_cast<double>(range.value.Get()),
             static_cast<double>(increment)),
-        value_(PEX_THIS("wxpex::SpinControl"), range.value),
-        minimum_(this, range.minimum),
-        maximum_(this, range.maximum)
 
+        value_(
+            PEX_THIS("wxpex::SpinControl"),
+            range.value,
+            &SpinControl::OnValue_),
+
+        minimum_(
+            this,
+            range.minimum,
+            &SpinControl::OnMinimum_),
+
+        maximum_(
+            this,
+            range.maximum,
+            &SpinControl::OnMaximum_)
     {
         this->SetDigits(digits);
-
-        this->value_.Connect(&SpinControl::OnValue_);
-        this->minimum_.Connect(&SpinControl::OnMinimum_);
-        this->maximum_.Connect(&SpinControl::OnMaximum_);
 
         this->Bind(
             wxEVT_SPINCTRLDOUBLE,
