@@ -121,8 +121,8 @@ public:
             &ListView::OnMemberAdded_,
             &ListView::OnMemberWillRemove_,
             &ListView::OnMemberRemoved_,
-            &ListView::OnMemberWillRemove_,
-            &ListView::OnMemberRemoved_),
+            &ListView::OnMemberWillReplace_,
+            &ListView::OnMemberReplaced_),
 
         mutex_(),
         pendingModification_(false),
@@ -422,6 +422,18 @@ protected:
     void OnMemberRemoved_(const std::optional<size_t> &)
     {
         this->Layout();
+    }
+
+    void OnMemberWillReplace_(const std::optional<size_t> &index)
+    {
+        // We only need to delete the affect view, just like memberWillRemove.
+        this->OnMemberWillRemove_(index);
+    }
+
+    void OnMemberReplaced_(const std::optional<size_t> &index)
+    {
+        // We need to create the view like memberAdded.
+        this->OnMemberAdded_(index);
     }
 
 protected:
