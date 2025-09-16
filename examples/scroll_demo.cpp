@@ -61,7 +61,9 @@ struct StateTemplate
 
 using ColorsStateGroup = pex::Group<ColorsStateFields, StateTemplate>;
 using ColorsStateModel = typename ColorsStateGroup::Model;
-using ColorsStateControl = typename ColorsStateGroup::Control;
+
+using ColorsStateControl =
+    typename ColorsStateGroup::DefaultControl;
 
 
 class Colors: public wxpex::Collapsible

@@ -11,6 +11,7 @@
 
 #include <pex/value.h>
 #include <pex/group.h>
+#include <pex/endpoint.h>
 
 #include "wxpex/view.h"
 #include "wxpex/check_box.h"
@@ -35,12 +36,8 @@ struct DemoTemplate
 
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
-
-using DemoControl = typename DemoGroup::Control;
-
 using DemoModel = typename DemoGroup::Model;
-
-
+using DemoControl = typename DemoGroup::DefaultControl;
 using IsCheckedControl = decltype(DemoControl::isChecked);
 
 
@@ -78,7 +75,7 @@ private:
 
 private:
     DemoModel model_;
-    pex::Terminus<ExampleApp, IsCheckedControl> isChecked;
+    pex::Endpoint<ExampleApp, IsCheckedControl> isChecked;
 };
 
 

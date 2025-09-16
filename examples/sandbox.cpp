@@ -54,7 +54,7 @@ struct DemoTemplate
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
 using DemoModel = typename DemoGroup::Model;
-using DemoControl = typename DemoGroup::Control;
+using DemoControl = typename DemoGroup::DefaultControl;
 
 
 class ExampleApp: public wxApp

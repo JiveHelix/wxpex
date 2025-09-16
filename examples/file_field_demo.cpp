@@ -15,6 +15,7 @@
 #include <fstream>
 #include <fields/fields.h>
 #include <pex/group.h>
+#include <pex/endpoint.h>
 #include <wxpex/wxshim.h>
 #include <wxpex/file_field.h>
 #include <wxpex/button.h>
@@ -48,7 +49,7 @@ using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
 
 using Model = typename ApplicationGroup::Model;
 
-using Control = typename ApplicationGroup::Control;
+using Control = typename ApplicationGroup::DefaultControl;
 
 
 class ExampleApp: public wxApp
@@ -129,8 +130,8 @@ private:
 
 private:
     Model model_;
-    pex::Terminus<ExampleApp, decltype(Model::message)> message_;
-    pex::Terminus<ExampleApp, decltype(Model::copy)> copy_;
+    pex::Endpoint<ExampleApp, decltype(Model::message)> message_;
+    pex::Endpoint<ExampleApp, decltype(Model::copy)> copy_;
 };
 
 

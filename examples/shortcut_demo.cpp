@@ -121,12 +121,13 @@ struct ApplicationModel: public ApplicationGroup::Model
 };
 
 
-using ApplicationControl = typename ApplicationGroup::Control;
+using ApplicationControl =
+    typename ApplicationGroup::DefaultControl;
 
 
 class ExampleApp: public wxApp
 {
-    using Quit = pex::Terminus<ExampleApp, pex::model::Signal>;
+    using Quit = pex::Terminus<ExampleApp, pex::control::DefaultSignal>;
 
 public:
     static constexpr auto observerName = "ExampleApp";

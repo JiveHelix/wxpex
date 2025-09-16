@@ -103,7 +103,7 @@ public:
     static constexpr auto observerName = "ListView";
 
     using ListObserver = pex::ListObserver<ListView, ListControl>;
-    using Reorder = pex::control::Signal<>;
+    using Reorder = pex::control::DefaultSignal;
     using ListItem = typename ListControl::ListItem;
 
     ListView(

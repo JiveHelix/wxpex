@@ -14,22 +14,22 @@ namespace wxpex
 using HsvGroup = tau::HsvGroup<double>;
 using Hsv = typename HsvGroup::Plain;
 using HsvModel = typename HsvGroup::Model;
-using HsvControl = typename HsvGroup::Control;
+using HsvControl = typename HsvGroup::DefaultControl;
 
 using HsvaGroup = tau::HsvaGroup<double>;
 using Hsva = typename HsvaGroup::Plain;
 using HsvaModel = typename HsvaGroup::Model;
-using HsvaControl = typename HsvaGroup::Control;
+using HsvaControl = typename HsvaGroup::DefaultControl;
 
 using RgbGroup = tau::RgbGroup<uint8_t>;
 using Rgb = typename RgbGroup::Plain;
 using RgbModel = typename RgbGroup::Model;
-using RgbControl = typename RgbGroup::Control;
+using RgbControl = typename RgbGroup::DefaultControl;
 
 using RgbaGroup = tau::RgbaGroup<uint8_t>;
 using Rgba = typename RgbaGroup::Plain;
 using RgbaModel = typename RgbaGroup::Model;
-using RgbaControl = typename RgbaGroup::Control;
+using RgbaControl = typename RgbaGroup::DefaultControl;
 
 
 template<typename Control, typename Derived>

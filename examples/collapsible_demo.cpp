@@ -38,7 +38,7 @@ using WeaponsGroup = pex::Group<WeaponsFields, WeaponsTemplate>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
-using WeaponsControl = typename WeaponsGroup::Control;
+using WeaponsControl = typename WeaponsGroup::DefaultControl;
 
 
 inline WeaponsPlain DefaultWeapons()
@@ -66,7 +66,8 @@ struct ThingsTemplate
 
 
 using ThingsGroup = pex::Group<ThingsFields, ThingsTemplate>;
-using ThingsControl = typename ThingsGroup::Control;
+using ThingsModel = typename ThingsGroup::Model;
+using ThingsControl = typename ThingsGroup::template Control<ThingsModel>;
 
 
 template<typename T>
@@ -87,7 +88,7 @@ struct StuffTemplate
 
 
 using StuffGroup = pex::Group<StuffFields, StuffTemplate>;
-using StuffControl = typename StuffGroup::Control;
+using StuffControl = typename StuffGroup::DefaultControl;
 using StuffModel = typename StuffGroup::Model;
 
 

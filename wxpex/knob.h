@@ -553,7 +553,7 @@ private:
 private:
     ValueTerminus value_;
 
-    pex::control::Signal<> reset_;
+    pex::control::DefaultSignal reset_;
 
     double localValue_;
     LimitTerminus minimum_;

@@ -28,7 +28,7 @@ using Angle = pex::model::Value<double>;
 using DegreesControl = pex::control::Value<Angle>;
 
 using Signal = pex::model::Signal;
-using ControlSignal = pex::control::Signal<>;
+using ControlSignal = pex::control::DefaultSignal;
 
 
 /** Allow an control to use radians, while the model uses degrees. **/
@@ -81,7 +81,9 @@ private:
     Angle angle_ = Angle(42.0);
     Signal signal_;
 
-    using SignalTerminus = pex::Terminus<ExampleApp, Signal>;
+    using SignalTerminus =
+        pex::Terminus<ExampleApp, pex::control::Signal<Signal>>;
+
     SignalTerminus signalTerminus_;
 };
 

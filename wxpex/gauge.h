@@ -77,10 +77,7 @@ struct GaugeGroupTemplates
         Model()
             :
             GroupBase(typename GroupBase::Plain{0, 1000}),
-            internalMaximum_(
-                this,
-                typename GroupBase::ControlType(*this).maximum,
-                &Model::OnMaximum_)
+            internalMaximum_(this, this->maximum, &Model::OnMaximum_)
         {
 
         }
@@ -92,7 +89,7 @@ struct GaugeGroupTemplates
         }
 
         using Internal =
-            pex::Endpoint<Model, typename wxpex::Async<size_t>::Control>;
+            pex::Endpoint<Model, typename wxpex::Async<size_t>::Unfiltered>;
 
         Internal internalMaximum_;
     };
@@ -102,13 +99,15 @@ struct GaugeGroupTemplates
 using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate, GaugeGroupTemplates>;
 using GaugeModel = typename GaugeGroup::Model;
 using GaugeState = typename GaugeGroup::Plain;
-using GaugeControl = typename GaugeGroup::Control;
+
+using GaugeControl = typename GaugeGroup::DefaultControl;
+
 
 static_assert(
     std::is_same_v
     <
         decltype(GaugeControl::maximum),
-        typename Async<size_t>::Control
+        typename Async<size_t>::Unfiltered
     >);
 
 

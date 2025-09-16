@@ -37,7 +37,7 @@ using WeaponsGroup = pex::Group<WeaponsFields, WeaponsTemplate>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
-using WeaponsControl = typename WeaponsGroup::Control;
+using WeaponsControl = typename WeaponsGroup::DefaultControl;
 
 
 inline WeaponsPlain DefaultWeapons()
@@ -76,7 +76,7 @@ using GpsGroup = pex::Group<GpsFields, GpsTemplate>;
 using GpsPlain = typename GpsGroup::Plain;
 using GpsModel = typename GpsGroup::Model;
 
-using GpsControl = typename GpsGroup::Control;
+using GpsControl = typename GpsGroup::DefaultControl;
 
 
 inline GpsPlain DefaultGps()
@@ -107,7 +107,8 @@ struct ThingsTemplate
 
 
 using ThingsGroup = pex::Group<ThingsFields, ThingsTemplate>;
-using ThingsControl = typename ThingsGroup::Control;
+using ThingsModel = typename ThingsGroup::Model;
+using ThingsControl = typename ThingsGroup::DefaultControl;
 
 
 template<typename T>
@@ -128,8 +129,8 @@ struct StuffTemplate
 
 
 using StuffGroup = pex::Group<StuffFields, StuffTemplate>;
-using StuffControl = typename StuffGroup::Control;
 using StuffModel = typename StuffGroup::Model;
+using StuffControl = typename StuffGroup::DefaultControl;
 
 
 template<template<typename, typename> typename Widget>

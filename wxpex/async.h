@@ -34,11 +34,127 @@ namespace wxpex
 {
 
 
+template<typename, typename, typename>
+class AsyncMux;
+
+
+// Adds GetWorkerControl to pex::control::Value_.
+template
+<
+    typename Upstream,
+    typename ControlFilter = pex::NoFilter,
+    typename ControlAccess = pex::GetAndSetTag
+>
+class AsyncControl
+    :
+    public pex::control::Value_
+        <
+            typename Upstream::ThreadSafe,
+            ControlFilter,
+            ControlAccess
+        >
+{
+public:
+    using ThreadSafe = typename Upstream::ThreadSafe;
+
+    using Base =
+        pex::control::Value_<ThreadSafe, ControlFilter, ControlAccess>;
+
+    AsyncControl()
+        :
+        Base(),
+        async_(nullptr)
+    {
+
+    }
+
+    AsyncControl(Upstream &upstream)
+        :
+        Base(upstream.node_),
+        async_(&upstream)
+    {
+
+    }
+
+    AsyncControl(const AsyncControl &other)
+        :
+        Base(other),
+        async_(other.async_)
+    {
+
+    }
+
+    AsyncControl & operator=(const AsyncControl &other)
+    {
+        if (&other == this)
+        {
+            return *this;
+        }
+
+        this->Base::operator=(other);
+        this->async_ = other.async_;
+
+        return *this;
+    }
+
+    template<typename, typename, typename>
+    friend class AsyncControl;
+
+    template<typename OtherFilter, typename OtherAccess>
+    AsyncControl(const AsyncControl<Upstream, OtherFilter, OtherAccess> &other)
+        :
+        Base(other),
+        async_(other.async_)
+    {
+
+    }
+
+    template<typename OtherFilter, typename OtherAccess>
+    AsyncControl & operator=(
+        const AsyncControl<Upstream, OtherFilter, OtherAccess> &other)
+    {
+        this->Base::operator=(other);
+        this->async_ = other.async_;
+
+        return *this;
+    }
+
+    AsyncControl(ThreadSafe &threadSafe, Upstream *async)
+        :
+        Base(threadSafe),
+        async_(async)
+    {
+
+    }
+
+    AsyncControl GetWorkerControl()
+    {
+        if (!this->async_)
+        {
+            throw std::logic_error("Unitialized control");
+        }
+
+        return AsyncControl(this->async_->workerNode_, this->async_);
+    }
+
+    bool HasModel() const
+    {
+        return this->async_ != NULL;
+    }
+
+private:
+    Upstream *async_;
+};
+
+
+
+
 template
 <
     typename T,
     typename Filter = pex::NoFilter,
-    typename Access_ = pex::GetAndSetTag>
+    typename Access_ = pex::GetAndSetTag
+>
 class Async: public wxEvtHandler
 {
 public:
@@ -56,103 +172,28 @@ public:
     template<typename>
     friend class pex::Reference;
 
-    // Adds GetWorkerControl to pex::control::Value_.
-    template<typename ControlFilter, typename ControlAccess>
-    struct FilteredControl
-        :
-        public pex::control::Value_<ThreadSafe, ControlFilter, ControlAccess>
-    {
-        using Base =
-            pex::control::Value_<ThreadSafe, ControlFilter, ControlAccess>;
+    template<typename, typename, typename>
+    friend class AsyncControl;
 
-        FilteredControl()
-            :
-            Base(),
-            async_(nullptr)
-        {
+    template<typename, typename, typename>
+    friend class AsyncMux;
 
-        }
+    using Unfiltered = AsyncControl<Async, pex::NoFilter, Access>;
 
-        FilteredControl(const FilteredControl &other)
-            :
-            Base(other),
-            async_(other.async_)
-        {
-
-        }
-
-        FilteredControl & operator=(const FilteredControl &other)
-        {
-            if (&other == this)
-            {
-                return *this;
-            }
-
-            this->Base::operator=(other);
-            this->async_ = other.async_;
-
-            return *this;
-        }
-
-        template<typename, typename>
-        friend struct FilteredControl;
-
-        template<typename OtherFilter, typename OtherAccess>
-        FilteredControl(const FilteredControl<OtherFilter, OtherAccess> &other)
-            :
-            Base(other),
-            async_(other.async_)
-        {
-
-        }
-
-        template<typename OtherFilter, typename OtherAccess>
-        FilteredControl & operator=(
-            const FilteredControl<OtherFilter, OtherAccess> &other)
-        {
-            this->Base::operator=(other);
-            this->async_ = other.async_;
-
-            return *this;
-        }
-
-        FilteredControl(ThreadSafe &threadSafe, Async *async)
-            :
-            Base(threadSafe),
-            async_(async)
-        {
-
-        }
-
-        FilteredControl GetWorkerControl()
-        {
-            if (!this->async_)
-            {
-                throw std::logic_error("Unitialized control");
-            }
-
-            return FilteredControl(this->async_->workerModel_, this->async_);
-        }
-
-    private:
-        Async *async_;
-    };
-
-    using Control = FilteredControl<pex::NoFilter, Access>;
 
     Async(pex::Argument<Type> value = Type{})
         :
         mutex_(),
         ignoredValue_(),
-        model_(value),
+        node_(value),
 
         endpoint_(
             PEX_THIS("wxpex::Async"),
-            Control(PEX_MEMBER_PASS(model_), this)),
+            Unfiltered(PEX_MEMBER_PASS(node_), this)),
 
         workerQueuedValues_(),
-        workerModel_(value),
-        workerEndpoint_(this, Control(this->workerModel_, this))
+        workerNode_(value),
+        workerEndpoint_(this, Unfiltered(this->workerNode_, this))
     {
         this->Initialize_();
     }
@@ -161,15 +202,15 @@ public:
         :
         mutex_(),
         ignoredValue_(),
-        model_(value, filter),
+        node_(value, filter),
 
         endpoint_(
             PEX_THIS("wxpex::Async"),
-            Control(PEX_MEMBER_PASS(model_), this)),
+            Unfiltered(PEX_MEMBER_PASS(node_), this)),
 
         workerQueuedValues_(),
-        workerModel_(value, filter),
-        workerEndpoint_(this, Control(this->workerModel_, this))
+        workerNode_(value, filter),
+        workerEndpoint_(this, Unfiltered(this->workerNode_, this))
     {
         this->Initialize_();
     }
@@ -178,15 +219,15 @@ public:
         :
         mutex_(),
         ignoredValue_(),
-        model_(filter),
+        node_(filter),
 
         endpoint_(
             PEX_THIS("wxpex::Async"),
-            Control(PEX_MEMBER_PASS(model_), this)),
+            Unfiltered(PEX_MEMBER_PASS(node_), this)),
 
         workerQueuedValues_(),
-        workerModel_(filter),
-        workerEndpoint_(this, Control(this->workerModel_, this))
+        workerNode_(filter),
+        workerEndpoint_(this, Unfiltered(this->workerNode_, this))
     {
         this->Initialize_();
     }
@@ -197,7 +238,7 @@ public:
 protected:
     void Initialize_()
     {
-        PEX_MEMBER(workerModel_);
+        PEX_MEMBER(workerNode_);
 
         this->Bind(wxEVT_THREAD, &Async::OnWxEventLoop_, this);
         this->endpoint_.Connect(&Async::OnWxChanged_);
@@ -205,58 +246,63 @@ protected:
     }
 
 public:
-    Control GetWorkerControl()
+    Unfiltered GetWorkerControl()
     {
-        return Control(this->workerModel_, this);
+        return Unfiltered(this->workerNode_, this);
     }
 
-    Control GetWxControl()
+    Unfiltered GetWxControl()
     {
-        return Control(this->model_, this);
+        return Unfiltered(*this);
     }
 
     Async & operator=(pex::Argument<Type> value)
     {
-        this->model_.Set(value);
+        this->node_.Set(value);
         return *this;
     }
 
     void SetFilter(Filter filter)
     {
-        this->model_.SetFilter(filter);
-        this->workerModel_.SetFilter(filter);
+        this->node_.SetFilter(filter);
+        this->workerNode_.SetFilter(filter);
     }
 
     void Set(pex::Argument<Type> value)
     {
         this->SetWithoutNotify_(value);
-        this->DoNotify_();
+        this->Notify();
     }
 
     Type Get() const
     {
-        return this->model_.Get();
+        return this->node_.Get();
     }
 
     explicit operator Type () const
     {
-        return this->model_.Get();
+        return this->node_.Get();
     }
 
     // The defaut control is for the wx event loop.
-    operator Control ()
-    {
-        return Control(this->model_, this);
-    }
+    // operator Unfiltered ()
+    // {
+    //     return Unfiltered(this);
+    // }
 
     void Connect(void * observer, Callable callable)
     {
-        this->model_.Connect(observer, callable);
+        this->node_.Connect(observer, callable);
     }
 
     void Disconnect(void * observer)
     {
-        this->model_.Disconnect(observer);
+        this->node_.Disconnect(observer);
+    }
+
+    void Notify()
+    {
+        pex::detail::AccessReference<ThreadSafe>(this->node_).Notify();
     }
 
 private:
@@ -300,7 +346,7 @@ private:
         }
 
         this->ignoredValue_ = value;
-        this->model_.Set(value);
+        this->node_.Set(value);
         this->ignoredValue_.reset();
     }
 
@@ -312,35 +358,190 @@ private:
         }
 
         this->ignoredValue_ = value;
-        this->workerModel_.Set(value);
+        this->workerNode_.Set(value);
         this->ignoredValue_.reset();
     }
 
 
     void SetWithoutNotify_(pex::Argument<Type> value)
     {
-        pex::detail::AccessReference<ThreadSafe>(this->model_)
+        pex::detail::AccessReference<ThreadSafe>(this->node_)
             .SetWithoutNotify(value);
-    }
-
-    void DoNotify_()
-    {
-        pex::detail::AccessReference<ThreadSafe>(this->model_).DoNotify();
     }
 
 private:
     mutable std::mutex mutex_;
     std::optional<Type> ignoredValue_;
-    ThreadSafe model_;
-    pex::Endpoint<Async, Control> endpoint_;
+    ThreadSafe node_;
+    pex::Endpoint<Async, Unfiltered> endpoint_;
     std::queue<Type> workerQueuedValues_;
-    ThreadSafe workerModel_;
-    pex::Endpoint<Async, Control> workerEndpoint_;
+    ThreadSafe workerNode_;
+    pex::Endpoint<Async, Unfiltered> workerEndpoint_;
+};
+
+
+template
+<
+    typename T,
+    typename Filter,
+    typename Access_
+>
+class AsyncMux
+{
+public:
+    using Upstream = Async<T, Filter, Access_>;
+
+    using Mux =
+        pex::control::Mux<typename Upstream::ThreadSafe>;
+
+    using ThreadSafe = Mux;
+
+    using Type = typename Mux::Type;
+    using Callable = typename Mux::Callable;
+    using Access = typename Mux::Access;
+
+    template<typename>
+    friend class pex::Reference;
+
+    template<typename, typename, typename>
+    friend class AsyncControl;
+
+    template<typename ControlFilter, typename ControlAccess>
+    using Follow = AsyncControl<AsyncMux, ControlFilter, ControlAccess>;
+
+    using Unfiltered = Follow<pex::NoFilter, Access>;
+
+    AsyncMux()
+        :
+        node_(),
+        workerNode_()
+    {
+        PEX_MEMBER(node_);
+        PEX_MEMBER(workerNode_);
+    }
+
+    AsyncMux(Upstream &upstream)
+        :
+        node_(upstream.node_),
+        workerNode_(upstream.workerNode_)
+    {
+        PEX_MEMBER(node_);
+        PEX_MEMBER(workerNode_);
+    }
+
+    AsyncMux(const AsyncMux &) = delete;
+    AsyncMux(AsyncMux &&) = delete;
+    AsyncMux & operator=(const AsyncMux &) = delete;
+    AsyncMux & operator=(AsyncMux &&) = delete;
+
+    void ChangeUpstream(Upstream &upstream)
+    {
+        this->node_.ChangeUpstream(upstream.node_);
+        this->workerNode_.ChangeUpstream(upstream.workerNode_);
+    }
+
+public:
+    Unfiltered GetWorkerControl()
+    {
+        return Unfiltered(this->workerNode_, this);
+    }
+
+    Unfiltered GetWxControl()
+    {
+        return Unfiltered(this->node_, this);
+    }
+
+    AsyncMux & operator=(pex::Argument<Type> value)
+    {
+        this->node_.Set(value);
+
+        return *this;
+    }
+
+    void SetFilter(Filter filter)
+    {
+        this->node_.SetFilter(filter);
+    }
+
+    void Set(pex::Argument<Type> value)
+    {
+        this->SetWithoutNotify_(value);
+        this->Notify();
+    }
+
+    Type Get() const
+    {
+        return this->node_.Get();
+    }
+
+    explicit operator Type () const
+    {
+        return this->node_.Get();
+    }
+
+    // The defaut control is for the wx event loop.
+    operator Unfiltered ()
+    {
+        return Unfiltered(this->node_, this);
+    }
+
+    void Connect(void * observer, Callable callable)
+    {
+        this->node_.Connect(observer, callable);
+    }
+
+    void Disconnect(void * observer)
+    {
+        this->node_.Disconnect(observer);
+    }
+
+    void Notify()
+    {
+        pex::detail::AccessReference<Mux>(this->node_).Notify();
+    }
+
+    bool HasModel() const
+    {
+        return this->node_.HasModel() && this->workerNode_.HasModel();
+    }
+
+private:
+    void SetWithoutNotify_(pex::Argument<Type> value)
+    {
+        pex::detail::AccessReference<Mux>(this->node_)
+            .SetWithoutNotify(value);
+    }
+
+private:
+    Mux node_;
+    Mux workerNode_;
+};
+
+
+template<typename T, typename ModelFilter, typename Access>
+struct AsyncTypes
+{
+    using Type = T;
+    using Model = Async<T, ModelFilter, Access>;
+
+    template
+    <
+        typename Upstream,
+        typename ControlFilter,
+        typename ControlAccess
+    >
+    using Control = AsyncControl<Upstream, ControlFilter, ControlAccess>;
+
+    using Mux = AsyncMux<T, ModelFilter, Access>;
+
+    template<typename ControlFilter, typename ControlAccess>
+    using Follow =
+        typename Mux::template Follow<ControlFilter, ControlAccess>;
 };
 
 
 template<typename T, typename Filter = pex::NoFilter>
-using MakeAsync = pex::MakeCustom<Async<T, Filter>>;
+using MakeAsync = pex::DefineNodes<AsyncTypes<T, Filter, pex::GetAndSetTag>>;
 
 
 class CallAfter: public wxEvtHandler
@@ -379,11 +580,12 @@ public:
     using ThreadSafe = pex::model::Signal;
     using Callable = typename ThreadSafe::Callable;
 
-    struct Control
+    class Control
         :
-        public pex::control::Signal<>
+        public pex::control::Signal<ThreadSafe>
     {
-        using Base = pex::control::Signal<>;
+    public:
+        using Base = pex::control::Signal<ThreadSafe>;
 
         Control()
             :
@@ -445,8 +647,7 @@ public:
 
         endpoint_(
             PEX_THIS("wxpex::AsyncSignal"),
-            Control(this->model_,
-            this)),
+            Control(this->model_, this)),
 
         workerModel_(),
         workerEndpoint_(this, Control(this->workerModel_, this))
@@ -537,7 +738,7 @@ private:
 };
 
 
-static_assert(pex::IsControlSignal<typename AsyncSignal::Control>);
+static_assert(pex::IsSignalControl<typename AsyncSignal::Control>);
 
 
 template<typename Control>
@@ -546,7 +747,7 @@ class SetWait
 public:
     using ValueType = typename Control::Type;
     using AsyncValue = Async<ValueType>;
-    using WorkerControl = typename AsyncValue::Control;
+    using WorkerControl = typename AsyncValue::Unfiltered;
 
     using Endpoint =
         pex::Endpoint<SetWait, WorkerControl>;
@@ -622,7 +823,7 @@ private:
 class TriggerWait
 {
 public:
-    using Control = pex::control::Signal<>;
+    using Control = pex::control::DefaultSignal;
     using WorkerControl = typename AsyncSignal::Control;
 
     using Endpoint =

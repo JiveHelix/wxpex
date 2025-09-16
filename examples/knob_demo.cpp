@@ -47,7 +47,7 @@ struct Demo: public DemoTemplate<pex::Identity>
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
-using DemoControl = typename DemoGroup::Control;
+using DemoControl = typename DemoGroup::DefaultControl;
 
 using HueControl = decltype(DemoControl::hue);
 using HueValue = decltype(HueControl::value);

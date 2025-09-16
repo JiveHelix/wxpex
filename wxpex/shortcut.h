@@ -60,7 +60,7 @@ class Shortcut
 {
 public:
     // We are not observing this signal, so the Observer can be void.
-    using SignalType = pex::control::Signal<>;
+    using SignalType = pex::control::DefaultSignal;
 
     template<typename KeyCode>
     Shortcut(

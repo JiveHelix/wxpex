@@ -19,6 +19,7 @@
 #include <jive/optional.h>
 #include <jive/scope_flag.h>
 #include <pex/range.h>
+#include <pex/endpoint.h>
 
 #include "wxpex/wxshim.h"
 #include "wxpex/view.h"
@@ -250,9 +251,9 @@ public:
 
         ignoreRange_(false),
         range_(GetDefaultFilteredRange(range)),
-        value_(this->range_->value),
-        minimum_(this->range_->minimum),
-        maximum_(this->range_->maximum),
+        value_(this, this->range_->value),
+        minimum_(this, this->range_->minimum),
+        maximum_(this, this->range_->maximum),
         reset_(range.reset),
 
         styleFilter_(
@@ -282,9 +283,9 @@ public:
             this->SetValue(value);
         }
 
-        this->value_.Connect(this, &Slider::OnValue_);
-        this->minimum_.Connect(this, &Slider::OnMinimum_);
-        this->maximum_.Connect(this, &Slider::OnMaximum_);
+        this->value_.Connect(&Slider::OnValue_);
+        this->minimum_.Connect(&Slider::OnMinimum_);
+        this->maximum_.Connect(&Slider::OnMaximum_);
 
         this->Bind(wxEVT_SLIDER, &Slider::OnSlider_, this);
         this->Bind(wxEVT_LEFT_DOWN, &Slider::OnSliderLeftDown_, this);
@@ -443,10 +444,10 @@ public:
 private:
     bool ignoreRange_;
     std::unique_ptr<Range> range_;
-    pex::Terminus<Slider, Value> value_;
-    pex::Terminus<Slider, Limit> minimum_;
-    pex::Terminus<Slider, Limit> maximum_;
-    pex::control::Signal<> reset_;
+    pex::Endpoint<Slider, Value> value_;
+    pex::Endpoint<Slider, Limit> minimum_;
+    pex::Endpoint<Slider, Limit> maximum_;
+    pex::control::DefaultSignal reset_;
     detail::StyleFilter styleFilter_;
     wxpex::CallAfter adjustRange_;
 };
@@ -552,7 +553,7 @@ private:
 
 private:
     bool sliderIsActive_;
-    pex::Terminus<ValueSliderConvert, ValueControl> value_;
+    pex::Endpoint<ValueSliderConvert, ValueControl> value_;
 };
 
 

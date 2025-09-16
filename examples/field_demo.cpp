@@ -54,7 +54,7 @@ struct ApplicationTemplate
 
 using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
 using Model = typename ApplicationGroup::Model;
-using Control = typename ApplicationGroup::Control;
+using Control = typename ApplicationGroup::DefaultControl;
 
 
 /** Allow a control to use degrees, while the model uses radians. **/

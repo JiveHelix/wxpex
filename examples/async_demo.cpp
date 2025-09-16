@@ -32,28 +32,6 @@
 #include "wxpex/window.h"
 
 
-
-template<typename T, typename Enable = std::void_t<>>
-struct HasControl_: std::false_type {};
-
-template<typename T>
-struct HasControl_
-<
-    T,
-    std::void_t<typename T::Control>
->
-: std::true_type {};
-
-template<typename T>
-inline constexpr bool HasControl = HasControl_<T>::value;
-
-
-static_assert(HasControl<wxpex::Async<double>>);
-
-
-
-
-
 template<typename T>
 struct DemoFields
 {
@@ -74,7 +52,7 @@ template<template<typename> typename T>
 struct DemoTemplate
 {
     T<double> startingAngle;
-    T<pex::MakeRange<double, void, void, wxpex::Async>> currentAngle;
+    T<pex::MakeRange<double, void, void, wxpex::AsyncTypes>> currentAngle;
     T<pex::MakeSignal> reset;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
@@ -85,8 +63,8 @@ struct DemoTemplate
 
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
-using DemoControl = typename DemoGroup::Control;
 using DemoModel = typename DemoGroup::Model;
+using DemoControl = typename DemoGroup::DefaultControl;
 
 using CurrentAngleModel = decltype(DemoModel::currentAngle);
 
@@ -94,9 +72,6 @@ static_assert(
     std::is_same_v<wxpex::Async<double, pex::model::RangeFilter<double>>,
     typename CurrentAngleModel::Value>);
 
-static_assert(HasControl<typename CurrentAngleModel::Value>);
-
-static_assert(pex::control::HasControl<typename CurrentAngleModel::Value>);
 
 static_assert(
     std::is_same_v

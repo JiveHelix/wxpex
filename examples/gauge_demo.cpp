@@ -31,8 +31,8 @@ struct DemoTemplate
 
 
 using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
-using DemoControl = typename DemoGroup::Control;
 using DemoModel = typename DemoGroup::Model;
+using DemoControl = typename DemoGroup::DefaultControl;
 
 
 class ExampleApp: public wxApp
@@ -96,11 +96,6 @@ private:
         this->worker1_.join();
         this->worker2_.join();
         this->worker3_.join();
-
-        for (auto &i: this->observedValues_)
-        {
-            std::cout << i << std::endl;
-        }
     }
 
     void OnValues_(int values)

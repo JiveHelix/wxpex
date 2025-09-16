@@ -18,7 +18,7 @@ class App : public wxApp
 public:
     static constexpr auto observerName = "App";
 
-    using Quit = pex::Terminus<App, pex::model::Signal>;
+    using Quit = pex::Terminus<App, pex::control::DefaultSignal>;
 
     bool OnInit() override
     {
