@@ -33,10 +33,10 @@ class WxpexConan(ConanFile):
         self.test_requires("catch2/2.13.8")
 
     def requirements(self):
-        self.requires("jive/[~1.4]")
-        self.requires("fields/[~1.5]")
-        self.requires("pex/[~1.1]")
-        self.requires("tau/[~1.12]")
+        self.requires("jive/[>=1.4 <2]")
+        self.requires("fields/[>=1.5 <2]")
+        self.requires("pex/[>=1.1 <2]")
+        self.requires("tau/[>=1.13 <2]")
 
         # As this library is a wrapper around wxWidgets, it makes sense to me
         # to propagate the headers and libs to make customization easier.
