@@ -32,9 +32,29 @@ struct WxSelect
         return wxString(Convert::ToString(choices[index]));
     }
 
+    static wxString GetSelectionAsString(
+        std::optional<size_t> index,
+        const std::vector<T> &choices,
+        std::string_view nullValue)
+    {
+        if (!index)
+        {
+            return wxString(std::string(nullValue));
+        }
+
+        return wxString(Convert::ToString(choices[*index]));
+    }
+
     static wxArrayString GetChoicesAsStrings(const std::vector<T> &choices)
     {
         return MakeArrayString<Convert>(choices);
+    }
+
+    static wxArrayString GetChoicesAsStrings(
+            const std::vector<T> &choices,
+            std::string_view nullValue)
+    {
+        return MakeArrayStringWithNull<Convert>(choices, nullValue);
     }
 };
 

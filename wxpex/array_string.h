@@ -36,4 +36,23 @@ wxArrayString MakeArrayString(Vector &&items)
 }
 
 
+template<typename Converter, typename Vector>
+wxArrayString MakeArrayStringWithNull(
+    Vector &&items,
+    std::string_view nullValue)
+{
+    wxArrayString result;
+    result.Alloc(items.size() + 1);
+
+    for (auto &it: items)
+    {
+        result.Add(Converter::ToString(it));
+    }
+
+    result.Add(std::string(nullValue));
+
+    return result;
+}
+
+
 } // namespace wxpex

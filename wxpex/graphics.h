@@ -97,7 +97,7 @@ template<typename U>
 using ShearModel = typename ShearGroup<U>::Model;
 
 template<typename U>
-using ShearControl = typename ShearGroup<U>::Control;
+using ShearControl = typename ShearGroup<U>::DefaultControl;
 
 
 enum class AntialiasMode: int

@@ -38,6 +38,8 @@ public:
     using Base = wxStaticText;
     using Type = typename Control::Type;
 
+    static constexpr bool isOptional = jive::IsOptional<Type>;
+
     View(
         wxWindow *parent,
         Control value,
@@ -46,19 +48,46 @@ public:
         Base(
             parent,
             wxID_ANY,
-            Convert::ToString(value.Get()),
+            View::ToString(value.Get()),
             wxDefaultPosition,
             wxDefaultSize,
             style),
+
         value_(PEX_THIS("wxpex::View"), value, &View::OnValueChanged_)
     {
 
     }
 
 private:
+    static std::string ToString(pex::Argument<Type> value)
+    {
+        if constexpr (isOptional)
+        {
+            if constexpr (pex::ToStringTakesOptional<Type, Convert>)
+            {
+                return Convert::ToString(value);
+            }
+            else
+            {
+                if (!value)
+                {
+                    return {};
+                }
+                else
+                {
+                    return Convert::ToString(*value);
+                }
+            }
+        }
+        else
+        {
+            return Convert::ToString(value);
+        }
+    }
+
     void OnValueChanged_(pex::Argument<Type> value)
     {
-        this->SetLabel(Convert::ToString(value));
+        this->SetLabel(View::ToString(value));
         this->UpdateMinimumSize_();
     }
 
@@ -68,7 +97,7 @@ private:
         auto fittingSize =
             this->GetSizeFromTextSize(
                 this->GetTextExtent(
-                    Convert::ToString(this->value_.Get())));
+                    View::ToString(this->value_.Get())));
 
         this->SetMinClientSize(fittingSize);
         this->InvalidateBestSize();

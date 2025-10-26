@@ -3,15 +3,16 @@
 
 #include <jive/path.h>
 
-#include "wxpex/ignores.h"
+#include <wxpex/ignores.h>
 
 WXSHIM_PUSH_IGNORES
 #include <wx/button.h>
 #include <wx/control.h>
 WXSHIM_POP_IGNORES
 
-#include "wxpex/field.h"
-#include "wxpex/labeled_widget.h"
+#include <wxpex/field.h>
+#include <wxpex/view.h>
+#include <wxpex/labeled_widget.h>
 
 
 namespace wxpex
@@ -130,6 +131,54 @@ public:
 
     }
 
+};
+
+
+template<typename Control>
+class FileChooser: public wxControl
+{
+public:
+    static constexpr auto observerName = "FileChooser";
+
+    FileChooser(
+        wxWindow *parent,
+        Control control,
+        const FileDialogOptions &options = FileDialogOptions{})
+        :
+        wxControl(parent, wxID_ANY),
+        value_(control),
+        options_{options}
+    {
+        auto view = new View(this, control, wxST_ELLIPSIZE_START);
+        view->SetMinSize(wxSize(0, view->GetBestSize().y));
+
+        auto button = new wxButton(
+            this,
+            wxID_ANY,
+            "Choose");
+
+        auto sizer = std::make_unique<wxBoxSizer>(wxHORIZONTAL);
+        sizer->Add(view, 1, wxRIGHT, 3);
+        sizer->Add(button, 0);
+
+        this->SetSizerAndFit(sizer.release());
+
+        this->Bind(wxEVT_BUTTON, &FileChooser::OnChoose_, this);
+    }
+
+    void OnChoose_(wxCommandEvent &)
+    {
+        auto chosenPath = ChoosePath(this->value_.Get(), this->options_);
+
+        if (chosenPath)
+        {
+            this->value_.Set(*chosenPath);
+        }
+    }
+
+private:
+    Control value_;
+    FileDialogOptions options_;
 };
 
 

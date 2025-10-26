@@ -58,6 +58,13 @@ using DemoControl = typename DemoGroup::DefaultControl;
 using OptionalControl = decltype(DemoControl::optional);
 using OptionalValue = decltype(OptionalControl::value);
 
+using PositionRangeModel = decltype(DemoModel::position);
+using PositionValueModel = typename PositionRangeModel::Value;
+using PositionFilter = pex::control::LinearFilter<double>;
+
+using FilteredPositionControl =
+    pex::control::FilteredValue<PositionValueModel, PositionFilter>;
+
 using PlaybackSpeed = decltype(DemoModel::playbackSpeed);
 using PlaybackSpeedControl = decltype(DemoControl::playbackSpeed);
 
@@ -99,6 +106,7 @@ public:
     ExampleApp()
         :
         model_(Demo::MakeDefault()),
+        filteredPosition_(this->model_.position.value, PositionFilter(1000.0)),
 
         position_(
             PEX_THIS("ExampleApp"),
@@ -142,6 +150,7 @@ private:
 
 private:
     DemoModel model_;
+    FilteredPositionControl filteredPosition_;
 
     using PositionEndpoint =
         pex::Endpoint<ExampleApp, decltype(DemoModel::position)>;
@@ -171,11 +180,15 @@ using SelectedRange = typename TestRangeSlider::Range;
 
 static_assert(std::is_same_v<SelectedRange, FilteredPlaybackSpeed>);
 
+using FilteredPosition = pex::control::Value<FilteredPositionControl>;
+
 
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl control);
+    ExampleFrame(
+        const DemoControl control,
+        const FilteredPosition &filteredPosition);
 
     void OnSliderDone_(wxCommandEvent &)
     {
@@ -190,7 +203,11 @@ wxshimIMPLEMENT_APP(ExampleApp)
 
 bool ExampleApp::OnInit()
 {
-    ExampleFrame *exampleFrame = new ExampleFrame(DemoControl(this->model_));
+    ExampleFrame *exampleFrame =
+        new ExampleFrame(
+            DemoControl(this->model_),
+            FilteredPosition(this->filteredPosition_));
+
     exampleFrame->Show();
 
     return true;
@@ -198,14 +215,21 @@ bool ExampleApp::OnInit()
 
 
 
-ExampleFrame::ExampleFrame(DemoControl control)
+ExampleFrame::ExampleFrame(
+    const DemoControl control,
+    const FilteredPosition &filteredPosition)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Slider Demo")
 {
     auto positionSlider = wxpex::CreateViewSlider<3>(this, control.position);
 
     auto positionFieldSlider =
-        wxpex::CreateFieldSlider<1>(this, control.position);
+        wxpex::CreateFieldSlider<3>(this, control.position);
+
+    auto filteredPositionField =
+        wxpex::CreateField<4>(
+            this,
+            filteredPosition);
 
     auto optionalSlider =
         new wxpex::Slider(this, control.optional);
@@ -234,6 +258,7 @@ ExampleFrame::ExampleFrame(DemoControl control)
 
     topSizer->Add(positionSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(positionFieldSlider, 0, wxALL | wxEXPAND, 10);
+    topSizer->Add(filteredPositionField, 0, wxALL , 10);
     topSizer->Add(optionalSlider, 0, wxALL | wxEXPAND, 10);
     topSizer->Add(verticalSlider, 1, wxALL | wxEXPAND, 10);
     topSizer->Add(checkBox, 1, wxALL | wxEXPAND, 10);

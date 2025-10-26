@@ -115,6 +115,11 @@ public:
         return result;
     }
 
+    wxFont GetFont() const
+    {
+        return this->textControl_->GetFont();
+    }
+
     tau::Size<int> GetFittingSize() const
     {
         auto fittingSize = ToSize<int>(
@@ -236,6 +241,15 @@ auto CreateField(wxWindow *parent, Control control)
     using Result = Field<Control, PrecisionConverter<Control, precision>>;
 
     return new Result(parent, control, FixedFieldTag<fixedWidth>{});
+}
+
+
+template<typename Converter, typename Control>
+auto CreateField(wxWindow *parent, Control control)
+{
+    using Result = Field<Control, Converter>;
+
+    return new Result(parent, control);
 }
 
 

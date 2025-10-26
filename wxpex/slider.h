@@ -271,17 +271,7 @@ public:
 
         auto value = this->range_->value.Get();
 
-        if constexpr (isOptional)
-        {
-            if (value)
-            {
-                this->SetValue(*value);
-            }
-        }
-        else
-        {
-            this->SetValue(value);
-        }
+        this->OnValue_(value);
 
         this->value_.Connect(&Slider::OnValue_);
         this->minimum_.Connect(&Slider::OnMinimum_);

@@ -16,6 +16,7 @@
 #include <memory>
 
 #include <pex/select.h>
+#include <pex/choice_muxer.h>
 
 #include "wxpex/combo_box.h"
 #include "wxpex/check_box.h"
@@ -29,15 +30,6 @@ static inline const std::vector<UnitSystem> withoutFirkins
     UnitSystem::MKS,
     UnitSystem::CGS,
     UnitSystem::FPS
-};
-
-
-static inline const std::vector<UnitSystem> withFirkins
-{
-    UnitSystem::MKS,
-    UnitSystem::CGS,
-    UnitSystem::FPS,
-    UnitSystem::FFF
 };
 
 
@@ -76,7 +68,7 @@ private:
 
         if (firkins)
         {
-            self->select_.SetChoices(withFirkins);
+            self->select_.SetChoices(UnitHelpers::GetChoices());
         }
         else
         {
@@ -126,15 +118,8 @@ ExampleFrame::ExampleFrame(
             "Show FFF",
             enableFirkinsControl);
 
-    auto shortComboBox =
-        new wxpex::ComboBox<SelectControl, ShortConverter>(
-            this,
-            select);
-
-    auto longComboBox =
-        new wxpex::ComboBox<SelectControl, LongConverter>(
-            this,
-            select);
+    auto shortComboBox = wxpex::MakeComboBox<ShortConverter>(this, select);
+    auto longComboBox = wxpex::MakeComboBox<LongConverter>(this, select);
 
     auto shortView =
         new wxpex::View<SelectControl::Value, ShortConverter>(

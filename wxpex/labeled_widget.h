@@ -105,7 +105,16 @@ struct LayoutOptions
         this->horizontalGap = value;
         return *this;
     }
+
+    static LayoutOptions LayoutHorizontal()
+    {
+        return LayoutOptions{}
+            .Orient(wxHORIZONTAL)
+            .LabelFlags(wxALIGN_LEFT)
+            .WidgetFlags(wxALIGN_LEFT);
+    }
 };
+
 
 
 template<typename ...Labeled>

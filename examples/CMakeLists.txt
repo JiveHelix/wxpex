@@ -145,6 +145,16 @@ target_link_libraries(
     wxpex)
 
 
+add_executable(combo_box_muxer_demo combo_box_muxer_demo.cpp)
+
+target_link_libraries(
+    combo_box_muxer_demo
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
+
+
 add_executable(slider_demo slider_demo.cpp)
 
 target_link_libraries(
@@ -216,11 +226,11 @@ target_link_libraries(
     wxpex)
 
 
-# add_executable(drawing_demo drawing_demo.cpp)
+add_executable(json_viewer json_viewer.cpp)
 
-# target_link_libraries(
-#    drawing_demo
-#    PRIVATE
-#    project_warnings
-#    project_options
-#    wxpex)
+target_link_libraries(
+    json_viewer
+    PRIVATE
+    project_warnings
+    project_options
+    wxpex)
