@@ -63,6 +63,13 @@ void Expandable::FixLayout()
     // And find the highest level window that is an instance of Expandable.
     auto top = wxGetTopLevelParent(this->window_);
 
+    if (!top)
+    {
+        std::cerr << "Could not find top level parent" << std::endl;
+
+        return;
+    }
+
     wxWindow *topExpandable = nullptr;
     wxWindow *topCollapsible = nullptr;
 
@@ -129,7 +136,7 @@ void Expandable::FixLayout()
 
             LOG_WIDGET_NAME("grandParent: ", grandParent)
             auto grandParentSizer = grandParent->GetSizer();
-            
+
             if (sizer)
             {
                 auto newSize = sizer->ComputeFittingClientSize(grandParent);

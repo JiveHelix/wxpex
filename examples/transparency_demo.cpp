@@ -3,7 +3,7 @@
 #include <pex/value.h>
 #include <pex/endpoint.h>
 
-#include <wxpex/wxshim.h>
+#include <wxpex/wxshim_app.h>
 #include <wxpex/color_picker.h>
 
 
@@ -69,7 +69,7 @@ public:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()

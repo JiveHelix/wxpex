@@ -112,7 +112,7 @@ bool Splitter::Layout()
 
 bool Splitter::OnSashPositionChange(int newSashPosition)
 {
-    bool result;
+    bool result{};
 
     if (this->firstPriority_)
     {

@@ -8,6 +8,7 @@
 #include <wxpex/labeled_widget.h>
 #include <wxpex/layout_items.h>
 #include <wxpex/widget_names.h>
+#include <wxpex/wxshim_app.h>
 #include <pex/group.h>
 #include <pex/list.h>
 #include <jive/testing/gettys_words.h>
@@ -103,7 +104,7 @@ using CountControl = decltype(SettingsControl::count);
 class CountView: public wxpex::Collapsible
 {
 public:
-    CountView(wxWindow *parent, CountControl countControl)
+    CountView(wxWindow *parent, const CountControl &countControl)
         :
         wxpex::Collapsible(parent, "Count")
     {
@@ -123,7 +124,7 @@ public:
 class PricingView: public wxpex::Collapsible
 {
 public:
-    PricingView(wxWindow *parent, PricingControl pricingControl)
+    PricingView(wxWindow *parent, const PricingControl &pricingControl)
         :
         wxpex::Collapsible(parent, "Pricing", wxBORDER_SIMPLE)
     {
@@ -156,7 +157,7 @@ public:
 class SettingsView: public wxpex::StaticBox
 {
 public:
-    SettingsView(wxWindow *parent, SettingsControl settingsControl)
+    SettingsView(wxWindow *parent, const SettingsControl &settingsControl)
         :
         wxpex::StaticBox(parent, "Settings")
     {
@@ -217,7 +218,7 @@ using BookControl = typename BookGroup::DefaultControl;
 class BookView: public wxpex::StaticBox
 {
 public:
-    BookView(wxWindow *parent, BookControl bookControl)
+    BookView(wxWindow *parent, const BookControl &bookControl)
         :
         wxpex::StaticBox(parent, "Book")
     {
@@ -462,7 +463,7 @@ public:
     using Base = wxpex::ListView<BookListControl>;
     using ListItem = typename Base::ListItem;
 
-    BookListView(wxWindow *parent, BookListControl books)
+    BookListView(wxWindow *parent, const BookListControl &books)
         :
         Base(parent, books)
     {
@@ -483,7 +484,7 @@ protected:
 class ScrolledBookListView: public wxpex::Scrolled
 {
 public:
-    ScrolledBookListView(wxWindow *parent, BookListControl control)
+    ScrolledBookListView(wxWindow *parent, const BookListControl &control)
         :
         wxpex::Scrolled(parent)
     {
@@ -503,7 +504,7 @@ public:
 class BookStoreView: public wxFrame
 {
 public:
-    BookStoreView(BookStoreControl bookStoreControl)
+    BookStoreView(const BookStoreControl &bookStoreControl)
         :
         wxFrame(nullptr, wxID_ANY, "Book Store")
     {
@@ -555,4 +556,4 @@ private:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)

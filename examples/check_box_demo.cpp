@@ -13,9 +13,10 @@
 #include <pex/group.h>
 #include <pex/endpoint.h>
 
-#include "wxpex/view.h"
-#include "wxpex/check_box.h"
-#include "wxpex/view.h"
+#include <wxpex/view.h>
+#include <wxpex/check_box.h>
+#include <wxpex/view.h>
+#include <wxpex/wxshim_app.h>
 
 
 template<typename T>
@@ -82,12 +83,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl control);
+    ExampleFrame(const DemoControl &control);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -100,7 +101,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(DemoControl control)
+ExampleFrame::ExampleFrame(const DemoControl &control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::CheckBox Demo")
 {

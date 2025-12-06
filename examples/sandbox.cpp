@@ -17,7 +17,7 @@
 #include <pex/signal.h>
 #include <pex/value.h>
 #include <pex/converter.h>
-#include <wxpex/wxshim.h>
+#include <wxpex/wxshim_app.h>
 #include <wxpex/view.h>
 #include <wxpex/knob.h>
 #include <wxpex/labeled_widget.h>
@@ -88,12 +88,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl control);
+    ExampleFrame(const DemoControl &control);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -120,7 +120,7 @@ using VelocityKnob = wxpex::ViewKnob
 >;
 
 
-ExampleFrame::ExampleFrame([[maybe_unused]] DemoControl control)
+ExampleFrame::ExampleFrame([[maybe_unused]] const DemoControl &control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Sandbox")
 {

@@ -15,7 +15,7 @@
 #include <tau/angles.h>
 #include <pex/group.h>
 #include <pex/endpoint.h>
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/view.h"
 #include "wxpex/field.h"
 #include "wxpex/labeled_widget.h"
@@ -138,12 +138,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(Control control);
+    ExampleFrame(const Control &control);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -157,7 +157,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(Control control)
+ExampleFrame::ExampleFrame(const Control &control)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Field Demo")
 {

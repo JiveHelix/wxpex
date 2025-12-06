@@ -14,6 +14,8 @@
 #include <wxpex/widget_names.h>
 #include <wxpex/border_sizer.h>
 
+#include <wxpex/wxshim_app.h>
+
 
 template<typename T>
 struct WeaponsFields
@@ -101,7 +103,7 @@ public:
     WeaponsWidget(
         wxWindow *parent,
         const std::string &name,
-        WeaponsControl control,
+        const WeaponsControl &control,
         const LayoutOptions &layoutOptions)
         :
         Super(parent, name)
@@ -147,7 +149,7 @@ public:
 
     WeaponsViews(
         wxWindow *parent,
-        WeaponsControl control,
+        const WeaponsControl &control,
         const LayoutOptions &layoutOptions)
         :
         wxpex::Collapsible(parent, "Weapons")
@@ -184,7 +186,7 @@ public:
 class StuffView: public wxPanel
 {
 public:
-    StuffView(wxWindow *parent, StuffControl control)
+    StuffView(wxWindow *parent, const StuffControl &control)
         :
         wxPanel(parent, wxID_ANY)
     {
@@ -208,7 +210,7 @@ public:
 class StuffFrame: public wxpex::Scrolled
 {
 public:
-    StuffFrame(wxWindow *parent, StuffControl control)
+    StuffFrame(wxWindow *parent, const StuffControl &control)
         :
         wxpex::Scrolled(parent)
     {
@@ -226,7 +228,7 @@ public:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(StuffControl control)
+    ExampleFrame(const StuffControl &control)
         :
         wxFrame(nullptr, wxID_ANY, "Settings Demo")
     {
@@ -269,4 +271,4 @@ private:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)

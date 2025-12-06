@@ -18,9 +18,11 @@
 #include <pex/select.h>
 #include <pex/choice_muxer.h>
 
-#include "wxpex/combo_box.h"
-#include "wxpex/check_box.h"
-#include "wxpex/view.h"
+#include <wxpex/combo_box.h>
+#include <wxpex/check_box.h>
+#include <wxpex/view.h>
+#include <wxpex/wxshim_app.h>
+
 
 #include "units.h"
 
@@ -91,7 +93,7 @@ public:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()

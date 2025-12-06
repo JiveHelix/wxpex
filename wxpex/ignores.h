@@ -12,7 +12,8 @@
 #define WXSHIM_PUSH_IGNORES \
     __pragma(warning(push)) \
     __pragma(warning(disable:4996)) \
-    __pragma(warning(disable:4242))
+    __pragma(warning(disable:4242)) \
+    __pragma(warning(disable:6011 6235 6240 28251))
 
 #define WXSHIM_POP_IGNORES \
     __pragma(warning(pop))

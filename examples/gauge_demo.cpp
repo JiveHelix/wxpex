@@ -1,7 +1,9 @@
 #include <thread>
+#include <chrono>
 #include <pex/endpoint.h>
-#include "wxpex/gauge.h"
-#include "wxpex/button.h"
+#include <wxpex/gauge.h>
+#include <wxpex/button.h>
+#include <wxpex/wxshim_app.h>
 
 
 template<typename T>
@@ -167,12 +169,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl demoControl);
+    ExampleFrame(const DemoControl &demoControl);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -184,7 +186,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(DemoControl demoControl)
+ExampleFrame::ExampleFrame(const DemoControl &demoControl)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Gauge Demo")
 {

@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <string>
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/view.h"
 #include "wxpex/field.h"
 #include "wxpex/bitset_check_boxes.h"
@@ -75,12 +75,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(Control control);
+    ExampleFrame(const Control &control);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -92,7 +92,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(Control control)
+ExampleFrame::ExampleFrame(const Control &control)
     :
     wxFrame(nullptr, wxID_ANY, "Bitset Demo")
 {

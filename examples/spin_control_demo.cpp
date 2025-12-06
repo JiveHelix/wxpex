@@ -10,7 +10,7 @@
 **/
 
 #include <pex/range.h>
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/view.h"
 #include "wxpex/spin_control.h"
 
@@ -57,13 +57,13 @@ class ExampleFrame: public wxFrame
 {
 public:
     ExampleFrame(
-        WibbleControl wibbleControl,
-        WobbleControl wobbleControl);
+        const WibbleControl &wibbleControl,
+        const WobbleControl &wobbleControl);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -83,7 +83,9 @@ using WibbleSpinControl = wxpex::SpinControl<WibbleControl>;
 using WobbleSpinControl = wxpex::SpinControl<WobbleControl>;
 
 
-ExampleFrame::ExampleFrame(WibbleControl wibble, WobbleControl wobble)
+ExampleFrame::ExampleFrame(
+    const WibbleControl &wibble,
+    const WobbleControl &wobble)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::SpinControl Demo")
 {

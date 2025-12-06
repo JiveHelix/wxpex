@@ -18,7 +18,7 @@
 #include <pex/interface.h>
 #include <pex/group.h>
 
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/window.h"
 #include "wxpex/shortcut.h"
 #include "wxpex/view.h"
@@ -220,7 +220,7 @@ private:
 };
 
 
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()

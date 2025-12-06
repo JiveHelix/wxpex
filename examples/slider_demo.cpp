@@ -13,8 +13,9 @@
 #include <pex/endpoint.h>
 #include <pex/converting_filter.h>
 #include <fields/fields.h>
-#include "wxpex/slider.h"
-#include "wxpex/check_box.h"
+#include <wxpex/wxshim_app.h>
+#include <wxpex/slider.h>
+#include <wxpex/check_box.h>
 
 
 template<typename T>
@@ -47,7 +48,7 @@ struct Demo: public DemoTemplate<pex::Identity>
 
     static Demo MakeDefault()
     {
-        return {{defaultPosition, false, defaultPlaybackSpeed, {}}};
+        return {{defaultPosition, false, {}, defaultPlaybackSpeed}};
     }
 };
 
@@ -198,7 +199,7 @@ public:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()

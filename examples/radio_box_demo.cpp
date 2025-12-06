@@ -12,8 +12,9 @@
 #include <memory>
 #include <pex/select.h>
 
-#include "wxpex/view.h"
-#include "wxpex/radio_box.h"
+#include <wxpex/wxshim_app.h>
+#include <wxpex/view.h>
+#include <wxpex/radio_box.h>
 
 #include "units.h"
 
@@ -31,12 +32,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(SelectControl select);
+    ExampleFrame(const SelectControl &select);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -49,7 +50,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(SelectControl select)
+ExampleFrame::ExampleFrame(const SelectControl &select)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::RadioBox Demo")
 {

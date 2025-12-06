@@ -97,6 +97,23 @@ public:
         return *this;
     }
 
+    void Emplace(Upstream &upstream)
+    {
+        this->Base::Emplace(upstream.node_);
+        this->async_ = &upstream;
+    }
+
+    void Emplace(const AsyncControl &other)
+    {
+        if (&other == this)
+        {
+            return;
+        }
+
+        this->Base::Emplace(other);
+        this->async_ = other.async_;
+    }
+
     template<typename, typename, typename>
     friend class AsyncControl;
 
@@ -127,7 +144,7 @@ public:
 
     }
 
-    AsyncControl GetWorkerControl()
+    AsyncControl GetWorkerControl() const
     {
         if (!this->async_)
         {
@@ -145,8 +162,6 @@ public:
 private:
     Upstream *async_;
 };
-
-
 
 
 template
@@ -308,15 +323,14 @@ public:
 private:
     void OnWorkerChanged_(pex::Argument<Type> value)
     {
+        std::lock_guard lock(this->mutex_);
+
         if (this->ignoredValue_ && value == *this->ignoredValue_)
         {
             return;
         }
 
-        {
-            std::lock_guard<std::mutex> lock(this->mutex_);
-            this->workerQueuedValues_.push(value);
-        }
+        this->workerQueuedValues_.push(value);
 
         // Queue the event for the wxWidgets event loop.
         this->QueueEvent(new wxThreadEvent());
@@ -343,22 +357,32 @@ private:
                 // Repeat until all queued values have been forwarded.
                 this->QueueEvent(new wxThreadEvent());
             }
+
+            this->ignoredValue_ = value;
         }
 
-        this->ignoredValue_ = value;
         this->node_.Set(value);
+
+        std::lock_guard lock(this->mutex_);
         this->ignoredValue_.reset();
     }
 
     void OnWxChanged_(pex::Argument<Type> value)
     {
-        if (this->ignoredValue_ && value == *this->ignoredValue_)
         {
-            return;
+            std::lock_guard lock(this->mutex_);
+
+            if (this->ignoredValue_ && value == *this->ignoredValue_)
+            {
+                return;
+            }
+
+            this->ignoredValue_ = value;
         }
 
-        this->ignoredValue_ = value;
         this->workerNode_.Set(value);
+
+        std::lock_guard lock(this->mutex_);
         this->ignoredValue_.reset();
     }
 
@@ -433,6 +457,17 @@ public:
     AsyncMux(AsyncMux &&) = delete;
     AsyncMux & operator=(const AsyncMux &) = delete;
     AsyncMux & operator=(AsyncMux &&) = delete;
+
+    void Emplace(Upstream &upstream)
+    {
+        this->ChangeUpstream(upstream);
+    }
+
+    void Emplace(const AsyncMux &other)
+    {
+        this->node_.Emplace(other.node_);
+        this->workerNode_.Emplace(other.workerNode_);
+    }
 
     void ChangeUpstream(Upstream &upstream)
     {
@@ -752,7 +787,7 @@ public:
     using Endpoint =
         pex::Endpoint<SetWait, WorkerControl>;
 
-    SetWait(Control control)
+    SetWait(const Control &control)
         :
         mutex_(),
         condition_(),

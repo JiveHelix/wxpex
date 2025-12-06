@@ -20,6 +20,7 @@
 #include "wxpex/combo_box.h"
 #include "wxpex/check_box.h"
 #include "wxpex/view.h"
+#include <wxpex/wxshim_app.h>
 
 #include "units.h"
 
@@ -47,12 +48,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(UnitsMuxerControl unitsMuxer);
+    ExampleFrame(const UnitsMuxerControl &unitsMuxer);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -65,7 +66,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(UnitsMuxerControl unitsMuxer)
+ExampleFrame::ExampleFrame(const UnitsMuxerControl &unitsMuxer)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::ComboBox Demo")
 {

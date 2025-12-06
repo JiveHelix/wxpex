@@ -17,7 +17,7 @@
 #include <pex/signal.h>
 #include <pex/value.h>
 #include <pex/converter.h>
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/view.h"
 #include "wxpex/button.h"
 
@@ -91,12 +91,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DegreesControl value, ControlSignal signal);
+    ExampleFrame(const DegreesControl &value, const ControlSignal &signal);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -131,8 +131,8 @@ using FifteenDigits = pex::Converter<T, FifteenDigitsTraits>;
 
 
 ExampleFrame::ExampleFrame(
-    DegreesControl control,
-    ControlSignal interfaceSignal)
+    const DegreesControl &control,
+    const ControlSignal &interfaceSignal)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::View Demo")
 {

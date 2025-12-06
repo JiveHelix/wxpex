@@ -8,6 +8,7 @@
 #include <wxpex/layout_items.h>
 #include <wxpex/widget_names.h>
 #include <wx/colour.h>
+#include <wxpex/wxshim_app.h>
 
 
 class Widget: public wxpex::Collapsible
@@ -17,7 +18,7 @@ public:
         wxWindow *parent,
         const std::string &name,
         const wxColor &color,
-        wxpex::Collapsible::StateControl stateControl)
+        const wxpex::Collapsible::StateControl &stateControl)
         :
         wxpex::Collapsible(parent, name, stateControl, wxBORDER_SIMPLE)
     {
@@ -72,7 +73,7 @@ public:
     Colors(
         wxWindow *parent,
         const std::string &name,
-        ColorsStateControl state)
+        const ColorsStateControl &state)
         :
         wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
     {
@@ -109,7 +110,7 @@ public:
 class ColorSets: public wxpex::Scrolled
 {
 public:
-    ColorSets(wxWindow *parent, ColorsStateControl state)
+    ColorSets(wxWindow *parent, const ColorsStateControl &state)
         :
         wxpex::Scrolled(parent)
     {
@@ -136,7 +137,7 @@ public:
 class LeftControls: public wxPanel
 {
 public:
-    LeftControls(wxWindow *parent, ColorsStateControl state)
+    LeftControls(wxWindow *parent, const ColorsStateControl &state)
         :
         wxPanel(parent)
     {
@@ -167,7 +168,7 @@ public:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(ColorsStateControl state)
+    ExampleFrame(const ColorsStateControl &state)
         :
         wxFrame(nullptr, wxID_ANY, "Scroll Demo")
     {
@@ -214,4 +215,4 @@ public:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)

@@ -12,6 +12,7 @@
 #include <wxpex/static_box.h>
 #include <wxpex/scrolled.h>
 #include <wxpex/widget_names.h>
+#include <wxpex/wxshim_app.h>
 
 
 template<typename T>
@@ -142,7 +143,7 @@ public:
     WeaponsWidget(
         wxWindow *parent,
         const std::string &name,
-        WeaponsControl control,
+        const WeaponsControl &control,
         const LayoutOptions &layoutOptions)
         :
         wxpex::Collapsible(parent, name, wxBORDER_SIMPLE)
@@ -190,7 +191,7 @@ public:
     GpsWidget(
         wxWindow *parent,
         const std::string &name,
-        GpsControl control,
+        const GpsControl &control,
         const LayoutOptions &layoutOptions = LayoutOptions{})
         :
         wxpex::Collapsible(parent, name)
@@ -242,7 +243,7 @@ public:
 
     GpsViews(
         wxWindow *parent,
-        GpsControl gps,
+        const GpsControl &gps,
         const LayoutOptions &layoutOptions)
         :
         wxpex::Collapsible(parent, "GPS")
@@ -279,7 +280,7 @@ public:
 
     WeaponsViews(
         wxWindow *parent,
-        WeaponsControl control,
+        const WeaponsControl &control,
         const LayoutOptions &layoutOptions)
         :
         wxpex::Collapsible(parent, "Weapons")
@@ -322,7 +323,7 @@ public:
 
     ThingsView(
         wxWindow *parent,
-        ThingsControl control,
+        const ThingsControl &control,
         [[maybe_unused]] const std::string &name,
         const LayoutOptions &layoutOptions = LayoutOptions{})
         :
@@ -354,7 +355,7 @@ public:
 class StuffView: public wxpex::Scrolled
 {
 public:
-    StuffView(wxWindow *parent, StuffControl control)
+    StuffView(wxWindow *parent, const StuffControl &control)
         :
         wxpex::Scrolled(parent)
     {
@@ -379,7 +380,7 @@ public:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(StuffControl control)
+    ExampleFrame(const StuffControl &control)
         :
         wxFrame(nullptr, wxID_ANY, "Settings Demo")
     {
@@ -423,4 +424,4 @@ private:
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP_CONSOLE(ExampleApp)
+wxshimAPP(ExampleApp)

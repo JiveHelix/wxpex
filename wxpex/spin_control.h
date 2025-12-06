@@ -19,6 +19,7 @@ WXSHIM_PUSH_IGNORES
 WXSHIM_POP_IGNORES
 
 #include <pex/range.h>
+#include <pex/endpoint.h>
 #include <jive/to_float.h>
 
 
@@ -35,14 +36,15 @@ public:
     using Base = wxSpinCtrlDouble;
     using This = SpinControl<RangeControl>;
     using Range = RangeControl;
-    using Value = pex::Terminus<SpinControl, typename Range::Value>;
-    using Limit = pex::Terminus<SpinControl, typename Range::Limit>;
-    using Type = typename Value::Type;
+    using Value = pex::Endpoint<SpinControl, typename Range::Value>;
+
+    using Limit = pex::Endpoint<SpinControl, typename Range::Limit>;
+    using Type = typename Range::Value::Type;
 
     SpinControl(
         wxWindow *parent,
         RangeControl range,
-        typename Value::Type increment,
+        Type increment,
         unsigned int digits = 4,
         long style = wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER)
         :

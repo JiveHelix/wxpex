@@ -42,4 +42,7 @@ class WxpexConan(ConanFile):
         # to propagate the headers and libs to make customization easier.
         # Also, it won't break downstream consumers that expected requirements
         # to propagate by default.
-        self.requires("wxwidgets/3.2.7.1", transitive_headers=True)
+        # self.requires("wxwidgets/3.2.7.1", transitive_headers=True)
+        self.requires(
+            "wxwidgets/3.2.8@jivehelix/testing",
+            transitive_headers=True)

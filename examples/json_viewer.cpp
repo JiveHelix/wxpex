@@ -11,6 +11,7 @@
 #include <wxpex/button.h>
 #include <wxpex/file_field.h>
 #include <wxpex/app.h>
+#include <wxpex/wxshim_app.h>
 
 
 template<typename T>
@@ -182,4 +183,4 @@ private:
 };
 
 
-wxshimIMPLEMENT_APP(wxpex::App<ConsoleAppBrain>);
+wxshimAPP(wxpex::App<ConsoleAppBrain>);

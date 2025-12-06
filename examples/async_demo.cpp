@@ -23,7 +23,7 @@
 #include <pex/value.h>
 #include <pex/signal.h>
 
-#include "wxpex/wxshim.h"
+#include <wxpex/wxshim_app.h>
 #include "wxpex/view.h"
 #include "wxpex/field.h"
 #include "wxpex/labeled_widget.h"
@@ -235,12 +235,12 @@ private:
 class ExampleFrame: public wxFrame
 {
 public:
-    ExampleFrame(DemoControl demoControl);
+    ExampleFrame(const DemoControl &demoControl);
 };
 
 
 // Creates the main function for us, and initializes the app's run loop.
-wxshimIMPLEMENT_APP(ExampleApp)
+wxshimAPP(ExampleApp)
 
 
 bool ExampleApp::OnInit()
@@ -252,7 +252,7 @@ bool ExampleApp::OnInit()
 }
 
 
-ExampleFrame::ExampleFrame(DemoControl demoControl)
+ExampleFrame::ExampleFrame(const DemoControl &demoControl)
     :
     wxFrame(nullptr, wxID_ANY, "wxpex::Field Demo")
 {

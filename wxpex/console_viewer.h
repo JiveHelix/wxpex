@@ -4,7 +4,10 @@
 #include <pex/group.h>
 #include <pex/endpoint.h>
 #include <wx/tokenzr.h>
+
+WXSHIM_PUSH_IGNORES
 #include <wx/richtext/richtextctrl.h>
+WXSHIM_POP_IGNORES
 
 
 namespace wxpex
