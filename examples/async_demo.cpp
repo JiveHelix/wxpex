@@ -24,12 +24,13 @@
 #include <pex/signal.h>
 
 #include <wxpex/wxshim_app.h>
-#include "wxpex/view.h"
-#include "wxpex/field.h"
-#include "wxpex/labeled_widget.h"
-#include "wxpex/async.h"
-#include "wxpex/button.h"
-#include "wxpex/window.h"
+#include <wxpex/view.h>
+#include <wxpex/field.h>
+#include <wxpex/labeled_widget.h>
+#include <wxpex/async.h>
+#include <wxpex/button.h>
+#include <wxpex/window.h>
+#include <wxpex/async_range.h>
 
 
 template<typename T>
@@ -44,15 +45,14 @@ struct DemoFields
 };
 
 
-static_assert(
-    pex::IsMakeRange<pex::MakeRange<double, void, void, wxpex::Async>>);
+static_assert(pex::IsMakeRange<wxpex::AsyncRange<double, void, void>>);
 
 
 template<template<typename> typename T>
 struct DemoTemplate
 {
     T<double> startingAngle;
-    T<pex::MakeRange<double, void, void, wxpex::AsyncTypes>> currentAngle;
+    T<wxpex::AsyncRange<double, void, void>> currentAngle;
     T<pex::MakeSignal> reset;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
@@ -175,7 +175,15 @@ private:
 
     void OnReset_()
     {
-        this->reset_ = true;
+        if (!this->isRunning_)
+        {
+            this->control_.currentAngle.value.Set(
+                this->control_.startingAngle.Get());
+        }
+        else
+        {
+            this->reset_ = true;
+        }
     }
 
     void OnStop_()

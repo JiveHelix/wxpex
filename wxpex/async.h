@@ -180,9 +180,9 @@ public:
     static constexpr auto observerName = "wxpex::Async";
 
     using Type = T;
-    using ThreadSafe = pex::model::LockedValue<Type, Filter>;
-    using Callable = typename ThreadSafe::Callable;
     using Access = Access_;
+    using ThreadSafe = pex::model::LockedValue<Type, Filter, Access>;
+    using Callable = typename ThreadSafe::Callable;
 
     template<typename>
     friend class pex::Reference;
@@ -194,7 +194,6 @@ public:
     friend class AsyncMux;
 
     using Unfiltered = AsyncControl<Async, pex::NoFilter, Access>;
-
 
     Async(pex::Argument<Type> value = Type{})
         :
@@ -285,6 +284,8 @@ public:
 
     void Set(pex::Argument<Type> value)
     {
+        static_assert(pex::HasAccess<pex::SetTag, Access>);
+
         this->SetWithoutNotify_(value);
         this->Notify();
     }
@@ -299,12 +300,6 @@ public:
         return this->node_.Get();
     }
 
-    // The defaut control is for the wx event loop.
-    // operator Unfiltered ()
-    // {
-    //     return Unfiltered(this);
-    // }
-
     void Connect(void * observer, Callable callable)
     {
         this->node_.Connect(observer, callable);
@@ -318,6 +313,13 @@ public:
     void Notify()
     {
         pex::detail::AccessReference<ThreadSafe>(this->node_).Notify();
+    }
+
+protected:
+    void SetWithoutNotify_(pex::Argument<Type> value)
+    {
+        pex::detail::AccessReference<ThreadSafe>(this->node_)
+            .SetWithoutNotify(value);
     }
 
 private:
@@ -361,7 +363,8 @@ private:
             this->ignoredValue_ = value;
         }
 
-        this->node_.Set(value);
+        this->SetWithoutNotify_(value);
+        this->node_.Notify();
 
         std::lock_guard lock(this->mutex_);
         this->ignoredValue_.reset();
@@ -380,17 +383,22 @@ private:
             this->ignoredValue_ = value;
         }
 
-        this->workerNode_.Set(value);
+        this->SetWorkerWithoutNotify_(value);
+        this->NotifyWorker_();
 
         std::lock_guard lock(this->mutex_);
         this->ignoredValue_.reset();
     }
 
-
-    void SetWithoutNotify_(pex::Argument<Type> value)
+    void SetWorkerWithoutNotify_(pex::Argument<Type> value)
     {
-        pex::detail::AccessReference<ThreadSafe>(this->node_)
+        pex::detail::AccessReference<ThreadSafe>(this->workerNode_)
             .SetWithoutNotify(value);
+    }
+
+    void NotifyWorker_()
+    {
+        pex::detail::AccessReference<ThreadSafe>(this->workerNode_).Notify();
     }
 
 private:
@@ -500,6 +508,8 @@ public:
 
     void Set(pex::Argument<Type> value)
     {
+        static_assert(pex::HasAccess<pex::SetTag, Access>);
+
         this->SetWithoutNotify_(value);
         this->Notify();
     }
@@ -565,18 +575,37 @@ struct AsyncTypes
         typename ControlFilter,
         typename ControlAccess
     >
-    using Control = AsyncControl<Upstream, ControlFilter, ControlAccess>;
+    using Control =
+        AsyncControl
+        <
+            Upstream,
+            ControlFilter,
+            pex::LimitAccess<ControlAccess, Access>
+        >;
 
     using Mux = AsyncMux<T, ModelFilter, Access>;
 
     template<typename ControlFilter, typename ControlAccess>
     using Follow =
-        typename Mux::template Follow<ControlFilter, ControlAccess>;
+        typename Mux::template Follow
+        <
+            ControlFilter,
+            pex::LimitAccess<ControlAccess, Access>
+        >;
 };
 
 
-template<typename T, typename Filter = pex::NoFilter>
-using MakeAsync = pex::DefineNodes<AsyncTypes<T, Filter, pex::GetAndSetTag>>;
+template
+<
+    typename T,
+    typename Filter = pex::NoFilter,
+    typename Access = pex::GetAndSetTag
+>
+using MakeAsync = pex::DefineNodes<AsyncTypes<T, Filter, Access>>;
+
+
+template<typename T>
+using ReadOnlyAsync = MakeAsync<T, pex::NoFilter, pex::GetTag>;
 
 
 class CallAfter: public wxEvtHandler
