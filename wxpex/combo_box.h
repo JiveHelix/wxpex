@@ -43,7 +43,7 @@ public:
 
     ComboBox(
         wxWindow *parent,
-        Control control,
+        const Control &control,
         long style = 0)
         :
         Base(
@@ -206,7 +206,7 @@ template
 >
 wxComboBox * MakeComboBox(
     wxWindow *parent,
-    Control control,
+    const Control &control,
     const std::string &nullValue = "")
 {
     if constexpr (jive::IsOptional<typename Control::Selection::Type>)
