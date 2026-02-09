@@ -21,10 +21,20 @@ Splitter::Splitter(
     userSashPosition_(-1)
 {
     this->Bind(wxEVT_LEFT_DCLICK, &Splitter::OnDoubleClick_, this);
+    this->Bind(wxEVT_SIZE, &Splitter::OnSize_, this);
 }
 
 
 void Splitter::OnDoubleClick_(wxMouseEvent &)
+{
+    // Interrupt the nonsensical default behavior.
+    // Reset the default sash position instead.
+    this->userSashPosition_ = -1;
+    this->Layout();
+}
+
+
+void Splitter::OnSize_(wxSizeEvent &)
 {
     // Interrupt the nonsensical default behavior.
     // Reset the default sash position instead.
@@ -50,6 +60,21 @@ void Splitter::SetSashWithWindow_(wxWindow *window, bool negativeSash)
             (negativeSash)
                 ? -bestSize.GetHeight()
                 : bestSize.GetHeight());
+    }
+}
+
+
+void Splitter::CenterSash_()
+{
+    auto clientSize = this->GetClientSize();
+
+    if (this->GetSplitMode() == wxSPLIT_VERTICAL)
+    {
+        this->SetSashPosition(clientSize.GetWidth() / 2);
+    }
+    else
+    {
+        this->SetSashPosition(clientSize.GetHeight() / 2);
     }
 }
 
@@ -103,6 +128,12 @@ bool Splitter::Layout()
     {
         this->SetSashWithWindow_(this->secondPriority_, true);
     }
+    else
+    {
+        // Neither half has priority.
+        // Put the sash in the middle.
+        this->CenterSash_();
+    }
 
     this->wxSplitterWindow::Layout();
 
@@ -128,6 +159,10 @@ bool Splitter::OnSashPositionChange(int newSashPosition)
             false,
             newSashPosition);
     }
+    else
+    {
+        result = true;
+    }
 
     if (result)
     {
@@ -147,6 +182,15 @@ void Splitter::SplitVerticallyLeft(wxWindow *left, wxWindow *right)
 }
 
 
+void Splitter::SplitVerticallyCenter(wxWindow *left, wxWindow *right)
+{
+    this->SplitVertically(left, right, 0);
+    this->firstPriority_ = nullptr;
+    this->secondPriority_ = nullptr;
+    this->Layout();
+}
+
+
 void Splitter::SplitVerticallyRight(wxWindow *left, wxWindow *right)
 {
     this->SplitVertically(left, right, 0);
@@ -160,6 +204,15 @@ void Splitter::SplitHorizontallyTop(wxWindow *top, wxWindow *bottom)
 {
     this->SplitHorizontally(top, bottom, 0);
     this->firstPriority_ = top;
+    this->secondPriority_ = nullptr;
+    this->Layout();
+}
+
+
+void Splitter::SplitHorizontallyCenter(wxWindow *top, wxWindow *bottom)
+{
+    this->SplitHorizontally(top, bottom, 0);
+    this->firstPriority_ = nullptr;
     this->secondPriority_ = nullptr;
     this->Layout();
 }

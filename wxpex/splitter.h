@@ -21,12 +21,15 @@ public:
     bool OnSashPositionChange(int newSashPosition) override;
 
     void SplitVerticallyLeft(wxWindow *left, wxWindow *right);
+    void SplitVerticallyCenter(wxWindow *left, wxWindow *right);
     void SplitVerticallyRight(wxWindow *left, wxWindow *right);
     void SplitHorizontallyTop(wxWindow *top, wxWindow *bottom);
+    void SplitHorizontallyCenter(wxWindow *top, wxWindow *bottom);
     void SplitHorizontallyBottom(wxWindow *top, wxWindow *bottom);
 
 private:
     void SetSashWithWindow_(wxWindow *window, bool negativeSash);
+    void CenterSash_();
 
     bool CheckSashWithWindow_(
         wxWindow *window,
@@ -34,6 +37,7 @@ private:
         int newSashPosition);
 
     void OnDoubleClick_(wxMouseEvent &);
+    void OnSize_(wxSizeEvent &);
 
 private:
     wxWindow *firstPriority_;
