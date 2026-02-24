@@ -43,6 +43,8 @@ private:
 private:
     wxWindow *firstPriority_;
     wxWindow *secondPriority_;
+    bool hasPendingUpdate_;
+    bool isInitialized_;
     int userSashPosition_;
 };
 

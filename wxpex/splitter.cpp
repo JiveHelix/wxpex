@@ -18,6 +18,8 @@ Splitter::Splitter(
         style),
     firstPriority_(nullptr),
     secondPriority_(nullptr),
+    hasPendingUpdate_(false),
+    isInitialized_(false),
     userSashPosition_(-1)
 {
     this->Bind(wxEVT_LEFT_DCLICK, &Splitter::OnDoubleClick_, this);
@@ -25,7 +27,7 @@ Splitter::Splitter(
 }
 
 
-void Splitter::OnDoubleClick_(wxMouseEvent &)
+void Splitter::OnDoubleClick_(wxMouseEvent &event)
 {
     // Interrupt the nonsensical default behavior.
     // Reset the default sash position instead.
@@ -36,10 +38,29 @@ void Splitter::OnDoubleClick_(wxMouseEvent &)
 
 void Splitter::OnSize_(wxSizeEvent &event)
 {
-    // Interrupt the nonsensical default behavior.
-    // Reset the default sash position instead.
-    this->userSashPosition_ = -1;
-    this->LayoutSash();
+    event.Skip();
+
+    if (this->hasPendingUpdate_ || this->isInitialized_)
+    {
+        return;
+    }
+
+    this->hasPendingUpdate_ = true;
+
+    this->CallAfter(
+        [this]()
+        {
+            this->hasPendingUpdate_ = false;
+            auto size = this->GetSize();
+
+            if (size.GetWidth() < 20 || size.GetHeight() < 20)
+            {
+                return;
+            }
+
+            this->LayoutSash();
+            this->isInitialized_ = true;
+        });
 }
 
 
@@ -52,14 +73,16 @@ void Splitter::SetSashWithWindow_(wxWindow *window, bool negativeSash)
         this->SetSashPosition(
             (negativeSash)
                 ? -bestSize.GetWidth()
-                : bestSize.GetWidth());
+                : bestSize.GetWidth(),
+            true);
     }
     else
     {
         this->SetSashPosition(
             (negativeSash)
                 ? -bestSize.GetHeight()
-                : bestSize.GetHeight());
+                : bestSize.GetHeight(),
+            true);
     }
 }
 
@@ -84,7 +107,7 @@ bool Splitter::CheckSashWithWindow_(
     bool leftOrTop,
     int newSashPosition)
 {
-    auto minimumSize = window->GetMinSize();
+    auto minimumSize = window->GetBestSize();
     int thisSize;
     int minimumChildSize;
 
@@ -131,16 +154,15 @@ void Splitter::LayoutSash()
 
 bool Splitter::Layout()
 {
+    this->wxSplitterWindow::Layout();
+
     if (this->userSashPosition_ > -1)
     {
         // Once the user has selected their desired size, do not change it.
-        this->wxSplitterWindow::Layout();
-
         return true;
     }
 
     this->LayoutSash();
-    this->wxSplitterWindow::Layout();
 
     return true;
 }
