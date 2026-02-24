@@ -44,5 +44,5 @@ class WxpexConan(ConanFile):
         # to propagate by default.
         # self.requires("wxwidgets/3.2.7.1", transitive_headers=True)
         self.requires(
-            "wxwidgets/3.2.8@jivehelix/testing",
+            "wxwidgets/3.2.8",
             transitive_headers=True)
