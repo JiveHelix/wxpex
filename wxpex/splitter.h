@@ -17,6 +17,7 @@ public:
     Splitter(wxWindow *parent, long style = wxSP_3DSASH | wxSP_LIVE_UPDATE);
 
 public:
+    void LayoutSash();
     bool Layout() override;
     bool OnSashPositionChange(int newSashPosition) override;
 

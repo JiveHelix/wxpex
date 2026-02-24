@@ -30,16 +30,16 @@ void Splitter::OnDoubleClick_(wxMouseEvent &)
     // Interrupt the nonsensical default behavior.
     // Reset the default sash position instead.
     this->userSashPosition_ = -1;
-    this->Layout();
+    this->LayoutSash();
 }
 
 
-void Splitter::OnSize_(wxSizeEvent &)
+void Splitter::OnSize_(wxSizeEvent &event)
 {
     // Interrupt the nonsensical default behavior.
     // Reset the default sash position instead.
     this->userSashPosition_ = -1;
-    this->Layout();
+    this->LayoutSash();
 }
 
 
@@ -110,16 +110,8 @@ bool Splitter::CheckSashWithWindow_(
 }
 
 
-bool Splitter::Layout()
+void Splitter::LayoutSash()
 {
-    if (this->userSashPosition_ > -1)
-    {
-        // Once the user has selected their desired size, do not change it.
-        this->wxSplitterWindow::Layout();
-
-        return true;
-    }
-
     if (this->firstPriority_)
     {
         this->SetSashWithWindow_(this->firstPriority_, false);
@@ -134,7 +126,20 @@ bool Splitter::Layout()
         // Put the sash in the middle.
         this->CenterSash_();
     }
+}
 
+
+bool Splitter::Layout()
+{
+    if (this->userSashPosition_ > -1)
+    {
+        // Once the user has selected their desired size, do not change it.
+        this->wxSplitterWindow::Layout();
+
+        return true;
+    }
+
+    this->LayoutSash();
     this->wxSplitterWindow::Layout();
 
     return true;
