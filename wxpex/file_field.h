@@ -173,6 +173,7 @@ public:
         if (chosenPath)
         {
             this->value_.Set(*chosenPath);
+            this->Layout();
         }
     }
 

@@ -14,20 +14,21 @@ class WxpexConan(ConanFile):
     description = "A simplified API to combine wxWidgets with pex nodes."
     topics = ("GUI", "C++", "wxWidgets")
 
+    default_options = {
+        "wxwidgets/*:stc": False,
+        "wxwidgets/*:jpeg": "libjpeg-turbo",
+        "libtiff/*:jpeg": "libjpeg-turbo",
+        "fPIC": True,
+        "shared": False,
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": None
+    }
+
     def init(self):
         # Call the base method _only_ if it exists
         base_init = getattr(super(), "init", None)
 
         if callable(base_init):
             base_init()
-
-        # Extend (not replace) the inherited defaults
-
-        # self.default_options.update({
-        #     "wxwidgets/*:stc": False
-        # })
-
-        self.default_options["wxwidgets/*:stc"] = False
 
     def build_requirements(self):
         self.test_requires("catch2/2.13.8")

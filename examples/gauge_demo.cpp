@@ -6,6 +6,7 @@
 #include <wxpex/wxshim_app.h>
 
 
+
 template<typename T>
 struct DemoFields
 {
@@ -37,6 +38,24 @@ using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 
 
+struct GaugeWorkers
+{
+public:
+    wxpex::GaugeWorker gauge1;
+    wxpex::GaugeWorker gauge2;
+
+    GaugeWorkers() = default;
+
+    GaugeWorkers(DemoModel &model)
+        :
+        gauge1(model.gauge1),
+        gauge2(model.gauge2)
+    {
+
+    }
+};
+
+
 class ExampleApp: public wxApp
 {
 public:
@@ -45,6 +64,7 @@ public:
     ExampleApp()
         :
         model_{},
+        gaugeWorkers_(this->model_),
         endpoints_(PEX_THIS("ExampleApp"), this->model_),
         observedValues_(),
         isRunning_{false},
@@ -107,35 +127,32 @@ private:
 
     void WorkerThread1_()
     {
-        auto valueControl = this->model_.gauge1.value.GetWorkerControl();
-        auto maximumControl = this->model_.gauge1.maximum.GetWorkerControl();
         size_t maximum = 100;
         size_t value = 0;
-        maximumControl.Set(100);
-        valueControl.Set(0);
+        this->gaugeWorkers_.gauge1.maximum.Set(100);
+        this->gaugeWorkers_.gauge1.value.Set(0);
 
         while (this->isRunning_ && value < maximum)
         {
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(100ms);
-            valueControl.Set(++value);
+            this->gaugeWorkers_.gauge1.value.Set(++value);
         }
     }
 
     void WorkerThread2_()
     {
-        auto valueControl = this->model_.gauge2.value.GetWorkerControl();
-        auto maximumControl = this->model_.gauge2.maximum.GetWorkerControl();
         size_t maximum = 1000;
         size_t value = 0;
-        maximumControl.Set(1000);
-        valueControl.Set(0);
+
+        this->gaugeWorkers_.gauge2.maximum.Set(maximum);
+        this->gaugeWorkers_.gauge2.value.Set(0);
 
         while (this->isRunning_ && value < maximum)
         {
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(10ms);
-            valueControl.Set(++value);
+            this->gaugeWorkers_.gauge2.value.Set(++value);
         }
     }
 
@@ -157,6 +174,7 @@ private:
 
 private:
     DemoModel model_;
+    GaugeWorkers gaugeWorkers_;
     pex::EndpointGroup<ExampleApp, DemoControl> endpoints_;
     std::vector<int> observedValues_;
     std::atomic_bool isRunning_;

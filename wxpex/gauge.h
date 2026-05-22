@@ -111,17 +111,29 @@ static_assert(
     >);
 
 
-struct GaugeWorker: public GaugeControl
+struct GaugeWorker
 {
 public:
+    using Value = decltype(GaugeControl::value);
+    Value value;
+
+    using Maximum = decltype(GaugeControl::maximum);
+    Maximum maximum;
+
     GaugeWorker() = default;
 
     GaugeWorker(GaugeModel &model)
         :
-        GaugeControl(model)
+        value(model.value.GetWorkerControl()),
+        maximum(model.maximum.GetWorkerControl())
     {
-        this->value = model.value.GetWorkerControl();
-        this->maximum = model.maximum.GetWorkerControl();
+
+    }
+
+    void Emplace(const GaugeControl &control)
+    {
+        this->value.Emplace(control.value.GetWorkerControl());
+        this->maximum.Emplace(control.maximum.GetWorkerControl());
     }
 };
 
