@@ -14,8 +14,7 @@ std::vector<PenCap> PenCapChoices::GetChoices()
 }
 
 
-std::string PenCapConverter::ToString(
-    PenCap penCap)
+std::string PenCapConverter::ToString(PenCap penCap)
 {
     switch (penCap)
     {
