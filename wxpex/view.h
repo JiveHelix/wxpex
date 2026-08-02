@@ -89,6 +89,7 @@ private:
     {
         this->SetLabel(View::ToString(value));
         this->UpdateMinimumSize_();
+        this->GetParent()->Layout();
     }
 
     void UpdateMinimumSize_()

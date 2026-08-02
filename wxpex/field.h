@@ -206,6 +206,7 @@ private:
         if (!this->fixedWidth_)
         {
             this->UpdateMinimumSize_();
+            this->GetParent()->Layout();
         }
     }
 
