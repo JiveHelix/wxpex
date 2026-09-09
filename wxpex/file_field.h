@@ -57,6 +57,12 @@ struct FileDialogOptions
 
 
 std::optional<std::string> ChoosePath(
+    const std::string &directory,
+    const std::string &fileName,
+    const FileDialogOptions &options);
+
+
+std::optional<std::string> ChoosePath(
     const std::string &currentValue,
     const FileDialogOptions &options);
 

@@ -105,6 +105,89 @@ template
     typename Control,
     typename Convert = pex::Converter<typename Control::Type>
 >
+class ReadOnlySelect : public wxStaticText
+{
+public:
+    static constexpr auto observerName = "wxpex::ReadOnlySelect";
+
+    using Base = wxStaticText;
+    using This = ReadOnlySelect<Control, Convert>;
+
+    using Selection =
+        pex::Endpoint<ReadOnlySelect, typename Control::Selection>;
+
+    using Choices = pex::Endpoint<ReadOnlySelect, typename Control::Choices>;
+    using ChoicesVector = typename Choices::Type;
+    using ValueType = typename Control::Type;
+    using WxAdapter = WxSelect<ValueType, Convert>;
+
+    ReadOnlySelect(
+        wxWindow *parent,
+        const Control &control,
+        long style = 0)
+        :
+        Base(
+            parent,
+            wxID_ANY,
+            WxAdapter::GetSelectionAsString(
+                control.selection.Get(),
+                control.choices.Get()),
+            wxDefaultPosition,
+            wxDefaultSize),
+
+        selection_(
+            PEX_THIS("wxpex::ReadOnlySelect"),
+            control.selection,
+            &ReadOnlySelect::OnSelectionChanged_),
+
+        choices_(
+            this,
+            control.choices,
+            &ReadOnlySelect::OnChoicesChanged_)
+    {
+
+    }
+
+private:
+    void OnSelectionChanged_(size_t index)
+    {
+        this->SetLabel(
+            WxAdapter::GetSelectionAsString(index, this->choices_.Get()));
+
+        this->UpdateMinimumSize_();
+        this->GetParent()->Layout();
+    }
+
+    void UpdateMinimumSize_()
+    {
+        // Text field should resize to fit whatever text is displayed.
+        auto fittingSize =
+            this->GetSizeFromTextSize(
+                this->GetTextExtent(
+                    WxAdapter::GetSelectionAsString(
+                        this->selection_.Get(),
+                        this->choices_.Get())));
+
+        this->SetMinClientSize(fittingSize);
+        this->InvalidateBestSize();
+    }
+
+    void OnChoicesChanged_(const ChoicesVector &choices)
+    {
+        this->OnSelectionChanged_(this->selection_.Get());
+    }
+
+
+    Selection selection_;
+    Choices choices_;
+};
+
+
+template
+<
+    typename Control,
+    typename Convert = pex::Converter<typename Control::Type>
+>
 class OptionalComboBox : public wxComboBox
 {
 public:

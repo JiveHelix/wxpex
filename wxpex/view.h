@@ -94,7 +94,7 @@ private:
 
     void UpdateMinimumSize_()
     {
-        // Text entry field should resize to fit whatever text is displayed.
+        // Text field should resize to fit whatever text is displayed.
         auto fittingSize =
             this->GetSizeFromTextSize(
                 this->GetTextExtent(

@@ -10,20 +10,21 @@ namespace wxpex
 
 
 std::optional<std::string> ChoosePath(
-    const std::string &currentValue,
+    const std::string &directory,
+    const std::string &fileName,
     const FileDialogOptions &options)
 {
-    auto defaultDir =
-        currentValue.empty()
+    auto defaultDirectory =
+        directory.empty()
         ? wxFileName::GetHomeDir()
-        : wxString(currentValue);
+        : wxString(directory);
 
     if (options.isFolder)
     {
         wxDirDialog openFolder(
             nullptr,
             wxString(options.message),
-            defaultDir,
+            defaultDirectory,
             (options.style & wxFD_FILE_MUST_EXIST)
                 ? wxDD_DIR_MUST_EXIST | wxDD_DEFAULT_STYLE
                 : wxDD_DEFAULT_STYLE);
@@ -37,13 +38,11 @@ std::optional<std::string> ChoosePath(
     }
     else
     {
-        auto [directory, file] = jive::path::Split(currentValue);
-
         wxFileDialog openFile(
             nullptr,
             wxString(options.message),
-            wxString(directory),
-            wxString(file),
+            defaultDirectory,
+            wxString(fileName),
             wxString(options.wildcard),
             options.style);
 
@@ -53,6 +52,23 @@ std::optional<std::string> ChoosePath(
         }
 
         return openFile.GetPath().utf8_string();
+    }
+}
+
+
+std::optional<std::string> ChoosePath(
+    const std::string &currentValue,
+    const FileDialogOptions &options)
+{
+    if (options.isFolder)
+    {
+        return ChoosePath(currentValue, "", options);
+    }
+    else
+    {
+        auto [directory, file] = jive::path::Split(currentValue);
+
+        return ChoosePath(directory, file, options);
     }
 }
 
