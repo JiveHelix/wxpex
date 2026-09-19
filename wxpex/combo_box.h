@@ -123,8 +123,7 @@ public:
 
     ReadOnlySelect(
         wxWindow *parent,
-        const Control &control,
-        long style = 0)
+        const Control &control)
         :
         Base(
             parent,
@@ -172,7 +171,7 @@ private:
         this->InvalidateBestSize();
     }
 
-    void OnChoicesChanged_(const ChoicesVector &choices)
+    void OnChoicesChanged_(const ChoicesVector &)
     {
         this->OnSelectionChanged_(this->selection_.Get());
     }
