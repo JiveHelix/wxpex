@@ -33,10 +33,12 @@ struct DemoTemplate
 {
     T<bool> isChecked;
     T<std::string> message;
+
+    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
 };
 
 
-using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
+using DemoGroup = pex::Group<DemoTemplate>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 using IsCheckedControl = decltype(DemoControl::isChecked);

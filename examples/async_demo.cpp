@@ -62,7 +62,7 @@ struct DemoTemplate
 };
 
 
-using DemoGroup = pex::Group<DemoFields, DemoTemplate>;
+using DemoGroup = pex::Group<DemoTemplate>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

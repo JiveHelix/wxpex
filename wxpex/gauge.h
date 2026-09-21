@@ -96,7 +96,7 @@ struct GaugeGroupTemplates
 };
 
 
-using GaugeGroup = pex::Group<GaugeFields, GaugeTemplate, GaugeGroupTemplates>;
+using GaugeGroup = pex::Group<GaugeTemplate, GaugeGroupTemplates>;
 using GaugeModel = typename GaugeGroup::Model;
 using GaugeState = typename GaugeGroup::Plain;
 

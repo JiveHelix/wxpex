@@ -45,10 +45,13 @@ struct ApplicationTemplate
     T<pex::MakeSignal> frobnicate;
     T<pex::MakeSignal> quit;
     T<std::string> message;
+
+    static constexpr auto fields =
+        ApplicationFields<ApplicationTemplate>::fields;
 };
 
 
-using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
+using ApplicationGroup = pex::Group<ApplicationTemplate>;
 
 
 struct ApplicationModel: public ApplicationGroup::Model

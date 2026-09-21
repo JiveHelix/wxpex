@@ -63,8 +63,7 @@ struct Pricing: public PricingTemplate<pex::Identity>
 };
 
 
-using PricingGroup =
-    pex::Group<PricingFields, PricingTemplate, pex::PlainT<Pricing>>;
+using PricingGroup = pex::Group<PricingTemplate, pex::PlainT<Pricing>>;
 
 using PricingModel = typename PricingGroup::Model;
 using PricingControl = typename PricingGroup::DefaultControl;
@@ -95,7 +94,7 @@ struct SettingsTemplate
 };
 
 
-using SettingsGroup = pex::Group<SettingsFields, SettingsTemplate>;
+using SettingsGroup = pex::Group<SettingsTemplate>;
 using SettingsControl = typename SettingsGroup::DefaultControl;
 using CountControl = decltype(SettingsControl::count);
 
@@ -211,7 +210,7 @@ struct BookTemplate
 };
 
 
-using BookGroup = pex::Group<BookFields, BookTemplate>;
+using BookGroup = pex::Group<BookTemplate>;
 using BookControl = typename BookGroup::DefaultControl;
 
 
@@ -448,8 +447,7 @@ struct BookStoreCustom
 };
 
 
-using BookStoreGroup =
-    pex::Group<BookStoreFields, BookStoreTemplate, BookStoreCustom>;
+using BookStoreGroup = pex::Group<BookStoreTemplate, BookStoreCustom>;
 
 using BookStoreModel = typename BookStoreGroup::Model;
 using BookStoreControl = typename BookStoreGroup::DefaultControl;

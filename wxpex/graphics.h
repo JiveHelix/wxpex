@@ -88,7 +88,6 @@ template<typename U>
 using ShearGroup =
     pex::Group
     <
-        ShearFields,
         ShearTemplate<U>::template Template,
         pex::PlainT<Shear<U>>
     >;

@@ -42,10 +42,13 @@ struct ApplicationTemplate
     T<std::string> target;
     T<std::string> message;
     T<pex::MakeSignal> copy;
+
+    static constexpr auto fields =
+        ApplicationFields<ApplicationTemplate>::fields;
 };
 
 
-using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
+using ApplicationGroup = pex::Group<ApplicationTemplate>;
 
 using Model = typename ApplicationGroup::Model;
 

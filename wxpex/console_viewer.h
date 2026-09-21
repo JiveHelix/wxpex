@@ -27,11 +27,13 @@ struct ConsoleViewerTemplate
 {
     T<pex::MakeSignal> clear;
     T<MakeAsync<std::string>> message;
+
+    static constexpr auto fields =
+        ConsoleViewerFields<ConsoleViewerTemplate>::fields;
 };
 
 
-using ConsoleViewerGroup =
-    pex::Group<ConsoleViewerFields, ConsoleViewerTemplate>;
+using ConsoleViewerGroup = pex::Group<ConsoleViewerTemplate>;
 
 using ConsoleViewerModel = typename ConsoleViewerGroup::Model;
 using ConsoleViewerControl = typename ConsoleViewerGroup::DefaultControl;

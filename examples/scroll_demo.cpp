@@ -60,7 +60,7 @@ struct StateTemplate
 };
 
 
-using ColorsStateGroup = pex::Group<ColorsStateFields, StateTemplate>;
+using ColorsStateGroup = pex::Group<StateTemplate>;
 using ColorsStateModel = typename ColorsStateGroup::Model;
 
 using ColorsStateControl =

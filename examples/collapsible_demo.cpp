@@ -33,10 +33,12 @@ struct WeaponsTemplate
     T<std::string> firstFruit;
     T<std::string> secondFruit;
     T<std::string> notFruit;
+
+    static constexpr auto fields = WeaponsFields<WeaponsTemplate>::fields;
 };
 
 
-using WeaponsGroup = pex::Group<WeaponsFields, WeaponsTemplate>;
+using WeaponsGroup = pex::Group<WeaponsTemplate>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
@@ -64,10 +66,12 @@ template<template<typename> typename T>
 struct ThingsTemplate
 {
     T<WeaponsGroup> weapons;
+
+    static constexpr auto fields = ThingsFields<ThingsTemplate>::fields;
 };
 
 
-using ThingsGroup = pex::Group<ThingsFields, ThingsTemplate>;
+using ThingsGroup = pex::Group<ThingsTemplate>;
 using ThingsModel = typename ThingsGroup::Model;
 using ThingsControl = typename ThingsGroup::template Control<ThingsModel>;
 
@@ -86,10 +90,12 @@ struct StuffTemplate
 {
     T<ThingsGroup> thing1;
     T<ThingsGroup> thing2;
+
+    static constexpr auto fields = StuffFields<StuffTemplate>::fields;
 };
 
 
-using StuffGroup = pex::Group<StuffFields, StuffTemplate>;
+using StuffGroup = pex::Group<StuffTemplate>;
 using StuffControl = typename StuffGroup::DefaultControl;
 using StuffModel = typename StuffGroup::Model;
 

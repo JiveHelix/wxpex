@@ -57,7 +57,7 @@ struct Recipe: public RecipeTemplate<pex::Identity>
 };
 
 
-using RecipeGroup = pex::Group<RecipeFields, RecipeTemplate, Recipe>;
+using RecipeGroup = pex::Group<RecipeTemplate, Recipe>;
 using RecipeControl = typename RecipeGroup::Control;
 
 
@@ -183,10 +183,12 @@ struct ColorTemplate
 {
     T<tau::Rgba<uint8_t>> color;
     T<pex::MakeSelect<CompositionSelect>> compositionMode;
+
+    static constexpr auto fields = ColorFields<ColorTemplate>::fields;
 };
 
 
-using ColorGroup = pex::Group<ColorFields, ColorTemplate>;
+using ColorGroup = pex::Group<ColorTemplate>;
 using ColorControl = typename ColorGroup::Control;
 
 
@@ -204,10 +206,12 @@ struct DrawTemplate
 {
     T<RecipeGroup> recipe;
     T<ColorGroup> color;
+
+    static constexpr auto fields = DrawFields<DrawTemplate>::fields;
 };
 
 
-using SettingsGroup = pex::Group<DrawFields, DrawTemplate>;
+using SettingsGroup = pex::Group<DrawTemplate>;
 using SettingsModel = typename SettingsGroup::Model;
 using SettingsControl = typename SettingsGroup::Control;
 

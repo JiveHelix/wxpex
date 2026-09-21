@@ -38,6 +38,8 @@ struct DemoTemplate
     T<bool> changeRange;
     T<MakeRange<std::optional<int>, Limit<0>, Limit<100>>> optional;
     T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
+
+    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
 };
 
 
@@ -52,7 +54,7 @@ struct Demo: public DemoTemplate<pex::Identity>
     }
 };
 
-using DemoGroup = pex::Group<DemoFields, DemoTemplate, pex::PlainT<Demo>>;
+using DemoGroup = pex::Group<DemoTemplate, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

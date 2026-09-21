@@ -37,7 +37,7 @@ struct UserTemplate
 };
 
 
-using UserGroup = pex::Group<UserFields, UserTemplate>;
+using UserGroup = pex::Group<UserTemplate>;
 using UserControls = typename UserGroup::DefaultControl;
 using UserModel = typename UserGroup::Model;
 

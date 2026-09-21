@@ -49,10 +49,13 @@ struct ApplicationTemplate
     T<pex::Filtered<double, AngleFilter>> angle;
     T<std::optional<double>> theAnswer;
     T<std::string> message;
+
+    static constexpr auto fields =
+        ApplicationFields<ApplicationTemplate>::fields;
 };
 
 
-using ApplicationGroup = pex::Group<ApplicationFields, ApplicationTemplate>;
+using ApplicationGroup = pex::Group<ApplicationTemplate>;
 using Model = typename ApplicationGroup::Model;
 using Control = typename ApplicationGroup::DefaultControl;
 
