@@ -25,34 +25,22 @@
 #include <wxpex/slider.h>
 
 
-
-template<typename T>
-struct DemoFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::velocity, "velocity"),
-        fields::Field(&T::azimuth, "azimuth"),
-        fields::Field(&T::elevation, "elevation"));
-};
-
-
 using pex::Limit;
 using pex::MakeRange;
 
 
 template<template<typename> typename T>
-struct DemoTemplate
+struct DemoSchema
 {
     T<pex::MakeRange<double, Limit<0>, Limit<1000>>> velocity;
     T<pex::MakeRange<double, Limit<-90>, Limit<90>>> azimuth;
     T<pex::MakeRange<double, Limit<0>, Limit<90>>> elevation;
 
-    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
     static constexpr auto fieldsTypeName = "Demo";
 };
 
 
-using DemoGroup = pex::Group<DemoTemplate>;
+using DemoGroup = pex::Group<DemoSchema>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

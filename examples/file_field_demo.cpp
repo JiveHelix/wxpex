@@ -22,33 +22,17 @@
 #include <wxpex/labeled_widget.h>
 
 
-template<typename T>
-struct ApplicationFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::source, "source"),
-        fields::Field(&T::target, "target"),
-        fields::Field(&T::message, "message"),
-        fields::Field(&T::copy, "copy"));
-
-    static constexpr auto fieldsTypeName = "FileFieldDemo";
-};
-
-
 template<template<typename> typename T>
-struct ApplicationTemplate
+struct ApplicationSchema
 {
     T<std::string> source;
     T<std::string> target;
     T<std::string> message;
     T<pex::MakeSignal> copy;
-
-    static constexpr auto fields =
-        ApplicationFields<ApplicationTemplate>::fields;
 };
 
 
-using ApplicationGroup = pex::Group<ApplicationTemplate>;
+using ApplicationGroup = pex::Group<ApplicationSchema>;
 
 using Model = typename ApplicationGroup::Model;
 

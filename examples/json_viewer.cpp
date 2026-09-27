@@ -14,30 +14,17 @@
 #include <wxpex/wxshim_app.h>
 
 
-template<typename T>
-struct UserFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::fileName, "fileName"),
-        fields::Field(&T::console, "console"),
-        fields::Field(&T::openJson, "openJson"),
-        fields::Field(&T::quit, "quit"));
-};
-
-
 template<template<typename> typename T>
-struct UserTemplate
+struct UserSchema
 {
     T<std::string> fileName;
     T<wxpex::ConsoleViewerGroup> console;
     T<pex::MakeSignal> openJson;
     T<pex::MakeSignal> quit;
-
-    static constexpr auto fields = UserFields<UserTemplate>::fields;
 };
 
 
-using UserGroup = pex::Group<UserTemplate>;
+using UserGroup = pex::Group<UserSchema>;
 using UserControls = typename UserGroup::DefaultControl;
 using UserModel = typename UserGroup::Model;
 

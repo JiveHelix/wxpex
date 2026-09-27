@@ -15,28 +15,16 @@
 #include <wxpex/wxshim_app.h>
 
 
-template<typename T>
-struct WeaponsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::firstFruit, "firstFruit"),
-        fields::Field(&T::secondFruit, "secondFruit"),
-        fields::Field(&T::notFruit, "notFruit"));
-};
-
-
 template<template<typename> typename T>
-struct WeaponsTemplate
+struct WeaponsSchema
 {
     T<std::string> firstFruit;
     T<std::string> secondFruit;
     T<std::string> notFruit;
-
-    static constexpr auto fields = WeaponsFields<WeaponsTemplate>::fields;
 };
 
 
-using WeaponsGroup = pex::Group<WeaponsTemplate>;
+using WeaponsGroup = pex::Group<WeaponsSchema>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
@@ -52,30 +40,17 @@ inline WeaponsPlain DefaultWeapons()
 };
 
 
-template<typename T>
-struct GpsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::time, "time"),
-        fields::Field(&T::latitude, "latitude"),
-        fields::Field(&T::longitude, "longitude"),
-        fields::Field(&T::elevation, "elevation"));
-};
-
-
 template<template<typename> typename T>
-struct GpsTemplate
+struct GpsSchema
 {
     T<int64_t> time;
     T<double> latitude;
     T<double> longitude;
     T<double> elevation;
-
-    static constexpr auto fields = GpsFields<GpsTemplate>::fields;
 };
 
 
-using GpsGroup = pex::Group<GpsTemplate>;
+using GpsGroup = pex::Group<GpsSchema>;
 using GpsPlain = typename GpsGroup::Plain;
 using GpsModel = typename GpsGroup::Model;
 
@@ -92,50 +67,28 @@ inline GpsPlain DefaultGps()
 }
 
 
-template<typename T>
-struct ThingsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::weapons, "weapons"),
-        fields::Field(&T::gps, "gps"));
-};
-
-
 template<template<typename> typename T>
-struct ThingsTemplate
+struct ThingsSchema
 {
     T<WeaponsGroup> weapons;
     T<GpsGroup> gps;
-
-    static constexpr auto fields = ThingsFields<ThingsTemplate>::fields;
 };
 
 
-using ThingsGroup = pex::Group<ThingsTemplate>;
+using ThingsGroup = pex::Group<ThingsSchema>;
 using ThingsModel = typename ThingsGroup::Model;
 using ThingsControl = typename ThingsGroup::DefaultControl;
 
 
-template<typename T>
-struct StuffFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::thing1, "thing1"),
-        fields::Field(&T::thing2, "thing2"));
-};
-
-
 template<template<typename> typename T>
-struct StuffTemplate
+struct StuffSchema
 {
     T<ThingsGroup> thing1;
     T<ThingsGroup> thing2;
-
-    static constexpr auto fields = StuffFields<StuffTemplate>::fields;
 };
 
 
-using StuffGroup = pex::Group<StuffTemplate>;
+using StuffGroup = pex::Group<StuffSchema>;
 using StuffModel = typename StuffGroup::Model;
 using StuffControl = typename StuffGroup::DefaultControl;
 

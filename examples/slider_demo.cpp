@@ -18,32 +18,20 @@
 #include <wxpex/check_box.h>
 
 
-template<typename T>
-struct DemoFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::position, "position"),
-        fields::Field(&T::changeRange, "changeRange"),
-        fields::Field(&T::optional, "optional"),
-        fields::Field(&T::playbackSpeed, "playbackSpeed"));
-};
-
 using pex::Limit;
 using pex::MakeRange;
 
 template<template<typename> typename T>
-struct DemoTemplate
+struct DemoSchema
 {
     T<MakeRange<double, Limit<0>, Limit<1>>> position;
     T<bool> changeRange;
     T<MakeRange<std::optional<int>, Limit<0>, Limit<100>>> optional;
     T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
-
-    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
 };
 
 
-struct Demo: public DemoTemplate<pex::Identity>
+struct Demo: public DemoSchema<pex::Identity>
 {
     static constexpr int defaultPosition = 0;
     static constexpr float defaultPlaybackSpeed = 1.0f;
@@ -54,7 +42,7 @@ struct Demo: public DemoTemplate<pex::Identity>
     }
 };
 
-using DemoGroup = pex::Group<DemoTemplate, pex::PlainT<Demo>>;
+using DemoGroup = pex::Group<DemoSchema, pex::PlainT<Demo>>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

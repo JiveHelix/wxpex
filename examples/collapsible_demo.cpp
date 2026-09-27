@@ -17,28 +17,16 @@
 #include <wxpex/wxshim_app.h>
 
 
-template<typename T>
-struct WeaponsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::firstFruit, "firstFruit"),
-        fields::Field(&T::secondFruit, "secondFruit"),
-        fields::Field(&T::notFruit, "notFruit"));
-};
-
-
 template<template<typename> typename T>
-struct WeaponsTemplate
+struct WeaponsSchema
 {
     T<std::string> firstFruit;
     T<std::string> secondFruit;
     T<std::string> notFruit;
-
-    static constexpr auto fields = WeaponsFields<WeaponsTemplate>::fields;
 };
 
 
-using WeaponsGroup = pex::Group<WeaponsTemplate>;
+using WeaponsGroup = pex::Group<WeaponsSchema>;
 using WeaponsPlain = typename WeaponsGroup::Plain;
 using WeaponsModel = typename WeaponsGroup::Model;
 
@@ -54,48 +42,45 @@ inline WeaponsPlain DefaultWeapons()
 };
 
 
-template<typename T>
-struct ThingsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::weapons, "weapons"));
-};
-
-
 template<template<typename> typename T>
-struct ThingsTemplate
+struct ThingsSchema
 {
     T<WeaponsGroup> weapons;
-
-    static constexpr auto fields = ThingsFields<ThingsTemplate>::fields;
 };
 
 
-using ThingsGroup = pex::Group<ThingsTemplate>;
+using ThingsGroup = pex::Group<ThingsSchema>;
 using ThingsModel = typename ThingsGroup::Model;
 using ThingsControl = typename ThingsGroup::template Control<ThingsModel>;
+using ThingsPlain = typename ThingsGroup::Plain;
 
 
-template<typename T>
-struct StuffFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::thing1, "thing1"),
-        fields::Field(&T::thing2, "thing2"));
-};
+using ModelSchema = ThingsSchema<pex::ModelTailor>;
+static_assert(std::same_as<ModelSchema, fields::ReflectorType<ThingsModel>>);
+
+using PlainSchema = ThingsSchema<pex::Identity>;
+static_assert(std::same_as<PlainSchema, fields::ReflectorType<ThingsPlain>>);
+
+static_assert(fields::GetMemberCount<ModelSchema>() == 1);
+
+static_assert(fields::GetMemberCount<PlainSchema>() == 1);
+
+static_assert(
+        fields::GetMemberCount<fields::ReflectorType<ThingsPlain>>() == 1);
+
+static_assert(fields::Reflect<ThingsModel>::count == 1);
+static_assert(fields::Reflect<ThingsPlain>::count == 1);
 
 
 template<template<typename> typename T>
-struct StuffTemplate
+struct StuffSchema
 {
     T<ThingsGroup> thing1;
     T<ThingsGroup> thing2;
-
-    static constexpr auto fields = StuffFields<StuffTemplate>::fields;
 };
 
 
-using StuffGroup = pex::Group<StuffTemplate>;
+using StuffGroup = pex::Group<StuffSchema>;
 using StuffControl = typename StuffGroup::DefaultControl;
 using StuffModel = typename StuffGroup::Model;
 

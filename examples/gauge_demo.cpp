@@ -6,21 +6,8 @@
 #include <wxpex/wxshim_app.h>
 
 
-
-template<typename T>
-struct DemoFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::gauge1, "gauge1"),
-        fields::Field(&T::gauge2, "gauge2"),
-        fields::Field(&T::start, "start"),
-        fields::Field(&T::stop, "stop"),
-        fields::Field(&T::values, "values"));
-};
-
-
 template<template<typename> typename T>
-struct DemoTemplate
+struct DemoSchema
 {
     T<wxpex::GaugeGroup> gauge1;
     T<wxpex::GaugeGroup> gauge2;
@@ -28,12 +15,11 @@ struct DemoTemplate
     T<pex::MakeSignal> stop;
     T<wxpex::MakeAsync<int>> values;
 
-    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
     static constexpr auto fieldsTypeName = "Demo";
 };
 
 
-using DemoGroup = pex::Group<DemoTemplate>;
+using DemoGroup = pex::Group<DemoSchema>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

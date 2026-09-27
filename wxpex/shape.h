@@ -12,20 +12,8 @@ namespace polygon
 {
 
 
-template<typename T>
-struct RecipeFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::sideCount, "sideCount"),
-        fields::Field(&T::sideLength, "sideLength"),
-        fields::Field(&T::position, "position"),
-        fields::Field(&T::rotation_deg, "rotation_deg"));
-};
-
-
-
 template<template<typename> typename T>
-struct RecipeTemplate
+struct RecipeSchema
 {
     T<pex::MakeRange<size_t, pex::Limit<3>, pex::Limit<1024>>> sideCount;
     T<double> sideLength;
@@ -34,11 +22,11 @@ struct RecipeTemplate
 };
 
 
-struct Recipe: public RecipeTemplate<pex::Identity>
+struct Recipe: public RecipeSchema<pex::Identity>
 {
     Recipe()
         :
-        RecipeTemplate<pex::Identity>{
+        RecipeSchema<pex::Identity>{
             3,
             100,
             {},
@@ -57,7 +45,7 @@ struct Recipe: public RecipeTemplate<pex::Identity>
 };
 
 
-using RecipeGroup = pex::Group<RecipeTemplate, Recipe>;
+using RecipeGroup = pex::Group<RecipeSchema, Recipe>;
 using RecipeControl = typename RecipeGroup::Control;
 
 
@@ -179,16 +167,16 @@ struct ColorFields
 
 
 template<template<typename> typename T>
-struct ColorTemplate
+struct ColorSchema
 {
     T<tau::Rgba<uint8_t>> color;
     T<pex::MakeSelect<CompositionSelect>> compositionMode;
 
-    static constexpr auto fields = ColorFields<ColorTemplate>::fields;
+    static constexpr auto fields = ColorFields<ColorSchema>::fields;
 };
 
 
-using ColorGroup = pex::Group<ColorTemplate>;
+using ColorGroup = pex::Group<ColorSchema>;
 using ColorControl = typename ColorGroup::Control;
 
 
@@ -202,16 +190,16 @@ struct DrawFields
 
 
 template<template<typename> typename T>
-struct DrawTemplate
+struct DrawSchema
 {
     T<RecipeGroup> recipe;
     T<ColorGroup> color;
 
-    static constexpr auto fields = DrawFields<DrawTemplate>::fields;
+    static constexpr auto fields = DrawFields<DrawSchema>::fields;
 };
 
 
-using SettingsGroup = pex::Group<DrawTemplate>;
+using SettingsGroup = pex::Group<DrawSchema>;
 using SettingsModel = typename SettingsGroup::Model;
 using SettingsControl = typename SettingsGroup::Control;
 

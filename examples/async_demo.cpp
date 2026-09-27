@@ -33,23 +33,11 @@
 #include <wxpex/async_range.h>
 
 
-template<typename T>
-struct DemoFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::startingAngle, "startingAngle"),
-        fields::Field(&T::currentAngle, "currentAngle"),
-        fields::Field(&T::reset, "reset"),
-        fields::Field(&T::start, "start"),
-        fields::Field(&T::stop, "stop"));
-};
-
-
 static_assert(pex::IsMakeRange<wxpex::AsyncRange<double, void, void>>);
 
 
 template<template<typename> typename T>
-struct DemoTemplate
+struct DemoSchema
 {
     T<double> startingAngle;
     T<wxpex::AsyncRange<double, void, void>> currentAngle;
@@ -57,12 +45,11 @@ struct DemoTemplate
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
 
-    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
     static constexpr auto fieldsTypeName = "Demo";
 };
 
 
-using DemoGroup = pex::Group<DemoTemplate>;
+using DemoGroup = pex::Group<DemoSchema>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 

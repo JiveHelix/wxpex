@@ -16,34 +16,23 @@
 #include <cctype>
 
 
-template<typename T>
-struct PricingFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::markup, "markup"),
-        fields::Field(&T::taxRate, "taxRate"),
-        fields::Field(&T::shipping, "shipping"));
-};
-
-
 using CountRangeMaker = pex::MakeRange<size_t, pex::Limit<0>, pex::Limit<100>>;
 
 
 template<template<typename> typename T>
-struct PricingTemplate
+struct PricingSchema
 {
     T<double> markup;
     T<double> taxRate;
     T<double> shipping;
 
-    static constexpr auto fields = PricingFields<PricingTemplate>::fields;
     static constexpr auto fieldsTypeName = "Pricing";
 };
 
 
-struct Pricing: public PricingTemplate<pex::Identity>
+struct Pricing: public PricingSchema<pex::Identity>
 {
-    using Base = PricingTemplate<pex::Identity>;
+    using Base = PricingSchema<pex::Identity>;
 
     Pricing()
         :
@@ -63,38 +52,26 @@ struct Pricing: public PricingTemplate<pex::Identity>
 };
 
 
-using PricingGroup = pex::Group<PricingTemplate, pex::PlainT<Pricing>>;
+using PricingGroup = pex::Group<PricingSchema, pex::PlainT<Pricing>>;
 
 using PricingModel = typename PricingGroup::Model;
 using PricingControl = typename PricingGroup::DefaultControl;
-
-
-template<typename T>
-struct SettingsFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::pricing, "pricing"),
-        fields::Field(&T::count, "count"));
-};
 
 
 using CountRangeMaker = pex::MakeRange<size_t, pex::Limit<0>, pex::Limit<100>>;
 
 
 template<template<typename> typename T>
-struct SettingsTemplate
+struct SettingsSchema
 {
     T<PricingGroup> pricing;
     T<CountRangeMaker> count;
-
-    static constexpr auto fields =
-        SettingsFields<SettingsTemplate>::fields;
 
     static constexpr auto fieldsTypeName = "Settings";
 };
 
 
-using SettingsGroup = pex::Group<SettingsTemplate>;
+using SettingsGroup = pex::Group<SettingsSchema>;
 using SettingsControl = typename SettingsGroup::DefaultControl;
 using CountControl = decltype(SettingsControl::count);
 
@@ -186,31 +163,19 @@ public:
 };
 
 
-template<typename T>
-struct BookFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::title, "title"),
-        fields::Field(&T::author, "author"),
-        fields::Field(&T::cost, "cost"),
-        fields::Field(&T::sale, "sale"));
-};
-
-
 template<template<typename> typename T>
-struct BookTemplate
+struct BookSchema
 {
     T<std::string> title;
     T<std::string> author;
     T<double> cost;
     T<double> sale;
 
-    static constexpr auto fields = BookFields<BookTemplate>::fields;
     static constexpr auto fieldsTypeName = "Book";
 };
 
 
-using BookGroup = pex::Group<BookTemplate>;
+using BookGroup = pex::Group<BookSchema>;
 using BookControl = typename BookGroup::DefaultControl;
 
 
@@ -263,26 +228,14 @@ public:
 };
 
 
-template<typename T>
-struct BookStoreFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::settings, "settings"),
-        fields::Field(&T::books, "books"));
-};
-
-
 using BookListMaker = pex::List<BookGroup, 0>;
 
 
 template<template<typename> typename T>
-struct BookStoreTemplate
+struct BookStoreSchema
 {
     T<SettingsGroup> settings;
     T<BookListMaker> books;
-
-    static constexpr auto fields =
-        BookStoreFields<BookStoreTemplate>::fields;
 
     static constexpr auto fieldsTypeName = "BookStore";
 };
@@ -393,10 +346,10 @@ private:
 };
 
 
-using BookListControl = pex::ControlSelector<BookListMaker>;
+using BookListControl = pex::ControlTailor<BookListMaker>;
 
 
-struct BookStoreCustom
+struct BookStoreFinisher
 {
     template<typename Base>
     class Model: public Base
@@ -447,7 +400,7 @@ struct BookStoreCustom
 };
 
 
-using BookStoreGroup = pex::Group<BookStoreTemplate, BookStoreCustom>;
+using BookStoreGroup = pex::Group<BookStoreSchema, BookStoreFinisher>;
 
 using BookStoreModel = typename BookStoreGroup::Model;
 using BookStoreControl = typename BookStoreGroup::DefaultControl;

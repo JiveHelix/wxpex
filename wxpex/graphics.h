@@ -28,47 +28,37 @@ namespace wxpex
 CREATE_EXCEPTION(GraphicsError, std::runtime_error);
 
 
-template<typename T>
-struct ShearFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::x, "x"),
-        fields::Field(&T::y, "y"));
-};
-
-
 template<typename U>
-struct ShearTemplate
+struct ShearSchema
 {
     using ShearRange = pex::MakeRange<U, pex::Limit<-1>, pex::Limit<1>>;
 
     template<template<typename> typename T>
-    struct Template
+    struct Schema
     {
         T<ShearRange> x;
         T<ShearRange> y;
 
-        static constexpr auto fields = ShearFields<Template>::fields;
         static constexpr auto fieldsTypeName = "Shear";
     };
 };
 
 
 template<typename U>
-struct Shear: public ShearTemplate<U>::template Template<pex::Identity>
+struct Shear: public ShearSchema<U>::template Schema<pex::Identity>
 {
     using Matrix = Eigen::Matrix<double, 2, 2>;
 
     Shear()
         :
-        ShearTemplate<U>::template Template<pex::Identity>{}
+        ShearSchema<U>::template Schema<pex::Identity>{}
     {
 
     }
 
     Shear(U x_, U y_)
         :
-        ShearTemplate<U>::template Template<pex::Identity>{x_, y_}
+        ShearSchema<U>::template Schema<pex::Identity>{x_, y_}
     {
 
     }
@@ -88,7 +78,7 @@ template<typename U>
 using ShearGroup =
     pex::Group
     <
-        ShearTemplate<U>::template Template,
+        ShearSchema<U>::template Schema,
         pex::PlainT<Shear<U>>
     >;
 
@@ -123,8 +113,8 @@ struct PenCapChoices
 
 
 using PenCapSelect = pex::MakeSelect<PenCapChoices>;
-using PenCapModel = pex::ModelSelector<PenCapSelect>;
-using PenCapControl = pex::ControlSelector<PenCapSelect>;
+using PenCapModel = pex::ModelTailor<PenCapSelect>;
+using PenCapControl = pex::ControlTailor<PenCapSelect>;
 
 
 struct PenCapConverter
@@ -169,8 +159,8 @@ struct PenStyleChoices
 
 
 using PenStyleSelect = pex::MakeSelect<PenStyleChoices>;
-using PenStyleModel = pex::ModelSelector<PenStyleSelect>;
-using PenStyleControl = pex::ControlSelector<PenStyleSelect>;
+using PenStyleModel = pex::ModelTailor<PenStyleSelect>;
+using PenStyleControl = pex::ControlTailor<PenStyleSelect>;
 
 
 struct PenStyleConverter
@@ -202,8 +192,8 @@ struct PenJoinChoices
 
 
 using PenJoinSelect = pex::MakeSelect<PenJoinChoices>;
-using PenJoinModel = pex::ModelSelector<PenJoinSelect>;
-using PenJoinControl = pex::ControlSelector<PenJoinSelect>;
+using PenJoinModel = pex::ModelTailor<PenJoinSelect>;
+using PenJoinControl = pex::ControlTailor<PenJoinSelect>;
 
 
 struct PenJoinConverter
@@ -243,8 +233,8 @@ struct BrushStyleChoices
 
 
 using BrushStyleSelect = pex::MakeSelect<BrushStyleChoices>;
-using BrushStyleModel = pex::ModelSelector<BrushStyleSelect>;
-using BrushStyleControl = pex::ControlSelector<BrushStyleSelect>;
+using BrushStyleModel = pex::ModelTailor<BrushStyleSelect>;
+using BrushStyleControl = pex::ControlTailor<BrushStyleSelect>;
 
 
 struct BrushStyleConverter
@@ -278,8 +268,8 @@ struct InterpolationChoices
 
 
 using InterpolationSelect = pex::MakeSelect<InterpolationChoices>;
-using InterpolationModel = pex::ModelSelector<InterpolationSelect>;
-using InterpolationControl = pex::ControlSelector<InterpolationSelect>;
+using InterpolationModel = pex::ModelTailor<InterpolationSelect>;
+using InterpolationControl = pex::ControlTailor<InterpolationSelect>;
 
 
 struct InterpolationConverter
@@ -320,8 +310,8 @@ struct CompositionChoices
 
 
 using CompositionSelect = pex::MakeSelect<CompositionChoices>;
-using CompositionModel = pex::ModelSelector<CompositionSelect>;
-using CompositionControl = pex::ControlSelector<CompositionSelect>;
+using CompositionModel = pex::ModelTailor<CompositionSelect>;
+using CompositionControl = pex::ControlTailor<CompositionSelect>;
 
 
 struct CompositionConverter
@@ -395,8 +385,21 @@ auto CreateGraphicsControl(wxWindow *parent, Control control)
 }
 
 
-struct GraphicsMatrix
+struct GraphicsMatrixBase
 {
+    double a;
+    double b;
+    double c;
+    double d;
+    double tx;
+    double ty;
+};
+
+
+struct GraphicsMatrix: public GraphicsMatrixBase
+{
+    using Reflector = GraphicsMatrixBase;
+
     GraphicsMatrix(const wxGraphicsMatrix &graphicsMatrix)
     {
         graphicsMatrix.Get(
@@ -511,21 +514,6 @@ struct GraphicsMatrix
             && (jive::About(this->tx) == 0.0)
             && (jive::About(this->ty) == 0.0));
     }
-
-    double a;
-    double b;
-    double c;
-    double d;
-    double tx;
-    double ty;
-
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&GraphicsMatrix::a, "a"),
-        fields::Field(&GraphicsMatrix::b, "b"),
-        fields::Field(&GraphicsMatrix::c, "c"),
-        fields::Field(&GraphicsMatrix::d, "d"),
-        fields::Field(&GraphicsMatrix::tx, "tx"),
-        fields::Field(&GraphicsMatrix::ty, "ty"));
 };
 
 

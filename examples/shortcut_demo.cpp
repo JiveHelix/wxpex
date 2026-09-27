@@ -24,20 +24,8 @@
 #include "wxpex/view.h"
 
 
-template<typename T>
-struct ApplicationFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::sayWhatsUp, "sayWhatsUp"),
-        fields::Field(&T::sayHello, "sayHello"),
-        fields::Field(&T::sayFortyTwo, "sayFortyTwo"),
-        fields::Field(&T::frobnicate, "frobnicate"),
-        fields::Field(&T::quit, "quit"),
-        fields::Field(&T::message, "message"));
-};
-
 template<template<typename> typename T>
-struct ApplicationTemplate
+struct ApplicationSchema
 {
     T<pex::MakeSignal> sayWhatsUp;
     T<pex::MakeSignal> sayHello;
@@ -45,13 +33,10 @@ struct ApplicationTemplate
     T<pex::MakeSignal> frobnicate;
     T<pex::MakeSignal> quit;
     T<std::string> message;
-
-    static constexpr auto fields =
-        ApplicationFields<ApplicationTemplate>::fields;
 };
 
 
-using ApplicationGroup = pex::Group<ApplicationTemplate>;
+using ApplicationGroup = pex::Group<ApplicationSchema>;
 
 
 struct ApplicationModel: public ApplicationGroup::Model

@@ -49,27 +49,17 @@ private:
 };
 
 
-template<typename T>
-struct GaugeFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::value, "value"),
-        fields::Field(&T::maximum, "maximum"));
-};
-
-
 template<template<typename> typename T>
-struct GaugeTemplate
+struct GaugeSchema
 {
     T<wxpex::MakeAsync<size_t, GaugeFilter>> value;
     T<wxpex::MakeAsync<size_t>> maximum;
 
-    static constexpr auto fields = GaugeFields<GaugeTemplate>::fields;
     static constexpr auto fieldsTypeName = "Gauge";
 };
 
 
-struct GaugeGroupTemplates
+struct GaugeGroupSchema
 {
     template<typename GroupBase>
     struct Model: public GroupBase
@@ -96,7 +86,7 @@ struct GaugeGroupTemplates
 };
 
 
-using GaugeGroup = pex::Group<GaugeTemplate, GaugeGroupTemplates>;
+using GaugeGroup = pex::Group<GaugeSchema, GaugeGroupSchema>;
 using GaugeModel = typename GaugeGroup::Model;
 using GaugeState = typename GaugeGroup::Plain;
 

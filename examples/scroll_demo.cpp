@@ -35,32 +35,18 @@ public:
 };
 
 
-template<typename T>
-struct ColorsStateFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::blue, "blue"),
-        fields::Field(&T::cyan, "cyan"),
-        fields::Field(&T::green, "green"),
-        fields::Field(&T::yellow, "yellow"),
-        fields::Field(&T::red, "red"));
-};
-
-
 template<template<typename> typename T>
-struct StateTemplate
+struct StateSchema
 {
     T<bool> blue;
     T<bool> cyan;
     T<bool> green;
     T<bool> yellow;
     T<bool> red;
-
-    static constexpr auto fields = ColorsStateFields<StateTemplate>::fields;
 };
 
 
-using ColorsStateGroup = pex::Group<StateTemplate>;
+using ColorsStateGroup = pex::Group<StateSchema>;
 using ColorsStateModel = typename ColorsStateGroup::Model;
 
 using ColorsStateControl =

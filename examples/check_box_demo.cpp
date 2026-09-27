@@ -19,26 +19,15 @@
 #include <wxpex/wxshim_app.h>
 
 
-template<typename T>
-struct DemoFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::isChecked, "isChecked"),
-        fields::Field(&T::message, "message"));
-};
-
-
 template<template<typename> typename T>
-struct DemoTemplate
+struct DemoSchema
 {
     T<bool> isChecked;
     T<std::string> message;
-
-    static constexpr auto fields = DemoFields<DemoTemplate>::fields;
 };
 
 
-using DemoGroup = pex::Group<DemoTemplate>;
+using DemoGroup = pex::Group<DemoSchema>;
 using DemoModel = typename DemoGroup::Model;
 using DemoControl = typename DemoGroup::DefaultControl;
 using IsCheckedControl = decltype(DemoControl::isChecked);

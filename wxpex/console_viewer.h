@@ -14,26 +14,15 @@ namespace wxpex
 {
 
 
-template<typename T>
-struct ConsoleViewerFields
-{
-    static constexpr auto fields = std::make_tuple(
-        fields::Field(&T::clear, "clear"),
-        fields::Field(&T::message, "message"));
-};
-
 template<template<typename> typename T>
-struct ConsoleViewerTemplate
+struct ConsoleViewerSchema
 {
     T<pex::MakeSignal> clear;
     T<MakeAsync<std::string>> message;
-
-    static constexpr auto fields =
-        ConsoleViewerFields<ConsoleViewerTemplate>::fields;
 };
 
 
-using ConsoleViewerGroup = pex::Group<ConsoleViewerTemplate>;
+using ConsoleViewerGroup = pex::Group<ConsoleViewerSchema>;
 
 using ConsoleViewerModel = typename ConsoleViewerGroup::Model;
 using ConsoleViewerControl = typename ConsoleViewerGroup::DefaultControl;
