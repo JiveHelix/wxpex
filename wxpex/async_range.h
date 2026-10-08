@@ -11,11 +11,26 @@ namespace wxpex
 template
 <
     typename T,
-    typename Low,
-    typename High,
+    pex::IsLimit Low,
+    pex::IsLimit High,
     typename Access = pex::GetAndSetTag
 >
-using AsyncRange = pex::MakeRange<T, Low, High, Access, wxpex::AsyncTypes>;
+using AsyncRange = pex::MakeRangeOptions
+<
+    pex::RangeOptions
+    <
+        T,
+        Low,
+        High,
+        pex::NoFilter,
+        wxpex::AsyncTypes
+    >,
+    Access
+>;
+
+
+template<typename T>
+using DefaultAsyncRange = AsyncRange<T, pex::DefaultLimit, pex::DefaultLimit>;
 
 
 } // end namespace wxpex

@@ -80,13 +80,30 @@ std::string GetModifierString(int modifierBitfield)
 
 void Shortcut::AddToMenu(wxMenu *menu)
 {
-    menu->Append(
-        this->menuItem_ = new wxMenuItem(
-            menu,
-            this->id_,
-            this->GetMenuItemLabel_(),
-            this->longDescription_));
+    if (this->isToggle_)
+    {
+        menu->Append(
+            this->menuItem_ = new wxMenuItem(
+                menu,
+                this->id_,
+                this->GetMenuItemLabel_(),
+                this->longDescription_,
+                wxITEM_CHECK));
+
+        this->menuItem_->Check(this->toggle_.Get());
+    }
+    else
+    {
+        menu->Append(
+            this->menuItem_ = new wxMenuItem(
+                menu,
+                this->id_,
+                this->GetMenuItemLabel_(),
+                this->longDescription_,
+                wxITEM_NORMAL));
+    }
 }
+
 
 wxAcceleratorEntry Shortcut::GetAcceleratorEntry() const
 {
@@ -103,9 +120,33 @@ int Shortcut::GetKeyAsInt() const { return this->key_.GetInt(); }
 
 int Shortcut::GetId() const { return this->id_; }
 
-void Shortcut::OnEventMenu()
+void Shortcut::OnEventMenu() const
 {
-    this->signal_.Trigger();
+    if (this->isToggle_)
+    {
+        if (!this->menuItem_)
+        {
+            return;
+        }
+
+        jive::ScopeFlag ignore(this->ignore_);
+        this->toggle_.Set(this->menuItem_->IsChecked());
+    }
+    else
+    {
+        this->signal_.Trigger();
+    }
+}
+
+void Shortcut::OnToggle_(bool checked)
+{
+    if (this->ignore_)
+    {
+        return;
+    }
+
+    jive::ScopeFlag ignore(this->ignore_);
+    this->menuItem_->Check(checked);
 }
 
 wxString Shortcut::GetMenuItemLabel_() const

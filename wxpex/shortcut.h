@@ -8,11 +8,13 @@
 #include <jive/formatter.h>
 #include <jive/for_each.h>
 
+#include <pex/control_value.h>
 #include <pex/signal.h>
+#include <pex/endpoint.h>
 #include <pex/detail/log.h>
 
-#include "wxpex/wxshim.h"
-#include "wxpex/window.h"
+#include <wxpex/wxshim.h>
+#include <wxpex/window.h>
 
 
 namespace wxpex
@@ -59,27 +61,76 @@ std::string GetModifierString(int modifierBitfield);
 class Shortcut
 {
 public:
-    // We are not observing this signal, so the Observer can be void.
     using SignalType = pex::control::DefaultSignal;
+    using ToggleType = pex::control::Value<pex::model::Value<bool>>;
+    using ToggleEndpoint = pex::Endpoint<Shortcut, ToggleType>;
 
     template<typename KeyCode>
     Shortcut(
-        SignalType signal,
+        const SignalType &signal,
         int modifier,
         KeyCode keyCode,
         std::string_view description,
         std::string_view longDescription,
         int id = wxID_NONE)
         :
-        signal_(signal),
         id_((id == wxID_NONE) ? wxWindow::NewControlId(): id),
         modifier_(modifier),
         key_(keyCode),
         description_(description),
         longDescription_(longDescription),
-        menuItem_(NULL)
+        menuItem_(NULL),
+        isToggle_(false),
+        signal_(signal),
+        ignore_(),
+        toggle_(),
+        toggleEndpoint_{}
     {
 
+    }
+
+    template<typename KeyCode>
+    Shortcut(
+        const ToggleType &toggle,
+        int modifier,
+        KeyCode keyCode,
+        std::string_view description,
+        std::string_view longDescription,
+        int id = wxID_NONE)
+        :
+        id_((id == wxID_NONE) ? wxWindow::NewControlId(): id),
+        modifier_(modifier),
+        key_(keyCode),
+        description_(description),
+        longDescription_(longDescription),
+        menuItem_(NULL),
+        isToggle_(true),
+        signal_(),
+        ignore_(false),
+        toggle_(toggle),
+        toggleEndpoint_(this, toggle, &Shortcut::OnToggle_)
+    {
+
+    }
+
+    Shortcut(const Shortcut &other)
+        :
+        id_(other.id_),
+        modifier_(other.modifier_),
+        key_(other.key_),
+        description_(other.description_),
+        longDescription_(other.longDescription_),
+        menuItem_(other.menuItem_),
+        isToggle_(other.isToggle_),
+        signal_(other.signal_),
+        ignore_(false),
+        toggle_(other.toggle_),
+        toggleEndpoint_(this, other.toggleEndpoint_)
+    {
+        if (this->isToggle_)
+        {
+            this->toggleEndpoint_.Connect(&Shortcut::OnToggle_);
+        }
     }
 
     void AddToMenu(wxMenu *menu);
@@ -92,18 +143,27 @@ public:
 
     int GetId() const;
 
-    void OnEventMenu();
+    void OnEventMenu() const;
 
 private:
     wxString GetMenuItemLabel_() const;
 
-    SignalType signal_;
+    void OnToggle_(bool checked);
+
+private:
     int id_;
     int modifier_;
     Key key_;
     std::string description_;
     std::string longDescription_;
     wxMenuItem *menuItem_;
+
+    bool isToggle_;
+    SignalType signal_;
+
+    mutable bool ignore_;
+    ToggleType toggle_;
+    ToggleEndpoint toggleEndpoint_;
 };
 
 
@@ -118,7 +178,7 @@ public:
     }
 
 private:
-    Shortcut shortcut_;
+    const Shortcut & shortcut_;
 };
 
 

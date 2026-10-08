@@ -16,9 +16,12 @@
 
 
 using pex::Limit;
+using pex::RangeOptions;
 
 
-using Wibble = pex::model::Range<double, Limit<0>, Limit<20>>;
+using Wibble =
+    pex::model::Range<RangeOptions<double, Limit<0>, Limit<20>>>;
+
 using WibbleControl = pex::control::Range<Wibble>;
 using WibbleValue = typename WibbleControl::Value;
 
@@ -26,7 +29,9 @@ inline constexpr double defaultWibble = 10;
 inline constexpr double wibbleIncrement = 1;
 
 
-using Wobble = pex::model::Range<float, Limit<-100>, Limit<100>>;
+using Wobble =
+    pex::model::Range<RangeOptions<float, Limit<-100>, Limit<100>>>;
+
 using WobbleControl = pex::control::Range<Wobble>;
 using WobbleValue = typename WobbleControl::Value;
 

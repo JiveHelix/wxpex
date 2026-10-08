@@ -33,14 +33,14 @@
 #include <wxpex/async_range.h>
 
 
-static_assert(pex::IsMakeRange<wxpex::AsyncRange<double, void, void>>);
+static_assert(pex::IsMakeRange<wxpex::DefaultAsyncRange<double>>);
 
 
 template<template<typename> typename T>
 struct DemoSchema
 {
     T<double> startingAngle;
-    T<wxpex::AsyncRange<double, void, void>> currentAngle;
+    T<wxpex::DefaultAsyncRange<double>> currentAngle;
     T<pex::MakeSignal> reset;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;

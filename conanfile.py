@@ -3,7 +3,7 @@ from conan import ConanFile
 
 class WxpexConan(ConanFile):
     name = "wxpex"
-    version = "1.0.0"
+    version = "1.1.0"
 
     python_requires = "boiler/0.2"
     python_requires_extend = "boiler.LibraryConanFile"
@@ -36,7 +36,7 @@ class WxpexConan(ConanFile):
     def requirements(self):
         self.requires("jive/[>=1.7 <2]")
         self.requires("fields/[>=1.8 <2]")
-        self.requires("pex/[>=1.4 <2]")
+        self.requires("pex/[>=1.5 <2]")
         self.requires("tau/[>=1.16 <2]")
 
         # As this library is a wrapper around wxWidgets, it makes sense to me
