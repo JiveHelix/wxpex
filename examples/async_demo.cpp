@@ -132,6 +132,10 @@ public:
         this->endpoints_.reset.Connect(&ExampleApp::OnReset_);
         this->endpoints_.start.Connect(&ExampleApp::OnStart_);
         this->endpoints_.stop.Connect(&ExampleApp::OnStop_);
+
+        this->model_.currentAngle.SetLimits(
+            -tau::Angles<double>::tau,
+            tau::Angles<double>::tau);
     }
 
     bool OnInit() override;
@@ -249,7 +253,7 @@ bool ExampleApp::OnInit()
 
 ExampleFrame::ExampleFrame(const DemoControl &demoControl)
     :
-    wxFrame(nullptr, wxID_ANY, "wxpex::Field Demo")
+    wxFrame(nullptr, wxID_ANY, "wxpex::Async Demo")
 {
     using namespace wxpex;
 

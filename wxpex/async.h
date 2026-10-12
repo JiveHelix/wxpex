@@ -164,6 +164,36 @@ private:
 };
 
 
+template<typename Filter>
+class AsyncFilter
+{
+public:
+    AsyncFilter(Filter &nodeFilter, Filter &workerFilter)
+        :
+        nodeFilter_(nodeFilter),
+        workerFilter_(workerFilter)
+    {
+
+    }
+
+    ~AsyncFilter()
+    {
+        // Any changes made to the node filter are propagated to the worker
+        // filter.
+        this->workerFilter_ = this->nodeFilter_;
+    }
+
+    operator Filter & ()
+    {
+        return this->nodeFilter_;
+    }
+
+private:
+    Filter & nodeFilter_;
+    Filter & workerFilter_;
+};
+
+
 template
 <
     typename T,
@@ -182,6 +212,7 @@ public:
     using Type = T;
     using Access = Access_;
     using ThreadSafe = pex::model::LockedValue<Type, Filter, Access>;
+
     using Callable = typename ThreadSafe::Callable;
 
     template<typename>
@@ -280,6 +311,11 @@ public:
     {
         this->node_.SetFilter(filter);
         this->workerNode_.SetFilter(filter);
+    }
+
+    AsyncFilter<Filter> GetFilter()
+    {
+        return {this->node_.GetFilter(), this->workerNode_.GetFilter()};
     }
 
     void Set(pex::Argument<Type> value)
@@ -398,7 +434,8 @@ private:
 
     void NotifyWorker_()
     {
-        pex::detail::AccessReference<ThreadSafe>(this->workerNode_).Notify();
+        pex::detail::AccessReference<ThreadSafe>(this->workerNode_)
+            .Notify();
     }
 
 private:

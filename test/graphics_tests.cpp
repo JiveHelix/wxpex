@@ -8,27 +8,26 @@
 TEST_CASE("Identity matrix", "[graphics]")
 {
     auto renderer = wxGraphicsRenderer::GetDefaultRenderer();
+
+    // wxWidgets documentation claims that CreateMatrix returns an identity
+    // matrix.
     auto matrix = renderer->CreateMatrix();
+
+    // When I test this, it returns false.
+    // REQUIRE(matrix.IsIdentity());
 
     auto graphicsMatrix = wxpex::GraphicsMatrix(matrix);
     auto scale = graphicsMatrix.GetScale();
     auto rotation = graphicsMatrix.GetRotation();
     auto translation = graphicsMatrix.GetTranslation();
 
+    // When I wrap the matrix in my own test, IsIdentity is true.
     REQUIRE(graphicsMatrix.IsIdentity());
     REQUIRE(scale.vertical == 1.0);
     REQUIRE(scale.horizontal == 1.0);
     REQUIRE(rotation == 0.0);
     REQUIRE(translation.x == 0.0);
     REQUIRE(translation.y == 0.0);
-
-    if (!matrix.IsIdentity())
-    {
-        std::cout << "wx thinks this isn't the identity matrix!" << std::endl;
-
-        std::cout << "wxpex::GraphicsMatrix::IsIdentity(): "
-            << graphicsMatrix.IsIdentity() << std::endl;
-    }
 }
 
 
@@ -42,7 +41,6 @@ TEST_CASE("SimpleRotation", "[graphics]")
     auto graphicsMatrix = wxpex::GraphicsMatrix(matrix);
     auto rotation = graphicsMatrix.GetRotation();
 
-    std::cout << graphicsMatrix << std::endl;
     REQUIRE(rotation == Approx(quarterCircle));
 }
 
@@ -125,9 +123,4 @@ TEST_CASE("Extract translation/rotation/scale", "[graphics]")
     REQUIRE(rotation == Approx(randomRotation));
     REQUIRE(translation.x == Approx(xTranslation));
     REQUIRE(translation.y == Approx(yTranslation));
-
-    std::cout << "scale: " << scale << std::endl;
-    std::cout << "translation: " << translation << std::endl;
-    std::cout << "rotation: " << rotation << std::endl;
-    std::cout << graphicsMatrix << std::endl;
 }

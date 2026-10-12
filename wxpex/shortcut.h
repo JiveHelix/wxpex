@@ -133,6 +133,28 @@ public:
         }
     }
 
+    Shortcut & operator=(const Shortcut &other)
+    {
+        this->id_ = other.id_;
+        this->modifier_ = other.modifier_;
+        this->key_ = other.key_;
+        this->description_ = other.description_;
+        this->longDescription_ = other.longDescription_;
+        this->menuItem_ = other.menuItem_;
+        this->isToggle_ = other.isToggle_;
+        this->signal_ = other.signal_;
+        this->ignore_ = false;
+        this->toggle_ = other.toggle_;
+        this->toggleEndpoint_.Assign(this, other.toggleEndpoint_);
+
+        if (this->isToggle_)
+        {
+            this->toggleEndpoint_.Connect(&Shortcut::OnToggle_);
+        }
+
+        return *this;
+    }
+
     void AddToMenu(wxMenu *menu);
 
     wxAcceleratorEntry GetAcceleratorEntry() const;

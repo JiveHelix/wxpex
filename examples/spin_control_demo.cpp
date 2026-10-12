@@ -80,6 +80,8 @@ bool ExampleApp::OnInit()
 
     exampleFrame->Show();
 
+    this->wibble_.SetMaximum(10);
+
     return true;
 }
 
