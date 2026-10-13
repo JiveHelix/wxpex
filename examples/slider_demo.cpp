@@ -9,7 +9,7 @@
   * Licensed under the MIT license. See LICENSE file.
 **/
 
-#include <pex/range.h>
+#include <pex/bounded.h>
 #include <pex/endpoint.h>
 #include <pex/converting_filter.h>
 #include <fields/fields.h>
@@ -19,15 +19,15 @@
 
 
 using pex::Limit;
-using pex::MakeRange;
+using pex::MakeBounded;
 
 template<template<typename> typename T>
 struct DemoSchema
 {
-    T<MakeRange<double, Limit<0>, Limit<1>>> position;
+    T<MakeBounded<double, Limit<0>, Limit<1>>> position;
     T<bool> changeRange;
-    T<MakeRange<std::optional<int>, Limit<0>, Limit<100>>> optional;
-    T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
+    T<MakeBounded<std::optional<int>, Limit<0>, Limit<100>>> optional;
+    T<MakeBounded<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
 };
 
 
@@ -49,8 +49,8 @@ using DemoControl = typename DemoGroup::DefaultControl;
 using OptionalControl = decltype(DemoControl::optional);
 using OptionalValue = decltype(OptionalControl::value);
 
-using PositionRangeModel = decltype(DemoModel::position);
-using PositionValueModel = typename PositionRangeModel::Value;
+using PositionBoundedModel = decltype(DemoModel::position);
+using PositionValueModel = typename PositionBoundedModel::Value;
 using PositionFilter = pex::control::LinearFilter<double>;
 
 using FilteredPositionControl =
@@ -86,7 +86,7 @@ struct PlaybackSpeedConverter:
 };
 
 
-using FilteredPlaybackSpeed = ::pex::control::Range<
+using FilteredPlaybackSpeed = ::pex::control::Bounded<
     PlaybackSpeed,
     PlaybackSpeedFilter<float>>;
 
@@ -166,10 +166,10 @@ using PlaybackSpeedSlider =
         PlaybackSpeedConverter
     >;
 
-using TestRangeSlider = typename PlaybackSpeedSlider::RangeSlider;
-using SelectedRange = typename TestRangeSlider::Range;
+using TestRangeSlider = typename PlaybackSpeedSlider::BoundedSlider;
+using SelectedBounded = typename TestRangeSlider::Bounded;
 
-static_assert(std::is_same_v<SelectedRange, FilteredPlaybackSpeed>);
+static_assert(std::is_same_v<SelectedBounded, FilteredPlaybackSpeed>);
 
 using FilteredPosition = pex::control::Value<FilteredPositionControl>;
 

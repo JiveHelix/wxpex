@@ -25,7 +25,7 @@
 #include <pex/value.h>
 #include <pex/traits.h>
 #include <pex/interface.h>
-#include <pex/range.h>
+#include <pex/bounded.h>
 
 #include "wxpex/wxshim.h"
 

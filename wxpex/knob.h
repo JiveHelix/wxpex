@@ -1,7 +1,7 @@
 #pragma once
 
 #include <tau/angles.h>
-#include <pex/range.h>
+#include <pex/bounded.h>
 #include <pex/converter.h>
 
 #include "wxpex/view.h"
@@ -241,7 +241,7 @@ protected:
 };
 
 
-template<typename Range>
+template<typename Bounded>
 class Knob: public KnobBase
 {
 
@@ -249,20 +249,20 @@ public:
     static constexpr auto observerName = "wxpex::Knob";
 
     using Base = KnobBase;
-    using This = Knob<Range>;
+    using This = Knob<Bounded>;
     using Rgb = typename KnobSettings::Rgb;
 
     // Value and Limit are observed by This
-    using ValueTerminus = pex::Terminus<This, typename Range::Value>;
+    using ValueTerminus = pex::Terminus<This, typename Bounded::Value>;
 
     using LimitTerminus =
-        pex::Terminus<This, typename Range::Limit>;
+        pex::Terminus<This, typename Bounded::Limit>;
 
-    using Type = typename Range::Value::Type;
+    using Type = typename Bounded::Value::Type;
 
     Knob(
         wxWindow *parent,
-        Range control,
+        Bounded control,
         const KnobSettings &settings = KnobSettings())
         :
         Base(parent, settings),
@@ -283,8 +283,10 @@ public:
         endAngle_(settings.endAngle),
         continuous_(settings.continuous),
         angleRange_(settings.GetAngleRange()),
+
         valueRange_(
             static_cast<double>(this->maximum_.Get() - this->minimum_.Get())),
+
         valueOffset_(-static_cast<double>(this->minimum_.Get())),
         hasCapturedMouse_(false),
         mousePosition_()
@@ -580,7 +582,7 @@ std::unique_ptr<wxBoxSizer> MakeSizer(
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     typename Convert
 >
@@ -593,13 +595,13 @@ public:
     // value is the value from the model for display in the view.
     ViewKnobConvert(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         const KnobSettings &knobSettings)
         :
         Base(parent, wxID_ANY)
     {
-        this->knob_ = new Knob<RangeControl>(this, range, knobSettings);
+        this->knob_ = new Knob<BoundedControl>(this, range, knobSettings);
         auto view = new View<ValueControl, Convert>(this, value);
 
         // Use a mono-spaced font for display so that the width of the view
@@ -618,7 +620,7 @@ public:
     // Constructors offering default options
     ViewKnobConvert(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value)
         :
         ViewKnobConvert(
@@ -630,7 +632,7 @@ public:
 
     }
 
-    Knob<RangeControl> & GetKnob()
+    Knob<BoundedControl> & GetKnob()
     {
         return *this->knob_;
     }
@@ -643,14 +645,14 @@ private:
         this->Layout();
     }
 
-    Knob<RangeControl> *knob_;
+    Knob<BoundedControl> *knob_;
 };
 
 
-template<typename RangeControl, typename ValueControl, int width, int precision>
+template<typename BoundedControl, typename ValueControl, int width, int precision>
 using ViewKnobBase = ViewKnobConvert
     <
-        RangeControl,
+        BoundedControl,
         ValueControl,
         Converter<ValueControl, width, precision>
     >;
@@ -658,22 +660,22 @@ using ViewKnobBase = ViewKnobConvert
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     int width,
     int precision
 >
 class ViewKnob
     :
-    public ViewKnobBase<RangeControl, ValueControl, width, precision>
+    public ViewKnobBase<BoundedControl, ValueControl, width, precision>
 {
     using Base =
-        ViewKnobBase<RangeControl, ValueControl, width, precision>;
+        ViewKnobBase<BoundedControl, ValueControl, width, precision>;
 
 public:
     ViewKnob(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         const KnobSettings &knobSettings)
         :
@@ -684,7 +686,7 @@ public:
 
     ViewKnob(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value)
         :
         Base(parent, range, value)
@@ -694,18 +696,18 @@ public:
 };
 
 
-template<typename RangeControl>
+template<typename BoundedControl>
 class SpinKnob: public wxControl
 {
 public:
     SpinKnob(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         const KnobSettings &knobSettings = KnobSettings())
         :
         wxControl(parent, wxID_ANY)
     {
-        this->knob_ = new Knob<RangeControl>(this, range, knobSettings);
+        this->knob_ = new Knob<BoundedControl>(this, range, knobSettings);
 
         auto spin =
             new SpinControl(this, range, 1, 0);
@@ -719,7 +721,7 @@ public:
             this);
     }
 
-    Knob<RangeControl> & GetKnob()
+    Knob<BoundedControl> & GetKnob()
     {
         return *this->knob_;
     }
@@ -731,13 +733,13 @@ private:
         this->Layout();
     }
 
-    Knob<RangeControl> *knob_;
+    Knob<BoundedControl> *knob_;
 };
 
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     typename Convert = pex::Converter<typename ValueControl::Type>
 >
@@ -748,13 +750,13 @@ public:
 
     FieldKnobConvert(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         const KnobSettings &knobSettings = KnobSettings())
         :
         wxControl(parent, wxID_ANY)
     {
-        this->knob_ = new Knob<RangeControl>(this, range, knobSettings);
+        this->knob_ = new Knob<BoundedControl>(this, range, knobSettings);
         auto field = new ValueField(this, value);
 
         this->SetSizerAndFit(
@@ -766,7 +768,7 @@ public:
             this);
     }
 
-    Knob<RangeControl> & GetKnob()
+    Knob<BoundedControl> & GetKnob()
     {
         return *this->knob_;
     }
@@ -778,14 +780,14 @@ private:
         this->Layout();
     }
 
-    Knob<RangeControl> *knob_;
+    Knob<BoundedControl> *knob_;
 };
 
 
-template<typename RangeControl, typename ValueControl, int precision>
+template<typename BoundedControl, typename ValueControl, int precision>
 using FieldKnobBase = FieldKnobConvert
     <
-        RangeControl,
+        BoundedControl,
         ValueControl,
         PrecisionConverter<ValueControl, precision>
     >;
@@ -793,21 +795,21 @@ using FieldKnobBase = FieldKnobConvert
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     int precision = 3
 >
 class FieldKnob
     :
-    public FieldKnobBase<RangeControl, ValueControl, precision>
+    public FieldKnobBase<BoundedControl, ValueControl, precision>
 {
     using Base =
-        FieldKnobBase<RangeControl, ValueControl, precision>;
+        FieldKnobBase<BoundedControl, ValueControl, precision>;
 
 public:
     FieldKnob(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         const KnobSettings &knobSettings = KnobSettings())
         :
@@ -818,50 +820,56 @@ public:
 };
 
 
-template<int precision, typename RangeControl, typename ValueControl>
+template<int precision, typename BoundedControl, typename ValueControl>
 auto CreateViewKnob(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     ValueControl value,
     const KnobSettings &knobSettings = KnobSettings())
 {
-    using Result = ViewKnob<RangeControl, ValueControl, -1, precision>;
+    using Result = ViewKnob<BoundedControl, ValueControl, -1, precision>;
     return new Result(parent, range, value, knobSettings);
 }
 
 
-template<int precision, typename RangeControl>
+template<int precision, typename BoundedControl>
 auto CreateViewKnob(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     const KnobSettings &knobSettings = KnobSettings())
 {
     using Result =
-        ViewKnob<RangeControl, decltype(RangeControl::value), -1, precision>;
+        ViewKnob
+        <
+            BoundedControl,
+            decltype(BoundedControl::value), -1,
+            precision
+        >;
+
     return new Result(parent, range, range.value, knobSettings);
 }
 
 
-template<int precision, typename RangeControl, typename ValueControl>
+template<int precision, typename BoundedControl, typename ValueControl>
 auto CreateFieldKnob(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     ValueControl value,
     const KnobSettings &knobSettings = KnobSettings())
 {
-    using Result = FieldKnob<RangeControl, ValueControl, precision>;
+    using Result = FieldKnob<BoundedControl, ValueControl, precision>;
     return new Result(parent, range, value, knobSettings);
 }
 
 
-template<int precision, typename RangeControl>
+template<int precision, typename BoundedControl>
 auto CreateFieldKnob(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     const KnobSettings &knobSettings = KnobSettings())
 {
     using Result =
-        FieldKnob<RangeControl, decltype(RangeControl::value), precision>;
+        FieldKnob<BoundedControl, decltype(BoundedControl::value), precision>;
 
     return new Result(parent, range, range.value, knobSettings);
 }

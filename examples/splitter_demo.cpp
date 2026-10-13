@@ -16,7 +16,7 @@
 #include <cctype>
 
 
-using CountRangeMaker = pex::MakeRange<size_t, pex::Limit<0>, pex::Limit<100>>;
+using CountBoundedMaker = pex::MakeBounded<size_t, pex::Limit<0>, pex::Limit<100>>;
 
 
 template<template<typename> typename T>
@@ -58,14 +58,14 @@ using PricingModel = typename PricingGroup::Model;
 using PricingControl = typename PricingGroup::DefaultControl;
 
 
-using CountRangeMaker = pex::MakeRange<size_t, pex::Limit<0>, pex::Limit<100>>;
+using CountBoundedMaker = pex::MakeBounded<size_t, pex::Limit<0>, pex::Limit<100>>;
 
 
 template<template<typename> typename T>
 struct SettingsSchema
 {
     T<PricingGroup> pricing;
-    T<CountRangeMaker> count;
+    T<CountBoundedMaker> count;
 
     static constexpr auto fieldsTypeName = "Settings";
 };

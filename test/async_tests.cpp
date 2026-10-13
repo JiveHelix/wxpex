@@ -39,16 +39,16 @@ public:
 };
 
 
-TEST_CASE("Range filter is applied to both threads", "[async]")
+TEST_CASE("Bounded filter is applied to both threads", "[async]")
 {
-    using Range = wxpex::DefaultAsyncRange<int>;
-    using Model = pex::ModelTailor<Range>;
-    using RangeControl = pex::ControlTailor<Range>;
-    using ValueControl = typename RangeControl::Value;
+    using Bounded = wxpex::DefaultAsyncBounded<int>;
+    using Model = pex::ModelTailor<Bounded>;
+    using BoundedControl = pex::ControlTailor<Bounded>;
+    using ValueControl = typename BoundedControl::Value;
 
     WxTestFixture testFixture;
     Model model;
-    RangeControl control(model);
+    BoundedControl control(model);
     ValueControl workerControl(model.value.GetWorkerControl());
 
     REQUIRE(model.value.Get() == 0);

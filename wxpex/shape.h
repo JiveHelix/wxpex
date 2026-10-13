@@ -15,10 +15,10 @@ namespace polygon
 template<template<typename> typename T>
 struct RecipeSchema
 {
-    T<pex::MakeRange<size_t, pex::Limit<3>, pex::Limit<1024>>> sideCount;
+    T<pex::MakeBounded<size_t, pex::Limit<3>, pex::Limit<1024>>> sideCount;
     T<double> sideLength;
     T<tau::Point2d<double> position;
-    T<pex::MakeRange<double, pex::Limit<-180>, pex::Limit<180>> rotation_deg;
+    T<pex::MakeBounded<double, pex::Limit<-180>, pex::Limit<180>> rotation_deg;
 };
 
 

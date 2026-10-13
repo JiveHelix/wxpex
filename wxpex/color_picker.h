@@ -40,29 +40,29 @@ public:
     using SaturationControl = decltype(Control::saturation);
     using ValueControl = decltype(Control::value);
 
-    using HueRange =
-        pex::control::StaticLinearRange<HueControl, 100>;
+    using HueBounded =
+        pex::control::StaticLinearBounded<HueControl, 100>;
 
-    using SaturationRange =
-        pex::control::StaticLinearRange<SaturationControl, 256>;
+    using SaturationBounded =
+        pex::control::StaticLinearBounded<SaturationControl, 256>;
 
-    using ValueRange =
-        pex::control::StaticLinearRange<ValueControl, 256>;
+    using ValueBounded =
+        pex::control::StaticLinearBounded<ValueControl, 256>;
 
     using HueKnob =
-        wxpex::ViewKnob<HueRange, typename HueControl::Value, 5, 1>;
+        wxpex::ViewKnob<HueBounded, typename HueControl::Value, 5, 1>;
 
     using SaturationKnob =
         wxpex::ViewKnob
         <
-            SaturationRange,
+            SaturationBounded,
             typename SaturationControl::Value,
             4,
             2
         >;
 
     using ValueKnob =
-        ::wxpex::ViewKnob<ValueRange, typename ValueControl::Value, 4, 2>;
+        ::wxpex::ViewKnob<ValueBounded, typename ValueControl::Value, 4, 2>;
 
     using Color = typename Control::Type;
 
@@ -74,18 +74,18 @@ public:
         hue(
             new HueKnob(
                 parent,
-                HueRange(control.hue),
+                HueBounded(control.hue),
                 control.hue.value,
                 KnobSettings().StartAngle(0).Continuous(true))),
         saturation(
             new SaturationKnob(
                 parent,
-                SaturationRange(control.saturation),
+                SaturationBounded(control.saturation),
                 control.saturation.value)),
         value(
             new ValueKnob(
                 parent,
-                ValueRange(control.value),
+                ValueBounded(control.value),
                 control.value.value)),
         parent_(parent),
         connect_(PEX_THIS("HsvKnobs_"), control, &HsvKnobs_::OnColorChanged_)
@@ -144,13 +144,13 @@ using HsvKnobs = HsvKnobs_<HsvControl, void>;
 class HsvaKnobs: public HsvKnobs_<HsvaControl, HsvaKnobs>
 {
 public:
-    using AlphaRange =
-        pex::control::StaticLinearRange<decltype(HsvaControl::alpha), 100>;
+    using AlphaBounded =
+        pex::control::StaticLinearBounded<decltype(HsvaControl::alpha), 100>;
 
     using AlphaControl = decltype(HsvaControl::alpha);
 
     using AlphaKnob =
-        ::wxpex::ViewKnob<AlphaRange, typename AlphaControl::Value, 4, 2>;
+        ::wxpex::ViewKnob<AlphaBounded, typename AlphaControl::Value, 4, 2>;
 
     HsvaKnobs(
         wxWindow *parent,
@@ -160,7 +160,7 @@ public:
         alpha(
             new AlphaKnob(
                 this->parent_,
-                AlphaRange(control.alpha),
+                AlphaBounded(control.alpha),
                 control.alpha.value))
     {
 

@@ -31,13 +31,13 @@ CREATE_EXCEPTION(GraphicsError, std::runtime_error);
 template<typename U>
 struct ShearSchema
 {
-    using ShearRange = pex::MakeRange<U, pex::Limit<-1>, pex::Limit<1>>;
+    using ShearBounded = pex::MakeBounded<U, pex::Limit<-1>, pex::Limit<1>>;
 
     template<template<typename> typename T>
     struct Schema
     {
-        T<ShearRange> x;
-        T<ShearRange> y;
+        T<ShearBounded> x;
+        T<ShearBounded> y;
 
         static constexpr auto fieldsTypeName = "Shear";
     };

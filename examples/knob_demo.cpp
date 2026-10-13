@@ -9,7 +9,7 @@
   * Licensed under the MIT license. See LICENSE file.
 **/
 
-#include <pex/range.h>
+#include <pex/bounded.h>
 #include <pex/converting_filter.h>
 #include <fields/fields.h>
 #include <wxpex/knob.h>
@@ -17,13 +17,13 @@
 
 
 using pex::Limit;
-using pex::MakeRange;
+using pex::MakeBounded;
 
 template<template<typename> typename T>
 struct DemoSchema
 {
-    T<MakeRange<double, Limit<0>, Limit<360>>> hue;
-    T<MakeRange<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
+    T<MakeBounded<double, Limit<0>, Limit<360>>> hue;
+    T<MakeBounded<float, Limit<0, 25, 100>, Limit<4>>> playbackSpeed;
 };
 
 
@@ -76,7 +76,7 @@ struct PlaybackSpeedConverter:
 };
 
 
-using FilteredPlaybackSpeed = ::pex::control::Range<
+using FilteredPlaybackSpeed = ::pex::control::Bounded<
     PlaybackSpeed,
     PlaybackSpeedFilter<float>>;
 

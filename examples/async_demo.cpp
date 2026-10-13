@@ -33,14 +33,14 @@
 #include <wxpex/async_range.h>
 
 
-static_assert(pex::IsMakeRange<wxpex::DefaultAsyncRange<double>>);
+static_assert(pex::IsMakeBounded<wxpex::DefaultAsyncBounded<double>>);
 
 
 template<template<typename> typename T>
 struct DemoSchema
 {
     T<double> startingAngle;
-    T<wxpex::DefaultAsyncRange<double>> currentAngle;
+    T<wxpex::DefaultAsyncBounded<double>> currentAngle;
     T<pex::MakeSignal> reset;
     T<pex::MakeSignal> start;
     T<pex::MakeSignal> stop;
@@ -56,7 +56,7 @@ using DemoControl = typename DemoGroup::DefaultControl;
 using CurrentAngleModel = decltype(DemoModel::currentAngle);
 
 static_assert(
-    std::is_same_v<wxpex::Async<double, pex::model::RangeFilter<double>>,
+    std::is_same_v<wxpex::Async<double, pex::model::BoundedFilter<double>>,
     typename CurrentAngleModel::Value>);
 
 

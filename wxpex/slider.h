@@ -1,7 +1,7 @@
 /**
   * @file slider.h
   *
-  * @brief A wxSlider connected to a pex::Range.
+  * @brief A wxSlider connected to a pex::Bounded.
   *
   * @author Jive Helix (jivehelix@gmail.com)
   * @date 14 Aug 2020
@@ -18,7 +18,7 @@
 
 #include <jive/optional.h>
 #include <jive/scope_flag.h>
-#include <pex/range.h>
+#include <pex/bounded.h>
 #include <pex/endpoint.h>
 
 #include "wxpex/wxshim.h"
@@ -108,93 +108,93 @@ template<typename T>
 using NotOptional = jive::RemoveOptional<RangeValueType<T>>;
 
 
-/** wxSlider uses `int`. If the Range type is integral, so the default filter will attempt to convert it to `int`. Floating-point types will default to a LinearRange that maps the range of possible values across the positions of the slider.
+/** wxSlider uses `int`. If the Range type is integral, so the default filter will attempt to convert it to `int`. Floating-point types will default to a LinearBounded that maps the range of possible values across the positions of the slider.
  **/
-template<typename RangeControl, typename Enable = void>
-struct FilteredRange_ {};
+template<typename BoundedControl, typename Enable = void>
+struct FilteredBounded_ {};
 
 
-template<typename RangeControl>
-struct FilteredRange_
+template<typename BoundedControl>
+struct FilteredBounded_
 <
-    RangeControl,
+    BoundedControl,
     std::enable_if_t
     <
         std::is_same_v
         <
-            NotOptional<RangeControl>,
+            NotOptional<BoundedControl>,
             int
         >
     >
 >
 {
-    // This RangeControl already has type 'int'
-    using Type = RangeControl;
+    // This BoundedControl already has type 'int'
+    using Type = BoundedControl;
 };
 
 
-template<typename RangeControl>
-struct FilteredRange_
+template<typename BoundedControl>
+struct FilteredBounded_
 <
-    RangeControl,
+    BoundedControl,
     std::enable_if_t
     <
         std::is_floating_point_v
         <
-            NotOptional<RangeControl>
+            NotOptional<BoundedControl>
         >
     >
 >
 {
-    // This RangeControl has floating-point type.
-    using Type = pex::control::LinearRange
+    // This BoundedControl has floating-point type.
+    using Type = pex::control::LinearBounded
         <
-            typename RangeControl::Upstream,
-            typename RangeControl::Access
+            typename BoundedControl::Upstream,
+            typename BoundedControl::Access
         >;
 };
 
 
-template<typename RangeControl>
-struct FilteredRange_
+template<typename BoundedControl>
+struct FilteredBounded_
 <
-    RangeControl,
+    BoundedControl,
     std::enable_if_t
     <
-        !std::is_same_v<NotOptional<RangeControl>, int>
-        && std::is_integral_v<NotOptional<RangeControl>>
+        !std::is_same_v<NotOptional<BoundedControl>, int>
+        && std::is_integral_v<NotOptional<BoundedControl>>
     >
 >
 {
-    // This RangeControl has integral type that is not int.
-    using Type = pex::control::ConvertingRange
+    // This BoundedControl has integral type that is not int.
+    using Type = pex::control::ConvertingBounded
         <
-            typename RangeControl::Upstream,
+            typename BoundedControl::Upstream,
             int,
-            typename RangeControl::Access
+            typename BoundedControl::Access
         >;
 };
 
 
-template<typename RangeControl>
-using FilteredRange = typename FilteredRange_<RangeControl>::Type;
+template<typename BoundedControl>
+using FilteredBounded = typename FilteredBounded_<BoundedControl>::Type;
 
 
-template<typename RangeControl>
-std::unique_ptr<FilteredRange<RangeControl>> GetDefaultFilteredRange(
-    const RangeControl &range)
+template<typename BoundedControl>
+std::unique_ptr<FilteredBounded<BoundedControl>> GetDefaultFilteredRange(
+    const BoundedControl &range)
 {
-    using Result = FilteredRange<RangeControl>;
+    using Result = FilteredBounded<BoundedControl>;
 
-    if constexpr (std::is_floating_point_v<NotOptional<RangeControl>>)
+    if constexpr (std::is_floating_point_v<NotOptional<BoundedControl>>)
     {
-        return std::make_unique<FilteredRange<RangeControl>>(
+        return std::make_unique<FilteredBounded<BoundedControl>>(
             range,
             typename Result::Filter(1000));
     }
     else
     {
-        return std::make_unique<FilteredRange<RangeControl>>(range);
+        return std::make_unique<FilteredBounded<BoundedControl>>(range);
     }
 }
 
@@ -211,7 +211,7 @@ static_assert(HasGetSlope<pex::control::LinearFilter<double>>);
 
 template
 <
-    typename RangeControl
+    typename BoundedControl
 >
 class Slider : public wxSlider
 {
@@ -219,24 +219,24 @@ public:
     static constexpr auto observerName = "wxpex::Slider";
 
     using Base = wxSlider;
-    using This = Slider<RangeControl>;
+    using This = Slider<BoundedControl>;
 
-    // FilteredRange automatically scales floating point types to int as
+    // FilteredBounded automatically scales floating point types to int as
     // required by wxSlider.
-    using Range = FilteredRange<RangeControl>;
-    using Unfiltered = typename Range::Unfiltered;
-    static constexpr bool hasGetSlope = HasGetSlope<typename Range::Filter>;
+    using Bounded = FilteredBounded<BoundedControl>;
+    using Unfiltered = typename Bounded::Unfiltered;
+    static constexpr bool hasGetSlope = HasGetSlope<typename Bounded::Filter>;
 
-    using Value = pex::control::Value<typename Range::Value>;
+    using Value = pex::control::Value<typename Bounded::Value>;
     using ValueType = typename Value::Type;
     static_assert(std::is_same_v<int, jive::RemoveOptional<ValueType>>);
     static constexpr bool isOptional = jive::IsOptional<ValueType>;
 
-    using Limit = pex::control::Value<typename Range::Limit>;
+    using Limit = pex::control::Value<typename Bounded::Limit>;
 
     Slider(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         Style style = Style::horizontal)
         :
         Base(
@@ -433,7 +433,7 @@ public:
 
 private:
     bool ignoreRange_;
-    std::unique_ptr<Range> range_;
+    std::unique_ptr<Bounded> range_;
     pex::Endpoint<Slider, Value> value_;
     pex::Endpoint<Slider, Limit> minimum_;
     pex::Endpoint<Slider, Limit> maximum_;
@@ -445,7 +445,7 @@ private:
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     typename Convert
 >
@@ -453,9 +453,9 @@ class ValueSliderConvert : public wxControl
 {
 public:
     using Base = wxControl;
-    using RangeSlider = Slider<RangeControl>;
-    using SliderRange = typename RangeSlider::Range;
-    using SliderValue = typename RangeSlider::Value;
+    using BoundedSlider = Slider<BoundedControl>;
+    using SliderBounded = typename BoundedSlider::Bounded;
+    using SliderValue = typename BoundedSlider::Value;
 
     static constexpr auto observerName = "wxpex::ValueSliderConvert";
 
@@ -463,7 +463,7 @@ public:
     // value is the value from the model for display in the view.
     ValueSliderConvert(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         Style style = Style::horizontal)
         :
@@ -547,10 +547,10 @@ private:
 };
 
 
-template<typename RangeControl, typename ValueControl, int precision>
+template<typename BoundedControl, typename ValueControl, int precision>
 using ValueSliderBase = ValueSliderConvert
     <
-        RangeControl,
+        BoundedControl,
         ValueControl,
         PrecisionConverter<ValueControl, precision>
     >;
@@ -558,21 +558,21 @@ using ValueSliderBase = ValueSliderConvert
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     int precision = 3
 >
 class ValueSlider
     :
-    public ValueSliderBase<RangeControl, ValueControl, precision>
+    public ValueSliderBase<BoundedControl, ValueControl, precision>
 {
     using Base =
-        ValueSliderBase<RangeControl, ValueControl, precision>;
+        ValueSliderBase<BoundedControl, ValueControl, precision>;
 
 public:
     ValueSlider(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         Style style = Style::horizontal)
         :
@@ -584,16 +584,16 @@ public:
 };
 
 
-template<typename RangeControl>
+template<typename BoundedControl>
 class SpinSlider: public wxControl
 {
 public:
-    SpinSlider(wxWindow *parent, RangeControl range)
+    SpinSlider(wxWindow *parent, BoundedControl range)
         :
         wxControl(parent, wxID_ANY)
     {
         auto slider =
-            new Slider<RangeControl>(this, range, Style::horizontal);
+            new Slider<BoundedControl>(this, range, Style::horizontal);
 
         auto spin =
             new SpinControl(this, range, 1, 0);
@@ -621,7 +621,7 @@ private:
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     typename Convert = pex::Converter<typename ValueControl::Type>
 >
@@ -632,14 +632,14 @@ public:
 
     FieldSliderConvert(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         Style style = Style::horizontal)
         :
         wxControl(parent, wxID_ANY)
     {
         auto slider =
-            new Slider<RangeControl>(this, range, style);
+            new Slider<BoundedControl>(this, range, style);
 
         auto field = new ValueField(this, value);
 
@@ -678,10 +678,10 @@ private:
 };
 
 
-template<typename RangeControl, typename ValueControl, int precision>
+template<typename BoundedControl, typename ValueControl, int precision>
 using FieldSliderBase = FieldSliderConvert
     <
-        RangeControl,
+        BoundedControl,
         ValueControl,
         PrecisionConverter<ValueControl, precision>
     >;
@@ -689,21 +689,21 @@ using FieldSliderBase = FieldSliderConvert
 
 template
 <
-    typename RangeControl,
+    typename BoundedControl,
     typename ValueControl,
     int precision = 3
 >
 class FieldSlider
     :
-    public FieldSliderBase<RangeControl, ValueControl, precision>
+    public FieldSliderBase<BoundedControl, ValueControl, precision>
 {
     using Base =
-        FieldSliderBase<RangeControl, ValueControl, precision>;
+        FieldSliderBase<BoundedControl, ValueControl, precision>;
 
 public:
     FieldSlider(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         ValueControl value,
         Style style = Style::horizontal)
         :
@@ -714,51 +714,51 @@ public:
 };
 
 
-template<int precision, typename RangeControl, typename ValueControl>
+template<int precision, typename BoundedControl, typename ValueControl>
 auto CreateFieldSlider(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     ValueControl value,
     Style style = Style::horizontal)
 {
-    using Result = FieldSlider<RangeControl, ValueControl, precision>;
+    using Result = FieldSlider<BoundedControl, ValueControl, precision>;
     return new Result(parent, range, value, style);
 }
 
 
-template<int precision, typename RangeControl>
+template<int precision, typename BoundedControl>
 auto CreateFieldSlider(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     Style style = Style::horizontal)
 {
     using Result =
-        FieldSlider<RangeControl, decltype(RangeControl::value), precision>;
+        FieldSlider<BoundedControl, decltype(BoundedControl::value), precision>;
 
     return new Result(parent, range, range.value, style);
 }
 
 
-template<int precision, typename RangeControl, typename ValueControl>
+template<int precision, typename BoundedControl, typename ValueControl>
 auto CreateViewSlider(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     ValueControl value,
     Style style = Style::horizontal)
 {
-    using Result = ValueSlider<RangeControl, ValueControl, precision>;
+    using Result = ValueSlider<BoundedControl, ValueControl, precision>;
     return new Result(parent, range, value, style);
 }
 
 
-template<int precision, typename RangeControl>
+template<int precision, typename BoundedControl>
 auto CreateViewSlider(
     wxWindow *parent,
-    RangeControl range,
+    BoundedControl range,
     Style style = Style::horizontal)
 {
     using Result =
-        ValueSlider<RangeControl, decltype(RangeControl::value), precision>;
+        ValueSlider<BoundedControl, decltype(BoundedControl::value), precision>;
 
     return new Result(parent, range, range.value, style);
 }

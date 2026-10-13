@@ -16,9 +16,9 @@ template
     pex::IsLimit High,
     typename Access = pex::GetAndSetTag
 >
-using AsyncRange = pex::MakeRangeOptions
+using AsyncBounded = pex::MakeBoundedOptions
 <
-    pex::RangeOptions
+    pex::BoundedOptions
     <
         T,
         Low,
@@ -31,7 +31,8 @@ using AsyncRange = pex::MakeRangeOptions
 
 
 template<typename T>
-using DefaultAsyncRange = AsyncRange<T, pex::DefaultLimit, pex::DefaultLimit>;
+using DefaultAsyncBounded =
+    AsyncBounded<T, pex::DefaultLimit, pex::DefaultLimit>;
 
 
 } // end namespace wxpex

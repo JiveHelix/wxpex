@@ -26,15 +26,15 @@
 
 
 using pex::Limit;
-using pex::MakeRange;
+using pex::MakeBounded;
 
 
 template<template<typename> typename T>
 struct DemoSchema
 {
-    T<pex::MakeRange<double, Limit<0>, Limit<1000>>> velocity;
-    T<pex::MakeRange<double, Limit<-90>, Limit<90>>> azimuth;
-    T<pex::MakeRange<double, Limit<0>, Limit<90>>> elevation;
+    T<pex::MakeBounded<double, Limit<0>, Limit<1000>>> velocity;
+    T<pex::MakeBounded<double, Limit<-90>, Limit<90>>> azimuth;
+    T<pex::MakeBounded<double, Limit<0>, Limit<90>>> elevation;
 
     static constexpr auto fieldsTypeName = "Demo";
 };
@@ -97,7 +97,7 @@ bool ExampleApp::OnInit()
 using VelocityControl = decltype(DemoControl::velocity);
 using VelocityValueControl = decltype(VelocityControl::value);
 
-using VelocityRange = pex::control::LinearRange<VelocityControl>;
+using VelocityBounded = pex::control::LinearBounded<VelocityControl>;
 
 using VelocityKnob = wxpex::ViewKnob
 <

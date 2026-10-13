@@ -1,7 +1,7 @@
 /**
   * @file spin_control.h
   *
-  * @brief A wxSpinCtrlDouble backed by a pex::Range for the value, minimum,
+  * @brief A wxSpinCtrlDouble backed by a pex::Bounded for the value, minimum,
   * and maximum.
   *
   * @author Jive Helix (jivehelix@gmail.com)
@@ -18,7 +18,7 @@ WXSHIM_PUSH_IGNORES
 #include <wx/spinctrl.h>
 WXSHIM_POP_IGNORES
 
-#include <pex/range.h>
+#include <pex/bounded.h>
 #include <pex/endpoint.h>
 #include <jive/to_float.h>
 
@@ -27,23 +27,23 @@ namespace wxpex
 {
 
 
-template<typename RangeControl>
+template<typename BoundedControl>
 class SpinControl: public wxSpinCtrlDouble
 {
 public:
     static constexpr auto observerName = "wxpex::SpinControl";
 
     using Base = wxSpinCtrlDouble;
-    using This = SpinControl<RangeControl>;
-    using Range = RangeControl;
-    using Value = pex::Endpoint<SpinControl, typename Range::Value>;
+    using This = SpinControl<BoundedControl>;
+    using Bounded = BoundedControl;
+    using Value = pex::Endpoint<SpinControl, typename Bounded::Value>;
 
-    using Limit = pex::Endpoint<SpinControl, typename Range::Limit>;
-    using Type = typename Range::Value::Type;
+    using Limit = pex::Endpoint<SpinControl, typename Bounded::Limit>;
+    using Type = typename Bounded::Value::Type;
 
     SpinControl(
         wxWindow *parent,
-        RangeControl range,
+        BoundedControl range,
         Type increment,
         unsigned int digits = 4,
         long style = wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER)
