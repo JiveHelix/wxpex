@@ -36,7 +36,7 @@ struct UnitHelpers
     {
         ValueByName result;
 
-        for (const auto [value, name]: shortNameByValue)
+        for (const auto &[value, name]: shortNameByValue)
         {
             result[name] = value;
         }

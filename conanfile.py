@@ -17,7 +17,9 @@ class WxpexConan(ConanFile):
     default_options = {
         "wxwidgets/*:stc": False,
         "wxwidgets/*:jpeg": "libjpeg-turbo",
+        "wxwidgets/*:secretstore": False,
         "libtiff/*:jpeg": "libjpeg-turbo",
+        "gdk-pixbuf/*:with_libjpeg": "libjpeg-turbo",
         "fPIC": True,
         "shared": False,
         "CMAKE_TRY_COMPILE_TARGET_TYPE": None
