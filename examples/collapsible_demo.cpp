@@ -61,12 +61,12 @@ static_assert(std::same_as<ModelSchema, fields::ReflectorType<ThingsModel>>);
 using PlainSchema = ThingsSchema<pex::Identity>;
 static_assert(std::same_as<PlainSchema, fields::ReflectorType<ThingsPlain>>);
 
-static_assert(fields::GetMemberCount<ModelSchema>() == 1);
+static_assert(fields::ReflectMemberCount<ModelSchema>() == 1);
 
-static_assert(fields::GetMemberCount<PlainSchema>() == 1);
+static_assert(fields::ReflectGetMemberCount<PlainSchema>() == 1);
 
 static_assert(
-        fields::GetMemberCount<fields::ReflectorType<ThingsPlain>>() == 1);
+    fields::ReflectGetMemberCount<fields::ReflectorType<ThingsPlain>>() == 1);
 
 static_assert(fields::Reflect<ThingsModel>::count == 1);
 static_assert(fields::Reflect<ThingsPlain>::count == 1);
